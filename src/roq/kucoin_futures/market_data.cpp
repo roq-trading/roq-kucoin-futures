@@ -1,0 +1,455 @@
+/* Copyright (c) 2017-2021, Hans Erik Thrane */
+
+#include "roq/kucoin_futures/market_data.h"
+
+#include <algorithm>
+
+#include "roq/utils/mask.h"
+#include "roq/utils/safe_cast.h"
+#include "roq/utils/update.h"
+
+#include "roq/core/back_emplacer.h"
+#include "roq/core/charconv.h"
+
+#include "roq/core/tools/exception.h"
+
+#include "roq/core/metrics/factory.h"
+
+#include "roq/kucoin_futures/flags.h"
+
+#include "roq/kucoin_futures/json/utils.h"
+
+using namespace roq::literals;
+
+namespace roq {
+namespace kucoin_futures {
+
+namespace {
+static const auto NAME = "md"_sv;
+static const auto SUPPORTS = utils::Mask{
+    SupportType::MARKET_STATUS,
+    SupportType::TOP_OF_BOOK,
+    SupportType::MARKET_BY_PRICE,
+    SupportType::TRADE_SUMMARY,
+    SupportType::STATISTICS,
+};
+
+struct create_metrics final : public core::metrics::Factory {
+  explicit create_metrics(const std::string_view &group, const std::string_view &function)
+      : core::metrics::Factory(server::Flags::name(), group, function) {}
+};
+
+template <typename T>
+void emplace(MBPUpdate &result, const T &value) {
+  new (&result) MBPUpdate{
+      .price = value.price,
+      .quantity = value.qty,
+      .implied_quantity = NaN,
+      .price_level = {},
+      .number_of_orders = {},
+  };
+}
+}  // namespace
+
+MarketData::MarketData(
+    Handler &handler,
+    core::io::Context &context,
+    uint32_t stream_id,
+    Shared &shared,
+    const std::string_view &uri,
+    std::chrono::nanoseconds ping_frequency)
+    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
+      ping_frequency_(ping_frequency), connection_(
+                                           *this,
+                                           context,
+                                           core::URI{uri},
+                                           {},  // query
+                                           Flags::ws_ping_freq(),
+                                           Flags::decode_buffer_size(),
+                                           Flags::encode_buffer_size(),
+                                           []() { return std::string(); }),
+      decode_buffer_(Flags::decode_buffer_size()),
+      request_id_(static_cast<uint64_t>(stream_id_) * 1000000),  // scale (debugging)
+      counter_{
+          .disconnect = create_metrics(name_, "disconnect"_sv),
+      },
+      profile_{
+          .parse = create_metrics(name_, "parse"_sv),
+          .welcome = create_metrics(name_, "welcome"_sv),
+          .error = create_metrics(name_, "error"_sv),
+          .pong = create_metrics(name_, "pong"_sv),
+          .ack = create_metrics(name_, "ack"_sv),
+          .snapshot = create_metrics(name_, "snapshot"_sv),
+          .ticker = create_metrics(name_, "ticker"_sv),
+          .level2 = create_metrics(name_, "level2"_sv),
+      },
+      latency_{
+          .ping = create_metrics(name_, "ping"_sv),
+          .heartbeat = create_metrics(name_, "heartbeat"_sv),
+      },
+      shared_(shared), download_({}, [this](auto state) { return download(state); }) {
+  if (ping_frequency_.count() == 0)
+    log::fatal("Unexpected"_sv);
+  log::info("ping_frequency={}"_sv, ping_frequency_);
+}
+
+void MarketData::operator()(const Event<Start> &) {
+  connection_.start();
+}
+
+void MarketData::operator()(const Event<Stop> &) {
+  connection_.stop();
+}
+
+void MarketData::operator()(const Event<Timer> &event) {
+  auto now = event.value.now;
+  connection_.refresh(now);
+  if (connection_.ready()) {
+    if (welcome_ && next_ping_ < now)
+      send_ping(now);
+  } else if (logon_timeout_.count() && logon_timeout_ < now) {
+    assert(!welcome_);
+    log::warn("Did not receive the welcome message, disconnecting now..."_sv);
+    connection_.close();
+  }
+}
+
+void MarketData::operator()(metrics::Writer &writer) {
+  writer
+      // counter
+      .write(counter_.disconnect, metrics::COUNTER)
+      // profile
+      .write(profile_.parse, metrics::PROFILE)
+      .write(profile_.welcome, metrics::PROFILE)
+      .write(profile_.error, metrics::PROFILE)
+      .write(profile_.pong, metrics::PROFILE)
+      .write(profile_.ack, metrics::PROFILE)
+      .write(profile_.snapshot, metrics::PROFILE)
+      .write(profile_.ticker, metrics::PROFILE)
+      .write(profile_.level2, metrics::PROFILE)
+      // latency
+      .write(latency_.ping, metrics::LATENCY)
+      .write(latency_.heartbeat, metrics::LATENCY);
+}
+
+void MarketData::update_subscriptions(std::vector<std::string> &symbols) {
+  assert(&symbols != &symbols_);
+  auto max_size = Flags::ws_max_subscriptions_per_stream();
+  auto offset = symbols_.size();
+  if (max_size <= offset)
+    return;
+  if (symbols.empty())
+    return;
+  symbols_.reserve(max_size);
+  auto length = std::min(max_size - offset, symbols.size());
+  assert(length > 0);
+  for (size_t i = {}; i < length; ++i) {
+    symbols_.emplace_back(symbols.back());
+    symbols.pop_back();
+  }
+  assert(length == (symbols_.size() - offset));
+  if (ready())
+    subscribe({&symbols_[offset], length});
+}
+
+void MarketData::operator()(const core::web::Socket::Connected &) {
+  assert(logon_timeout_.count() == 0);
+  auto now = core::get_system_clock();
+  logon_timeout_ = now + Flags::ws_request_timeout();
+}
+
+void MarketData::operator()(const core::web::Socket::Disconnected &) {
+  ++counter_.disconnect;
+  ready_ = false;
+  (*this)(ConnectionStatus::DISCONNECTED);
+  download_.reset();
+  welcome_ = false;
+  logon_timeout_ = {};
+  next_ping_ = {};
+}
+
+void MarketData::operator()(const core::web::Socket::Ready &) {
+  // note! wait for welcome
+}
+
+void MarketData::operator()(const core::web::Socket::Close &) {
+}
+
+void MarketData::operator()(const core::web::Socket::Latency &latency) {
+  server::TraceInfo trace_info;
+  ExternalLatency external_latency{
+      .stream_id = stream_id_,
+      .latency = latency.sample,
+  };
+  server::create_trace_and_dispatch(trace_info, external_latency, handler_);
+  latency_.ping.update(latency.sample);
+}
+
+void MarketData::operator()(const core::web::Socket::Text &text) {
+  parse(text.payload);
+}
+
+void MarketData::operator()(ConnectionStatus status) {
+  if (utils::update(status_, status)) {
+    server::TraceInfo trace_info;
+    StreamStatus stream_status{
+        .stream_id = stream_id_,
+        .account = {},
+        .supports = SUPPORTS.get(),
+        .status = status_,
+        .type = StreamType::WEB_SOCKET,
+        .priority = Priority::PRIMARY,
+    };
+    log::info("stream_status={}"_sv, stream_status);
+    server::create_trace_and_dispatch(trace_info, stream_status, handler_);
+  }
+}
+
+uint32_t MarketData::download(MarketDataState state) {
+  switch (state) {
+    case MarketDataState::UNDEFINED:
+      assert(false);
+      break;
+    case MarketDataState::SUBSCRIBE:
+      subscribe(symbols_);
+      return {};
+    case MarketDataState::DONE:
+      (*this)(ConnectionStatus::READY);
+      assert(!ready_);
+      ready_ = true;
+      return {};
+  }
+  assert(false);
+  return {};
+}
+
+void MarketData::subscribe(const roq::span<std::string> &symbols) {
+  if (std::empty(symbols))
+    return;
+  subscribe("/market/ticker"_sv, symbols);
+  subscribe("/market/snapshot"_sv, symbols);
+  subscribe("/market/level2"_sv, symbols);
+}
+
+void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
+  assert(!symbols.empty());
+  // note!
+  // we could subscribe all in one message, but if any subject fails, the entire request fails
+  for (auto &symbol : symbols) {
+    auto now = core::get_system_clock();
+    auto message = fmt::format(
+        R"({{)"
+        R"("id":"{}",)"
+        R"("type":"subscribe",)"
+        R"("topic":"{}:{}",)"
+        R"("response":true)"
+        R"(}})"_sv,
+        now.count(),
+        topic,
+        symbol);
+    log::debug("message={}"_sv, message);
+    connection_.send_text(message);
+  }
+}
+
+void MarketData::send_ping(std::chrono::nanoseconds now) {
+  assert(ping_frequency_.count() > 0);
+  next_ping_ = now + ping_frequency_ / 2;
+  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"_sv, now.count());
+  log::debug(R"(message="{}")"_sv, message);
+  connection_.send_text(message);
+}
+
+void MarketData::parse(const std::string_view &message) {
+  profile_.parse([&]() {
+    try {
+      log::debug(R"(message="{}")"_sv, message);
+      server::TraceInfo trace_info;
+      core::json::Buffer buffer(decode_buffer_);
+      json::Parser::dispatch(*this, message, buffer, trace_info);
+    } catch (...) {
+      log::warn(R"(message="{}")"_sv, message);
+      core::tools::UnhandledException::terminate();
+    }
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Welcome> const &event) {
+  profile_.welcome([&]() {
+    auto &[trace_info, welcome] = event;
+    log::info<1>("event={{trace_info={}, welcome={}}}"_sv, trace_info, welcome);
+    welcome_ = true;
+    (*this)(ConnectionStatus::DOWNLOADING);
+    download_.begin();
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Error> const &event) {
+  profile_.error([&]() {
+    auto &[trace_info, error] = event;
+    log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Pong> const &event) {
+  profile_.pong([&]() {
+    auto &[trace_info, pong] = event;
+    log::info<4>("event={{trace_info={}, pong={}}}"_sv, trace_info, pong);
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Ack> const &event) {
+  profile_.ack([&]() {
+    auto &[trace_info, ack] = event;
+    log::info<2>("event={{trace_info={}, ack={}}}"_sv, trace_info, ack);
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Snapshot> const &event) {
+  profile_.snapshot([&]() {
+    auto &[trace_info, snapshot] = event;
+    log::info<4>("event={{trace_info={}, snapshot={}}}"_sv, trace_info, snapshot);
+    auto &item = snapshot.data.data;
+    Statistics statistics[] = {
+        {
+            .type = StatisticsType::OPEN_PRICE,
+            .value = item.open,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+        {
+            .type = StatisticsType::HIGHEST_TRADED_PRICE,
+            .value = item.high,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+        {
+            .type = StatisticsType::LOWEST_TRADED_PRICE,
+            .value = item.low,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+        {
+            .type = StatisticsType::CLOSE_PRICE,
+            .value = item.close,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+        {
+            .type = StatisticsType::OPEN_PRICE,
+            .value = item.open,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+    };
+    const StatisticsUpdate statistics_update{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = item.symbol,
+        .statistics = statistics,
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(item.datetime),
+    };
+    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
+    const MarketStatus market_status{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = item.symbol,
+        .trading_status = item.trading ? TradingStatus::OPEN : TradingStatus::HALT,
+    };
+    server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Ticker> const &event) {
+  profile_.ticker([&]() {
+    auto &[trace_info, ticker] = event;
+    log::info<4>("event={{trace_info={}, ticker={}}}"_sv, trace_info, ticker);
+    auto &data = ticker.data;
+    auto symbol = json::strip_symbol_from_topic(ticker.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Level2> const &event) {
+  profile_.level2([&]() {
+    auto &[trace_info, level2] = event;
+    log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
+    auto &data = level2.data;
+    auto &symbol = data.symbol;
+    auto iter = order_book_ready_.find(symbol);
+    if (iter == order_book_ready_.end()) {
+      log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+      auto res = order_book_ready_.emplace(symbol, false);
+      assert(res.second);
+      iter = res.first;
+      const RequestL2Snapshot request{
+          .stream_id = stream_id_,
+          .symbol = symbol,
+      };
+      handler_(request);
+    }
+    if ((*iter).second) {
+      // publish
+    } else {
+      // collect
+    }
+    /*
+    int64_t sequence_start = {};
+    int64_t sequence_end = {};
+    std::string_view symbol = {};
+    Level2DataChanges changes = {};
+    */
+    for (auto &bid : data.changes.bids) {
+      /*
+      double price = NaN;
+      double size = NaN;
+      int64_t sequence = {};
+      */
+    }
+    for (auto &ask : data.changes.asks) {
+      /*
+      double price = NaN;
+      double size = NaN;
+      int64_t sequence = {};
+      */
+    }
+  });
+}
+
+void MarketData::release_level2(const std::string_view &symbol, int64_t sequence) {
+  log::debug(R"(Release symbol="{}", sequence={})"_sv, symbol, sequence);
+}
+
+}  // namespace kucoin_futures
+}  // namespace roq

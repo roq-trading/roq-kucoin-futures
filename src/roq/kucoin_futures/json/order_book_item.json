@@ -1,0 +1,8 @@
+{
+"name": "OrderBookItem",
+"type": "array_item",
+"values": [
+	{ "name": "price", "type": "double" },
+	{ "name": "size", "type": "double" }
+]
+}

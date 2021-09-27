@@ -1,0 +1,11 @@
+{
+"name": "Type",
+"type": "enum",
+"values": [
+	{ "name": "welcome" },
+	{ "name": "error" },
+	{ "name": "pong" },
+	{ "name": "ack" },
+	{ "name": "message" }
+]
+}

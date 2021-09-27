@@ -1,0 +1,38 @@
+/* Copyright (c) 2017-2021, Hans Erik Thrane */
+
+#pragma once
+
+#include <utility>
+
+#include "roq/api.h"
+#include "roq/server.h"
+
+#include "roq/core/memory.h"
+
+namespace roq {
+namespace kucoin_futures {
+
+struct Shared final {
+  explicit Shared(server::Dispatcher &);
+
+  Shared(Shared &&) = default;
+  Shared(const Shared &) = delete;
+
+  auto discard_symbol(const std::string_view &name) const {
+    return dispatcher_.discard_symbol(name);
+  }
+
+  template <typename... Args>
+  auto update_order(Args &&...args) {
+    return dispatcher_.update_order(std::forward<Args>(args)...);
+  }
+
+ public:
+  core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
+
+ private:
+  server::Dispatcher &dispatcher_;
+};
+
+}  // namespace kucoin_futures
+}  // namespace roq

@@ -1,0 +1,10 @@
+{
+"name": "OrderBook",
+"type": "comp",
+"values": [
+	{ "name": "sequence", "type": "int64_t" },
+	{ "name": "time", "type": "std::chrono::milliseconds" },
+	{ "name": "bids", "type": "roq::span<OrderBookItem>" },
+	{ "name": "asks", "type": "roq::span<OrderBookItem>" }
+]
+}

@@ -1,0 +1,40 @@
+package:
+  name: roq-kucoin-futures
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  git_url: ..
+
+build:
+  skip: True  # [win]
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  run_exports:
+    - {{ pin_subpackage('roq-kucoin-futures', max_pin='x.x') }}
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - clangdev
+    - cmake
+    - make
+  host:
+    - benchmark
+    - roq-api
+    - roq-core
+    - roq-oss-abseil-cpp
+    - roq-oss-brotli
+    - roq-oss-date
+    - roq-oss-http-parser
+    - roq-oss-libevent
+    - roq-oss-magic_enum
+    - roq-oss-tomlplusplus
+    - roq-server
+
+about:
+  home: https://roq-trading.com
+  doc_url: https://roq-trading.com/docs
+  dev_url: https://github.com/roq-trading
+  license: Commercial
+  license_family: PROPRIETARY
+  license_file: LICENSE
+  summary: Roq KuCoin Futures Gateway

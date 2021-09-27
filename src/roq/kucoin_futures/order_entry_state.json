@@ -1,0 +1,7 @@
+{
+"name": "OrderEntryState",
+"type": "enum",
+"values": [
+	{ "name": "done" }
+]
+}

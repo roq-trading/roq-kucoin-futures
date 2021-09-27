@@ -1,0 +1,116 @@
+/* Copyright (c) 2017-2021, Hans Erik Thrane */
+
+#pragma once
+
+#include <absl/container/flat_hash_set.h>
+
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "roq/core/promise.h"
+
+#include "roq/core/buffer.h"
+
+#include "roq/core/metrics/counter.h"
+#include "roq/core/metrics/latency.h"
+#include "roq/core/metrics/profile.h"
+
+#include "roq/core/io/context.h"
+
+#include "roq/core/web/client.h"
+
+#include "roq/download.h"
+#include "roq/server.h"
+
+#include "roq/kucoin_futures/order_entry_state.h"
+#include "roq/kucoin_futures/security.h"
+#include "roq/kucoin_futures/shared.h"
+
+namespace roq {
+namespace kucoin_futures {
+
+class OrderEntry final : public core::web::Client::Handler {
+ public:
+  struct PrivateToken final {
+    std::string_view token;
+    std::string_view endpoint;
+  };
+
+  struct Handler {
+    virtual void operator()(const server::Trace<StreamStatus> &) = 0;
+    virtual void operator()(const server::Trace<ExternalLatency> &) = 0;
+    virtual void operator()(const server::Trace<FundsUpdate> &, bool is_last) = 0;
+    // cross-communication
+    virtual void operator()(PrivateToken const &) = 0;
+  };
+
+  OrderEntry(Handler &, core::io::Context &, uint16_t stream_id, Security &, Shared &);
+
+  OrderEntry(OrderEntry &&) = delete;
+  OrderEntry(const OrderEntry &) = delete;
+
+  bool ready() const { return status_ == ConnectionStatus::READY; }
+
+  void operator()(const Event<Start> &);
+  void operator()(const Event<Stop> &);
+  void operator()(const Event<Timer> &);
+
+  void operator()(metrics::Writer &);
+
+  uint16_t operator()(const Event<CreateOrder> &, const std::string_view &request_id);
+  uint16_t operator()(
+      const Event<ModifyOrder> &,
+      const oms::Order &,
+      const std::string_view &request_id,
+      const std::string_view &previous_request_id);
+  uint16_t operator()(
+      const Event<CancelOrder> &,
+      const oms::Order &,
+      const std::string_view &request_id,
+      const std::string_view &previous_request_id);
+
+  uint16_t operator()(const Event<CancelAllOrders> &, const std::string_view &request_id);
+
+ protected:
+  void operator()(const core::web::Client::Connected &);
+  void operator()(const core::web::Client::Disconnected &);
+  void operator()(const core::web::Client::Latency &);
+
+  void operator()(ConnectionStatus);
+
+  template <typename T>
+  void get(std::function<void(const core::Promise<T> &)> &&);
+
+  uint32_t download(OrderEntryState state);
+
+ private:
+  Handler &handler_;
+  // config
+  const uint16_t stream_id_;
+  const std::string name_;
+  // connection
+  core::web::Client connection_;
+  // buffers
+  core::Buffer decode_buffer_;
+  // metrics
+  struct {
+    core::metrics::Counter disconnect;
+  } counter_;
+  struct {
+    core::metrics::Profile private_token;
+  } profile_;
+  struct {
+    core::metrics::Latency ping;
+  } latency_;
+  // security
+  Security &security_;
+  // cache
+  Shared &shared_;
+  // state
+  ConnectionStatus status_ = {};
+  server::Download<OrderEntryState> download_;
+};
+
+}  // namespace kucoin_futures
+}  // namespace roq
