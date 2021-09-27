@@ -2,8 +2,14 @@
 "name": "Subject",
 "type": "enum",
 "values": [
-	{ "raw": "trade.snapshot", "name": "trade_snapshot" },
-	{ "raw": "trade.l2update", "name": "trade_l2update" },
-	{ "raw": "trade.ticker", "name": "trade_ticker" }
+	{ "name": "tickerV2" },
+	{ "name": "ticker" },
+	{ "name": "match" },
+	{ "raw": "mark.index.price","name": "mark_index_price" },
+	{ "raw": "funding.rate","name": "funding_rate" },
+	{ "name": "level2" },
+	{ "raw": "funding.begin","name": "funding_begin" },
+	{ "raw": "funding.end","name": "funding_end" },
+	{ "raw": "snapshot.24h","name": "snapshot_24h" }
 ]
 }

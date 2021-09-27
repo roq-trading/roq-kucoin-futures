@@ -79,9 +79,15 @@ MarketData::MarketData(
           .error = create_metrics(name_, "error"_sv),
           .pong = create_metrics(name_, "pong"_sv),
           .ack = create_metrics(name_, "ack"_sv),
-          .snapshot = create_metrics(name_, "snapshot"_sv),
+          .ticker_v2 = create_metrics(name_, "ticker_v2"_sv),
           .ticker = create_metrics(name_, "ticker"_sv),
+          .match = create_metrics(name_, "match"_sv),
+          .mark_index_price = create_metrics(name_, "mark_index_price"_sv),
+          .funding_rate = create_metrics(name_, "funding_rate"_sv),
           .level2 = create_metrics(name_, "level2"_sv),
+          .funding_begin = create_metrics(name_, "funding_begin"_sv),
+          .funding_end = create_metrics(name_, "funding_end"_sv),
+          .snapshot_24h = create_metrics(name_, "snapshot_24h"_sv),
       },
       latency_{
           .ping = create_metrics(name_, "ping"_sv),
@@ -124,9 +130,15 @@ void MarketData::operator()(metrics::Writer &writer) {
       .write(profile_.error, metrics::PROFILE)
       .write(profile_.pong, metrics::PROFILE)
       .write(profile_.ack, metrics::PROFILE)
-      .write(profile_.snapshot, metrics::PROFILE)
+      .write(profile_.ticker_v2, metrics::PROFILE)
       .write(profile_.ticker, metrics::PROFILE)
+      .write(profile_.match, metrics::PROFILE)
+      .write(profile_.mark_index_price, metrics::PROFILE)
+      .write(profile_.funding_rate, metrics::PROFILE)
       .write(profile_.level2, metrics::PROFILE)
+      .write(profile_.funding_begin, metrics::PROFILE)
+      .write(profile_.funding_end, metrics::PROFILE)
+      .write(profile_.snapshot_24h, metrics::PROFILE)
       // latency
       .write(latency_.ping, metrics::LATENCY)
       .write(latency_.heartbeat, metrics::LATENCY);
@@ -226,15 +238,33 @@ uint32_t MarketData::download(MarketDataState state) {
 void MarketData::subscribe(const roq::span<std::string> &symbols) {
   if (std::empty(symbols))
     return;
-  subscribe("/market/ticker"_sv, symbols);
-  subscribe("/market/snapshot"_sv, symbols);
-  subscribe("/market/level2"_sv, symbols);
+  subscribe("/contract/announcement"_sv);
+  if (Flags::ws_subscribe_ticker_v2())
+    subscribe("/contractMarket/tickerV2"_sv, symbols);
+  else
+    subscribe("/contractMarket/ticker"_sv, symbols);
+  subscribe("/contractMarket/execution"_sv, symbols);
+  subscribe("/contract/instrument"_sv, symbols);
+  subscribe("/contractMarket/level2"_sv, symbols);
+}
+
+void MarketData::subscribe(const std::string_view &topic) {
+  auto now = core::get_system_clock();
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":"{}",)"
+      R"("type":"subscribe",)"
+      R"("topic":"{}",)"
+      R"("response":true)"
+      R"(}})"_sv,
+      now.count(),
+      topic);
+  log::debug("message={}"_sv, message);
+  connection_.send_text(message);
 }
 
 void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
   assert(!symbols.empty());
-  // note!
-  // we could subscribe all in one message, but if any subject fails, the entire request fails
   for (auto &symbol : symbols) {
     auto now = core::get_system_clock();
     auto message = fmt::format(
@@ -287,7 +317,7 @@ void MarketData::operator()(server::Trace<json::Welcome> const &event) {
 void MarketData::operator()(server::Trace<json::Error> const &event) {
   profile_.error([&]() {
     auto &[trace_info, error] = event;
-    log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
+    // log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
   });
 }
 
@@ -302,62 +332,6 @@ void MarketData::operator()(server::Trace<json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
     log::info<2>("event={{trace_info={}, ack={}}}"_sv, trace_info, ack);
-  });
-}
-
-void MarketData::operator()(server::Trace<json::Snapshot> const &event) {
-  profile_.snapshot([&]() {
-    auto &[trace_info, snapshot] = event;
-    log::info<4>("event={{trace_info={}, snapshot={}}}"_sv, trace_info, snapshot);
-    auto &item = snapshot.data.data;
-    Statistics statistics[] = {
-        {
-            .type = StatisticsType::OPEN_PRICE,
-            .value = item.open,
-            .begin_time_utc = {},
-            .end_time_utc = {},
-        },
-        {
-            .type = StatisticsType::HIGHEST_TRADED_PRICE,
-            .value = item.high,
-            .begin_time_utc = {},
-            .end_time_utc = {},
-        },
-        {
-            .type = StatisticsType::LOWEST_TRADED_PRICE,
-            .value = item.low,
-            .begin_time_utc = {},
-            .end_time_utc = {},
-        },
-        {
-            .type = StatisticsType::CLOSE_PRICE,
-            .value = item.close,
-            .begin_time_utc = {},
-            .end_time_utc = {},
-        },
-        {
-            .type = StatisticsType::OPEN_PRICE,
-            .value = item.open,
-            .begin_time_utc = {},
-            .end_time_utc = {},
-        },
-    };
-    const StatisticsUpdate statistics_update{
-        .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
-        .symbol = item.symbol,
-        .statistics = statistics,
-        .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(item.datetime),
-    };
-    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
-    const MarketStatus market_status{
-        .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
-        .symbol = item.symbol,
-        .trading_status = item.trading ? TradingStatus::OPEN : TradingStatus::HALT,
-    };
-    server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
   });
 }
 
@@ -398,6 +372,172 @@ void MarketData::operator()(server::Trace<json::Ticker> const &event) {
       };
       server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
     }
+  });
+}
+
+void MarketData::operator()(server::Trace<json::TickerV2> const &event) {
+  profile_.ticker([&]() {
+    auto &[trace_info, ticker_v2] = event;
+    log::info<4>("event={{trace_info={}, ticker_v2={}}}"_sv, trace_info, ticker_v2);
+    auto &data = ticker_v2.data;
+    auto symbol = json::strip_symbol_from_topic(ticker_v2.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Match> const &event) {
+  profile_.match([&]() {
+    auto &[trace_info, match] = event;
+    log::info<4>("event={{trace_info={}, match={}}}"_sv, trace_info, match);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
+  });
+}
+
+void MarketData::operator()(server::Trace<json::MarkIndexPrice> const &event) {
+  profile_.mark_index_price([&]() {
+    auto &[trace_info, mark_index_price] = event;
+    log::info<4>("event={{trace_info={}, mark_index_price={}}}"_sv, trace_info, mark_index_price);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
+  });
+}
+
+void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
+  profile_.funding_rate([&]() {
+    auto &[trace_info, funding_rate] = event;
+    log::info<4>("event={{trace_info={}, funding_rate={}}}"_sv, trace_info, funding_rate);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
   });
 }
 
@@ -444,6 +584,132 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
       int64_t sequence = {};
       */
     }
+  });
+}
+
+void MarketData::operator()(server::Trace<json::FundingBegin> const &event) {
+  profile_.funding_begin([&]() {
+    auto &[trace_info, funding_begin] = event;
+    log::info<4>("event={{trace_info={}, funding_begin={}}}"_sv, trace_info, funding_begin);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
+  });
+}
+
+void MarketData::operator()(server::Trace<json::FundingEnd> const &event) {
+  profile_.funding_end([&]() {
+    auto &[trace_info, funding_end] = event;
+    log::info<4>("event={{trace_info={}, funding_end={}}}"_sv, trace_info, funding_end);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
+  });
+}
+
+void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
+  profile_.snapshot_24h([&]() {
+    auto &[trace_info, snapshot_24h] = event;
+    log::info<4>("event={{trace_info={}, snapshot_24h={}}}"_sv, trace_info, snapshot_24h);
+    /*
+    auto &data = match.data;
+    auto symbol = json::strip_symbol_from_topic(match.topic);
+    const TopOfBook top_of_book{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .layer{
+            .bid_price = data.best_bid,
+            .bid_quantity = data.best_bid_size,
+            .ask_price = data.best_ask,
+            .ask_quantity = data.best_ask_size,
+        },
+        .snapshot = false,
+        .exchange_time_utc = utils::safe_cast(data.time),
+    };
+    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
+    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
+      // note! what is this? accumulation of all done trades?
+      Trade trade{
+          .side = Side::UNDEFINED,
+          .price = data.price,
+          .quantity = data.size,
+          .trade_id = {},
+      };
+      const TradeSummary trade_summary{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .trades = {&trade, 1},
+          .exchange_time_utc = utils::safe_cast(data.time),
+      };
+      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
+    }
+    */
   });
 }
 

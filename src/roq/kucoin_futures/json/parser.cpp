@@ -59,25 +59,67 @@ bool Parser::dispatch(
         case json::Subject::UNKNOWN:
           log::fatal("Unexpected"_sv);
           break;
-        case json::Subject::TRADE_SNAPSHOT: {
-          core::json::Parser parser(message);
-          auto root = parser.root();
-          json::Snapshot snapshot(root, buffer);
-          create_trace_and_dispatch(trace_info, snapshot, handler);
-          break;
-        }
-        case json::Subject::TRADE_TICKER: {
+        case json::Subject::TICKER: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Ticker ticker(root, buffer);
           create_trace_and_dispatch(trace_info, ticker, handler);
           break;
         }
-        case json::Subject::TRADE_L2UPDATE: {
+        case json::Subject::TICKER_V2: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::TickerV2 ticker_v2(root, buffer);
+          create_trace_and_dispatch(trace_info, ticker_v2, handler);
+          break;
+        }
+        case json::Subject::MATCH: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::Match match(root, buffer);
+          create_trace_and_dispatch(trace_info, match, handler);
+          break;
+        }
+        case json::Subject::MARK_INDEX_PRICE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::MarkIndexPrice mark_index_price(root, buffer);
+          create_trace_and_dispatch(trace_info, mark_index_price, handler);
+          break;
+        }
+        case json::Subject::FUNDING_RATE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::FundingRate funding_rate(root, buffer);
+          create_trace_and_dispatch(trace_info, funding_rate, handler);
+          break;
+        }
+        case json::Subject::LEVEL2: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Level2 level2(root, buffer);
           create_trace_and_dispatch(trace_info, level2, handler);
+          break;
+        }
+        case json::Subject::FUNDING_BEGIN: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::FundingBegin funding_begin(root, buffer);
+          create_trace_and_dispatch(trace_info, funding_begin, handler);
+          break;
+        }
+        case json::Subject::FUNDING_END: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::FundingEnd funding_end(root, buffer);
+          create_trace_and_dispatch(trace_info, funding_end, handler);
+          break;
+        }
+        case json::Subject::SNAPSHOT_24H: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::Snapshot24h snapshot_24h(root, buffer);
+          create_trace_and_dispatch(trace_info, snapshot_24h, handler);
           break;
         }
       }

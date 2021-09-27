@@ -1,0 +1,9 @@
+{
+"name": "FundingRateData",
+"type": "comp",
+"values": [
+	{ "name": "granularity", "type": "double" },
+	{ "name": "fundingRate", "type": "double" },
+	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
+]
+}

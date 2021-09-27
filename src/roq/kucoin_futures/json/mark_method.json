@@ -1,0 +1,7 @@
+{
+"name": "MarkMethod",
+"type": "enum",
+"values": [
+	{ "name": "FairPrice" }
+]
+}

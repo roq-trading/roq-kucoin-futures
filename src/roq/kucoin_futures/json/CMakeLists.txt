@@ -6,26 +6,38 @@ include(RoqAutogen)
 
 set(AUTOGEN_SCHEMAS
     ack.json
-    currencies.json
-    currency.json
+    contract.json
+    contracts.json
     error.json
+    fair_method.json
+    funding_begin.json
+    funding_begin_data.json
+    funding_end.json
+    funding_end_data.json
+    funding_rate.json
+    funding_rate_data.json
     instance_server.json
     level2.json
     level2_data.json
     level2_data_changes.json
     level2_data_changes_item.json
+    mark_index_price.json
+    mark_index_price_data.json
+    mark_method.json
+    match.json
+    match_data.json
     message.json
     order_book.json
     order_book_item.json
     pong.json
-    snapshot.json
-    snapshot_data.json
-    snapshot_data_item.json
+    snapshot24h.json
+    snapshot24h_data.json
+    status.json
     subject.json
-    symbol.json
-    symbols.json
     ticker.json
     ticker_data.json
+    ticker_v2.json
+    ticker_v2_data.json
     token.json
     token_data.json
     type.json

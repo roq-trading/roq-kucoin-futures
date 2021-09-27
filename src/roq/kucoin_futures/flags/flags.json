@@ -25,7 +25,7 @@
       "name": "rest_uri",
       "type": "roq::core::URI",
       "validator": "roq::core::flags::URI<std::string>",
-      "default": "https://openapi-sandbox.kucoin.com",
+      "default": "https://api-sandbox-futures.kucoin.com",
       "description": "REST end-point (URI)"
     },
     {
@@ -110,6 +110,12 @@
       "validator": "roq::core::flags::NonZero<uint32_t>",
       "default": 128,
       "description": "max symbols per connection (count)"
+    },
+    {
+      "name": "ws_subscribe_ticker_v2",
+      "type": "bool",
+      "default": false,
+      "description": "subscribe ticker v2? (bool)"
     },
     {
       "name": "ws_subscribe_depth_levels",

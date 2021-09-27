@@ -1,9 +1,9 @@
 {
-"name": "Symbols",
+"name": "Contracts",
 "type": "comp",
 "values": [
 	{ "name": "code", "type": "std::string_view" },
 	{ "name": "msg", "type": "std::string_view", "optional": true },
-	{ "name": "data", "type": "roq::span<Symbol>" }
+	{ "name": "data", "type": "roq::span<Contract>" }
 ]
 }

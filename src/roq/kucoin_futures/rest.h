@@ -27,8 +27,7 @@
 #include "roq/kucoin_futures/security.h"
 #include "roq/kucoin_futures/shared.h"
 
-#include "roq/kucoin_futures/json/currencies.h"
-#include "roq/kucoin_futures/json/symbols.h"
+#include "roq/kucoin_futures/json/contracts.h"
 #include "roq/kucoin_futures/json/token.h"
 
 namespace roq {
@@ -92,12 +91,10 @@ class Rest final : public core::web::Client::Handler {
   uint32_t download(RestState);
 
   void download_public_token();
-  void download_currencies();
-  void download_symbols();
+  void download_contracts();
 
   void operator()(const json::Token &);
-  void operator()(const json::Currencies &);
-  void operator()(const json::Symbols &);
+  void operator()(const json::Contracts &);
 
  private:
   Handler &handler_;
@@ -113,7 +110,7 @@ class Rest final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile public_token, currencies, symbols, order_book;
+    core::metrics::Profile public_token, contracts, order_book;
   } profile_;
   struct {
     core::metrics::Latency ping;

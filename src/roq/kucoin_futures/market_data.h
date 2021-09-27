@@ -86,6 +86,7 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
 
   void subscribe(const roq::span<std::string> &symbols);
 
+  void subscribe(const std::string_view &topic);
   void subscribe(const std::string_view &topic, const roq::span<std::string> &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
@@ -97,9 +98,15 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   void operator()(server::Trace<json::Pong> const &) override;
   void operator()(server::Trace<json::Ack> const &) override;
 
-  void operator()(server::Trace<json::Snapshot> const &) override;
   void operator()(server::Trace<json::Ticker> const &) override;
+  void operator()(server::Trace<json::TickerV2> const &) override;
+  void operator()(server::Trace<json::Match> const &) override;
+  void operator()(server::Trace<json::MarkIndexPrice> const &) override;
+  void operator()(server::Trace<json::FundingRate> const &) override;
   void operator()(server::Trace<json::Level2> const &) override;
+  void operator()(server::Trace<json::FundingBegin> const &) override;
+  void operator()(server::Trace<json::FundingEnd> const &) override;
+  void operator()(server::Trace<json::Snapshot24h> const &) override;
 
  private:
   Handler &handler_;
@@ -118,7 +125,8 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile parse, welcome, error, pong, ack, snapshot, ticker, level2;
+    core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match,
+        mark_index_price, funding_rate, level2, funding_begin, funding_end, snapshot_24h;
   } profile_;
   struct {
     core::metrics::Latency ping, heartbeat;

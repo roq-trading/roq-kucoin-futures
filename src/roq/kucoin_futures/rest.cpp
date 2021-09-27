@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "roq/utils/mask.h"
+#include "roq/utils/safe_cast.h"
 #include "roq/utils/update.h"
 
 #include "roq/core/charconv.h"
@@ -66,8 +67,7 @@ Rest::Rest(
       },
       profile_{
           .public_token = create_metrics(name_, "public_token"_sv),
-          .currencies = create_metrics(name_, "currencies"_sv),
-          .symbols = create_metrics(name_, "symbols"_sv),
+          .contracts = create_metrics(name_, "contracts"_sv),
           .order_book = create_metrics(name_, "order_book"_sv),
       },
       latency_{
@@ -95,11 +95,51 @@ void Rest::operator()(metrics::Writer &writer) {
       .write(counter_.disconnect, metrics::COUNTER)
       // profile
       .write(profile_.public_token, metrics::PROFILE)
-      .write(profile_.currencies, metrics::PROFILE)
-      .write(profile_.symbols, metrics::PROFILE)
+      .write(profile_.contracts, metrics::PROFILE)
       .write(profile_.order_book, metrics::PROFILE)
       // latency
       .write(latency_.ping, metrics::LATENCY);
+}
+
+template <>
+void Rest::get(std::function<void(const core::Promise<json::Token> &)> &&callback) {
+  core::web::Request request{
+      .method = core::http::Method::POST,
+      .path = "/api/v1/bullet-public"_sv,
+      .query = {},
+      .accept = core::http::Accept::JSON,
+      .content_type = {},
+      .headers = {},
+      .body = {},
+      .quality_of_service = {},
+      .rate_limit_weight = 1,
+  };
+  connection_(
+      "public_token"_sv,
+      request,
+      [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
+        profile_.public_token([&]() {
+          try {
+            response.expect(core::http::Status::OK);
+            auto body = response.body();
+            log::debug(R"(body="{}")"_sv, body);
+            core::json::Buffer buffer(decode_buffer_);
+            auto token = core::json::Parser::create<json::Token>(body, buffer);
+            if (utils::compare(token.code, "200000"_sv) == 0) {
+              log::info<1>("token={}"_sv, token);
+              core::Promise<json::Token> promise(token);
+              callback(promise);
+            } else {
+              log::warn("token={}"_sv, token);
+              log::fatal("Unexpected"_sv);
+            }
+          } catch (core::NetworkError &e) {
+            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+            core::Promise<json::Token> promise(std::current_exception());
+            callback(promise);
+          }
+        });
+      });
 }
 
 void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
@@ -168,50 +208,9 @@ void Rest::operator()(ConnectionStatus status) {
 }
 
 template <>
-void Rest::get(std::function<void(const core::Promise<json::Token> &)> &&callback) {
-  core::web::Request request{
-      .method = core::http::Method::POST,
-      .path = "/api/v1/bullet-public"_sv,
-      .query = {},
-      .accept = core::http::Accept::JSON,
-      .content_type = {},
-      .headers = {},
-      .body = {},
-      .quality_of_service = {},
-      .rate_limit_weight = 1,
-  };
-  connection_(
-      "public_token"_sv,
-      request,
-      [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.public_token([&]() {
-          try {
-            response.expect(core::http::Status::OK);
-            auto body = response.body();
-            log::debug(R"(body="{}")"_sv, body);
-            core::json::Buffer buffer(decode_buffer_);
-            auto token = core::json::Parser::create<json::Token>(body, buffer);
-            if (utils::compare(token.code, "200000"_sv) == 0) {
-              log::info<1>("token={}"_sv, token);
-              core::Promise<json::Token> promise(token);
-              callback(promise);
-            } else {
-              log::warn("token={}"_sv, token);
-              log::fatal("Unexpected"_sv);
-            }
-          } catch (core::NetworkError &e) {
-            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            core::Promise<json::Token> promise(std::current_exception());
-            callback(promise);
-          }
-        });
-      });
-}
-
-template <>
-void Rest::get(std::function<void(const core::Promise<json::Currencies> &)> &&callback) {
+void Rest::get(std::function<void(const core::Promise<json::Contracts> &)> &&callback) {
   auto method = core::http::Method::GET;
-  auto path = "/api/v1/currencies"_sv;
+  auto path = "/api/v1/contracts/active"_sv;
   core::web::Request request{
       .method = method,
       .path = path,
@@ -224,70 +223,27 @@ void Rest::get(std::function<void(const core::Promise<json::Currencies> &)> &&ca
       .rate_limit_weight = 1,
   };
   connection_(
-      "currencies"_sv,
+      "contracts"_sv,
       request,
       [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.currencies([&]() {
+        profile_.contracts([&]() {
           try {
             response.expect(core::http::Status::OK);
             auto body = response.body();
             log::debug(R"(body="{}")"_sv, body);
             core::json::Buffer buffer(decode_buffer_);
-            auto currencies = core::json::Parser::create<json::Currencies>(body, buffer);
-            if (utils::compare(currencies.code, "200000"_sv) == 0) {
-              log::info<1>("currencies={}"_sv, currencies);
-              core::Promise<json::Currencies> promise(currencies);
+            auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
+            if (utils::compare(contracts.code, "200000"_sv) == 0) {
+              log::info<1>("contracts={}"_sv, contracts);
+              core::Promise<json::Contracts> promise(contracts);
               callback(promise);
             } else {
-              log::warn("currencies={}"_sv, currencies);
+              log::warn("contracts={}"_sv, contracts);
               log::fatal("Unexpected"_sv);
             }
           } catch (core::NetworkError &e) {
             log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            core::Promise<json::Currencies> promise(std::current_exception());
-            callback(promise);
-          }
-        });
-      });
-}
-
-template <>
-void Rest::get(std::function<void(const core::Promise<json::Symbols> &)> &&callback) {
-  auto method = core::http::Method::GET;
-  auto path = "/api/v1/symbols"_sv;
-  core::web::Request request{
-      .method = method,
-      .path = path,
-      .query = {},
-      .accept = core::http::Accept::JSON,
-      .content_type = {},
-      .headers = {},
-      .body = {},
-      .quality_of_service = {},
-      .rate_limit_weight = 1,
-  };
-  connection_(
-      "symbols"_sv,
-      request,
-      [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.symbols([&]() {
-          try {
-            response.expect(core::http::Status::OK);
-            auto body = response.body();
-            log::debug(R"(body="{}")"_sv, body);
-            core::json::Buffer buffer(decode_buffer_);
-            auto symbols = core::json::Parser::create<json::Symbols>(body, buffer);
-            if (utils::compare(symbols.code, "200000"_sv) == 0) {
-              log::info<1>("symbols={}"_sv, symbols);
-              core::Promise<json::Symbols> promise(symbols);
-              callback(promise);
-            } else {
-              log::warn("symbols={}"_sv, symbols);
-              log::fatal("Unexpected"_sv);
-            }
-          } catch (core::NetworkError &e) {
-            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            core::Promise<json::Symbols> promise(std::current_exception());
+            core::Promise<json::Contracts> promise(std::current_exception());
             callback(promise);
           }
         });
@@ -328,11 +284,8 @@ uint32_t Rest::download(RestState state) {
     case RestState::PUBLIC_TOKEN:
       download_public_token();
       return 1;
-    case RestState::CURRENCIES:
-      download_currencies();
-      return 1;
-    case RestState::SYMBOLS:
-      download_symbols();
+    case RestState::CONTRACTS:
+      download_contracts();
       return 1;
     case RestState::DONE:
       (*this)(ConnectionStatus::READY);
@@ -357,25 +310,10 @@ void Rest::download_public_token() {
   });
 }
 
-void Rest::download_currencies() {
-  constexpr auto state = RestState::CURRENCIES;
+void Rest::download_contracts() {
+  constexpr auto state = RestState::CONTRACTS;
   auto sequence = download_.sequence();
-  get<json::Currencies>([this, sequence](auto &promise) {
-    try {
-      if (download_.skip(sequence, state))
-        return;
-      (*this)(promise.get());
-      download_.check(state);
-    } catch (core::NetworkError &) {
-      download_.retry(state);
-    }
-  });
-}
-
-void Rest::download_symbols() {
-  constexpr auto state = RestState::SYMBOLS;
-  auto sequence = download_.sequence();
-  get<json::Symbols>([this, sequence](auto &promise) {
+  get<json::Contracts>([this, sequence](auto &promise) {
     try {
       if (download_.skip(sequence, state))
         return;
@@ -404,67 +342,65 @@ void Rest::operator()(const json::Token &token) {
   handler_(public_token);
 }
 
-void Rest::operator()(const json::Currencies &currencies) {
-  log::info<2>("currencies={}"_sv, currencies);
-}
-
-void Rest::operator()(const json::Symbols &symbols) {
-  log::info<2>("symbols={}"_sv, symbols);
+void Rest::operator()(const json::Contracts &contracts) {
+  log::info<2>("contracts={}"_sv, contracts);
   server::TraceInfo trace_info;  // XXX not correct (*parsing* already done)
   // reference data
-  std::vector<std::string> symbols_2;
-  // symbols_2.reserve(std::size(symbols.data));
+  std::vector<std::string> symbols;
+  // symbols.reserve(std::size(symbols.data));
   size_t counter = 0;
-  for (size_t i = 0; i < std::size(symbols.data); ++i) {
-    auto &item = symbols.data[i];
+  for (size_t i = 0; i < std::size(contracts.data); ++i) {
+    auto &item = contracts.data[i];
     auto &symbol = item.symbol;
     if (shared_.discard_symbol(item.symbol))
       continue;
     if (all_symbols_.emplace(symbol).second)  // only include new
-      symbols_2.emplace_back(symbol);
+      symbols.emplace_back(symbol);
     ++counter;
     const ReferenceData reference_data{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
-        .description = item.name,
+        .description = {},
         .security_type = {},
         .currency = item.quote_currency,            // XXX check
         .settlement_currency = item.base_currency,  // XXX check
         .commission_currency = {},
-        .tick_size = item.price_increment,  // XXX check
-        .multiplier = 1.0,
-        .min_trade_vol = item.quote_min_size,  // XXX check
+        .tick_size = item.tick_size,
+        .multiplier = item.multiplier,
+        .min_trade_vol = 1.0,
         .option_type = {},
         .strike_currency = {},
         .strike_price = NaN,
         .underlying = {},
         .time_zone = {},
-        .issue_date = {},
-        .settlement_date = {},
-        .expiry_datetime = {},
-        .expiry_datetime_utc = {},
+        .issue_date = utils::safe_cast(item.first_open_date),
+        .settlement_date = utils::safe_cast(item.settle_date),
+        .expiry_datetime = utils::safe_cast(item.expire_date),
+        .expiry_datetime_utc = utils::safe_cast(item.expire_date),
     };
     server::create_trace_and_dispatch(trace_info, reference_data, handler_, true);
   }
-  if (!std::empty(symbols_2)) {
+  if (!std::empty(symbols)) {
     SymbolsUpdate symbols_update{
-        .symbols = symbols_2,
+        .symbols = symbols,
     };
     handler_(symbols_update);
   }
   if (ROQ_UNLIKELY(counter > 0))
-    log::info("Symbols {} / {}"_sv, counter, std::size(symbols.data));
+    log::info("Contracts {} / {}"_sv, counter, std::size(contracts.data));
   // market status
-  for (auto &item : symbols.data) {
+  for (auto &item : contracts.data) {
     auto &symbol = item.symbol;
     if (all_symbols_.find(symbol) == all_symbols_.end())
       continue;
+    auto trading_status =
+        item.status == json::Status::OPEN ? TradingStatus::OPEN : TradingStatus::CLOSE;
     const MarketStatus market_status{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
-        .trading_status = item.enable_trading ? TradingStatus::OPEN : TradingStatus::CLOSE,
+        .trading_status = trading_status,
     };
     server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
   }

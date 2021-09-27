@@ -3,8 +3,7 @@
 "type": "enum",
 "values": [
 	{ "name": "public_token" },
-	{ "name": "currencies" },
-	{ "name": "symbols" },
+	{ "name": "contracts" },
 	{ "name": "done" }
 ]
 }

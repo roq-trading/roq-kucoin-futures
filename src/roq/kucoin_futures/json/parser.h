@@ -13,9 +13,15 @@
 #include "roq/kucoin_futures/json/pong.h"
 #include "roq/kucoin_futures/json/welcome.h"
 
+#include "roq/kucoin_futures/json/funding_begin.h"
+#include "roq/kucoin_futures/json/funding_end.h"
+#include "roq/kucoin_futures/json/funding_rate.h"
 #include "roq/kucoin_futures/json/level2.h"
-#include "roq/kucoin_futures/json/snapshot.h"
+#include "roq/kucoin_futures/json/mark_index_price.h"
+#include "roq/kucoin_futures/json/match.h"
+#include "roq/kucoin_futures/json/snapshot24h.h"
 #include "roq/kucoin_futures/json/ticker.h"
+#include "roq/kucoin_futures/json/ticker_v2.h"
 
 namespace roq {
 namespace kucoin_futures {
@@ -28,9 +34,15 @@ struct Parser final {
     virtual void operator()(server::Trace<json::Pong> const &) = 0;
     virtual void operator()(server::Trace<json::Ack> const &) = 0;
 
-    virtual void operator()(server::Trace<json::Snapshot> const &) = 0;
     virtual void operator()(server::Trace<json::Ticker> const &) = 0;
+    virtual void operator()(server::Trace<json::TickerV2> const &) = 0;
+    virtual void operator()(server::Trace<json::Match> const &) = 0;
+    virtual void operator()(server::Trace<json::MarkIndexPrice> const &) = 0;
+    virtual void operator()(server::Trace<json::FundingRate> const &) = 0;
     virtual void operator()(server::Trace<json::Level2> const &) = 0;
+    virtual void operator()(server::Trace<json::FundingBegin> const &) = 0;
+    virtual void operator()(server::Trace<json::FundingEnd> const &) = 0;
+    virtual void operator()(server::Trace<json::Snapshot24h> const &) = 0;
   };
 
   static bool dispatch(

@@ -1,0 +1,10 @@
+{
+"name": "MarkIndexPriceData",
+"type": "comp",
+"values": [
+	{ "name": "markPrice", "type": "double" },
+	{ "name": "indexPrice", "type": "double" },
+	{ "name": "granularity", "type": "double" },
+	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
+]
+}
