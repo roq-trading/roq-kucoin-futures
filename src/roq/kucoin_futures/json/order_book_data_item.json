@@ -1,5 +1,5 @@
 {
-"name": "OrderBookItem",
+"name": "OrderBookDataItem",
 "type": "array_item",
 "values": [
 	{ "name": "price", "type": "double" },

@@ -482,9 +482,8 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
   profile_.level2([&]() {
     auto &[trace_info, level2] = event;
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
-    /*
+    auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
-    auto &symbol = data.symbol;
     auto iter = order_book_ready_.find(symbol);
     if (iter == order_book_ready_.end()) {
       log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
@@ -502,7 +501,6 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     } else {
       // collect
     }
-    */
   });
 }
 

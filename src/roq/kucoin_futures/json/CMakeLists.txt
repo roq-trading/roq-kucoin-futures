@@ -26,7 +26,8 @@ set(AUTOGEN_SCHEMAS
     match_data.json
     message.json
     order_book.json
-    order_book_item.json
+    order_book_data.json
+    order_book_data_item.json
     pong.json
     side.json
     snapshot24h.json

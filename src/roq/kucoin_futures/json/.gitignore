@@ -40,8 +40,10 @@ message.h
 message.cpp
 order_book.h
 order_book.cpp
-order_book_item.h
-order_book_item.cpp
+order_book_data.h
+order_book_data.cpp
+order_book_data_item.h
+order_book_data_item.cpp
 pong.h
 pong.cpp
 side.h

@@ -144,9 +144,8 @@ void Rest::get(std::function<void(const core::Promise<json::Token> &)> &&callbac
 
 void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
   auto method = core::http::Method::GET;
-  auto path = "/api/v3/market/orderbook/level2"_sv;
+  auto path = "/api/v1/level2/snapshot"_sv;
   auto query = fmt::format("?symbol={}"_sv, symbol);
-  auto headers = security_.create_signature_api_v1(method, path, query, {});
   core::web::Request request{
       .method = method,
       .path = path,
@@ -158,6 +157,7 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
       .quality_of_service = {},
       .rate_limit_weight = 1,
   };
+  log::debug("HERE"_sv);
   connection_(
       "order_book"_sv,
       request,
@@ -174,7 +174,7 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
             // XXX HANS publish mbp snapshot
             Level2Snapshot response{
                 .symbol = symbol,
-                .sequence = order_book.sequence,
+                .sequence = order_book.data.sequence,
                 .stream_id = stream_id,
             };
             handler_(response);
