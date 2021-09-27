@@ -8,7 +8,7 @@ roq_autogen(
   OUTPUT
   AUTOGEN_HEADERS
   NAMESPACE
-  "roq/kucoin/flags"
+  "roq/kucoin_futures/flags"
   OUTPUT_TYPE
   "state"
   FILE_TYPE
@@ -22,7 +22,7 @@ roq_autogen(
   OUTPUT
   AUTOGEN_SOURCES
   NAMESPACE
-  "roq/kucoin/flags"
+  "roq/kucoin_futures/flags"
   OUTPUT_TYPE
   "state"
   FILE_TYPE

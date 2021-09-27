@@ -35,7 +35,7 @@ roq_autogen(
   OUTPUT
   AUTOGEN_HEADERS
   NAMESPACE
-  "roq/kucoin/json"
+  "roq/kucoin_futures/json"
   OUTPUT_TYPE
   "json"
   FILE_TYPE
@@ -49,7 +49,7 @@ roq_autogen(
   OUTPUT
   AUTOGEN_SOURCES
   NAMESPACE
-  "roq/kucoin/json"
+  "roq/kucoin_futures/json"
   OUTPUT_TYPE
   "json"
   FILE_TYPE
