@@ -10,6 +10,8 @@
 
 #include "roq/core/charconv/datetime.h"
 
+#include "roq/kucoin_futures/json/side.h"
+
 namespace roq {
 namespace kucoin_futures {
 namespace json {
@@ -38,9 +40,42 @@ inline void update(std::chrono::milliseconds &result, const core::json::value_t 
       value);
 }
 
+template <>
+inline void update(std::chrono::nanoseconds &result, const core::json::value_t &value) {
+  return std::visit(
+      overloaded{
+          [&](const core::json::null_t &) { result = std::chrono::nanoseconds{}; },
+          [](bool) { throw std::bad_cast(); },
+          [&](int64_t value) { result = std::chrono::nanoseconds{value}; },
+          [&](double value) { result = std::chrono::nanoseconds{static_cast<int64_t>(value)}; },
+          [&](const std::string_view &value) {
+            result =
+                core::charconv::datetime_from_string<std::remove_reference<decltype(result)>::type>(
+                    value);
+          },
+          [](const core::json::object_t &) { throw std::bad_cast(); },
+          [](const core::json::array_t &) { throw std::bad_cast(); },
+      },
+      value);
+}
+
 inline std::string_view strip_symbol_from_topic(const std::string_view &topic) {
   auto pos = topic.find_last_of(':');
   return pos == topic.npos ? topic : topic.substr(pos + 1);
+}
+
+inline roq::Side map(json::Side value) {
+  switch (value) {
+    case json::Side::UNDEFINED:
+      break;
+    case json::Side::UNKNOWN:
+      break;
+    case json::Side::BUY:
+      return roq::Side::BUY;
+    case json::Side::SELL:
+      return roq::Side::SELL;
+  }
+  return {};
 }
 
 }  // namespace json

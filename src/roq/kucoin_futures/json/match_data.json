@@ -2,6 +2,16 @@
 "name": "MatchData",
 "type": "comp",
 "values": [
-	{ "name": "sequence", "type": "int64_t" }
+	{ "name": "makerUserId", "type": "std::string_view" },
+	{ "name": "symbol", "type": "std::string_view" },
+	{ "name": "sequence", "type": "int64_t" },
+	{ "name": "side", "type": "Side" },
+	{ "name": "size", "type": "double" },
+	{ "name": "price", "type": "double" },
+	{ "name": "takerOrderId", "type": "std::string_view" },
+	{ "name": "makerOrderId", "type": "std::string_view" },
+	{ "name": "takerUserId", "type": "std::string_view" },
+	{ "name": "tradeId", "type": "std::string_view" },
+	{ "name": "ts", "type": "std::chrono::nanoseconds" }
 ]
 }

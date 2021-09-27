@@ -26,10 +26,6 @@ level2.h
 level2.cpp
 level2_data.h
 level2_data.cpp
-level2_data_changes.h
-level2_data_changes.cpp
-level2_data_changes_item.h
-level2_data_changes_item.cpp
 mark_index_price.h
 mark_index_price.cpp
 mark_index_price_data.h
@@ -48,6 +44,8 @@ order_book_item.h
 order_book_item.cpp
 pong.h
 pong.cpp
+side.h
+side.cpp
 snapshot24h.h
 snapshot24h.cpp
 snapshot24h_data.h

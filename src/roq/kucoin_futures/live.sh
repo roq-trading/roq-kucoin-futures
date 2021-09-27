@@ -12,12 +12,12 @@ NAME="kucoin-futures"
 
 CONFIG_FILE="$CWD/config/$NAME.toml"
 
-URI="api.kucoin.com"
+URI="api-futures.kucoin.com"
 
 REST_URI="https://$URI"
 
-$PREFIX ./roq-kucoin \
-	--name "kucoin" \
+$PREFIX ./roq-kucoin-futures \
+	--name "kucoin-futures" \
 	--config_file "$CONFIG_FILE" \
 	--client_listen_address $CWD/$NAME.sock \
 	--metrics_listen_address 1234 \

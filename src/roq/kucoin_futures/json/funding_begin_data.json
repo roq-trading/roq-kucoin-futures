@@ -2,13 +2,9 @@
 "name": "FundingBeginData",
 "type": "comp",
 "values": [
-	{ "name": "sequence", "type": "int64_t" },
-	{ "name": "bestAsk", "type": "double" },
-	{ "name": "size", "type": "double" },
-	{ "name": "bestBidSize", "type": "double" },
-	{ "name": "price", "type": "double" },
-	{ "name": "time", "type": "std::chrono::milliseconds" },
-	{ "name": "bestAskSize", "type": "double" },
-	{ "name": "bestBid", "type": "double" }
+	{ "name": "symbol", "type": "std::string_view" },
+	{ "name": "fundingTime", "type": "std::chrono::milliseconds" },
+	{ "name": "fundingRate", "type": "double" },
+	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
 ]
 }

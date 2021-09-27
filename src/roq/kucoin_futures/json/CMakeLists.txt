@@ -19,8 +19,6 @@ set(AUTOGEN_SCHEMAS
     instance_server.json
     level2.json
     level2_data.json
-    level2_data_changes.json
-    level2_data_changes_item.json
     mark_index_price.json
     mark_index_price_data.json
     mark_method.json
@@ -30,6 +28,7 @@ set(AUTOGEN_SCHEMAS
     order_book.json
     order_book_item.json
     pong.json
+    side.json
     snapshot24h.json
     snapshot24h_data.json
     status.json

@@ -314,9 +314,10 @@ void MarketData::operator()(server::Trace<json::Welcome> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Error> const &event) {
+void MarketData::operator()(server::Trace<json::Error> const &) {
   profile_.error([&]() {
-    auto &[trace_info, error] = event;
+    // XXX HANS DEBUG
+    // auto &[trace_info, error] = event;
     // log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
   });
 }
@@ -340,38 +341,20 @@ void MarketData::operator()(server::Trace<json::Ticker> const &event) {
     auto &[trace_info, ticker] = event;
     log::info<4>("event={{trace_info={}, ticker={}}}"_sv, trace_info, ticker);
     auto &data = ticker.data;
-    auto symbol = json::strip_symbol_from_topic(ticker.topic);
     const TopOfBook top_of_book{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
-        .symbol = symbol,
+        .symbol = data.symbol,
         .layer{
-            .bid_price = data.best_bid,
+            .bid_price = data.best_bid_price,
             .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
+            .ask_price = data.best_ask_price,
             .ask_quantity = data.best_ask_size,
         },
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
   });
 }
 
@@ -419,41 +402,21 @@ void MarketData::operator()(server::Trace<json::Match> const &event) {
   profile_.match([&]() {
     auto &[trace_info, match] = event;
     log::info<4>("event={{trace_info={}, match={}}}"_sv, trace_info, match);
-    /*
     auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
+    Trade trade{
+        .side = json::map(data.side),
+        .price = data.price,
+        .quantity = data.size,
+        .trade_id = data.trade_id,
+    };
+    const TradeSummary trade_summary{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
-        .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
-        .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .symbol = data.symbol,
+        .trades = {&trade, 1},
+        .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
   });
 }
 
@@ -461,41 +424,31 @@ void MarketData::operator()(server::Trace<json::MarkIndexPrice> const &event) {
   profile_.mark_index_price([&]() {
     auto &[trace_info, mark_index_price] = event;
     log::info<4>("event={{trace_info={}, mark_index_price={}}}"_sv, trace_info, mark_index_price);
-    /*
-    auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
+    auto symbol = json::strip_symbol_from_topic(mark_index_price.topic);
+    auto &data = mark_index_price.data;
+    Statistics statistics[] = {
+        {
+            .type = StatisticsType::SETTLEMENT_PRICE,
+            .value = data.mark_price,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+        {
+            .type = StatisticsType::INDEX_VALUE,
+            .value = data.index_price,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+    };
+    StatisticsUpdate statistics_update{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
+        .statistics = statistics,
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
   });
 }
 
@@ -503,41 +456,25 @@ void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
   profile_.funding_rate([&]() {
     auto &[trace_info, funding_rate] = event;
     log::info<4>("event={{trace_info={}, funding_rate={}}}"_sv, trace_info, funding_rate);
-    /*
-    auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
+    auto symbol = json::strip_symbol_from_topic(funding_rate.topic);
+    auto &data = funding_rate.data;
+    Statistics statistics[] = {
+        {
+            .type = StatisticsType::FUNDING_RATE,
+            .value = data.funding_rate,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+    };
+    StatisticsUpdate statistics_update{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
+        .statistics = statistics,
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
   });
 }
 
@@ -545,6 +482,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
   profile_.level2([&]() {
     auto &[trace_info, level2] = event;
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
+    /*
     auto &data = level2.data;
     auto &symbol = data.symbol;
     auto iter = order_book_ready_.find(symbol);
@@ -564,26 +502,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     } else {
       // collect
     }
-    /*
-    int64_t sequence_start = {};
-    int64_t sequence_end = {};
-    std::string_view symbol = {};
-    Level2DataChanges changes = {};
     */
-    for (auto &bid : data.changes.bids) {
-      /*
-      double price = NaN;
-      double size = NaN;
-      int64_t sequence = {};
-      */
-    }
-    for (auto &ask : data.changes.asks) {
-      /*
-      double price = NaN;
-      double size = NaN;
-      int64_t sequence = {};
-      */
-    }
   });
 }
 
@@ -591,41 +510,24 @@ void MarketData::operator()(server::Trace<json::FundingBegin> const &event) {
   profile_.funding_begin([&]() {
     auto &[trace_info, funding_begin] = event;
     log::info<4>("event={{trace_info={}, funding_begin={}}}"_sv, trace_info, funding_begin);
-    /*
-    auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
+    auto &data = funding_begin.data;
+    Statistics statistics[] = {
+        {
+            .type = StatisticsType::FUNDING_RATE_PREDICTION,
+            .value = data.funding_rate,
+            .begin_time_utc = utils::safe_cast(data.funding_time),
+            .end_time_utc = {},
+        },
+    };
+    StatisticsUpdate statistics_update{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
-        .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
+        .symbol = data.symbol,
+        .statistics = statistics,
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
   });
 }
 
@@ -633,41 +535,7 @@ void MarketData::operator()(server::Trace<json::FundingEnd> const &event) {
   profile_.funding_end([&]() {
     auto &[trace_info, funding_end] = event;
     log::info<4>("event={{trace_info={}, funding_end={}}}"_sv, trace_info, funding_end);
-    /*
-    auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
-        .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
-        .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
-        .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
-    };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    // what to do?
   });
 }
 
@@ -675,41 +543,25 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
   profile_.snapshot_24h([&]() {
     auto &[trace_info, snapshot_24h] = event;
     log::info<4>("event={{trace_info={}, snapshot_24h={}}}"_sv, trace_info, snapshot_24h);
-    /*
-    auto &data = match.data;
-    auto symbol = json::strip_symbol_from_topic(match.topic);
-    const TopOfBook top_of_book{
+    auto symbol = json::strip_symbol_from_topic(snapshot_24h.topic);
+    auto &data = snapshot_24h.data;
+    Statistics statistics[] = {
+        {
+            .type = StatisticsType::TRADE_VOLUME,
+            .value = data.volume,
+            .begin_time_utc = {},
+            .end_time_utc = {},
+        },
+    };
+    StatisticsUpdate statistics_update{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
-        .layer{
-            .bid_price = data.best_bid,
-            .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
-            .ask_quantity = data.best_ask_size,
-        },
+        .statistics = statistics,
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
-    */
+    server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
   });
 }
 

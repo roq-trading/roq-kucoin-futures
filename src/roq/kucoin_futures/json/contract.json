@@ -46,6 +46,16 @@
 	{ "name": "indexPrice", "type": "double" },
 	{ "name": "lastTradePrice", "type": "double" },
 	{ "name": "nextFundingRateTime", "type": "double" },
-	{ "name": "maxLeverage", "type": "double" }
+	{ "name": "maxLeverage", "type": "double" },
+	{ "name": "settlementSymbol", "type": "std::string_view", "comment": "undoc" },
+	{ "name": "sourceExchanges", "comment": "undoc" },
+	{ "name": "premiumsSymbol1M", "type": "std::string_view", "comment": "undoc" },
+	{ "name": "premiumsSymbol8H", "type": "std::string_view", "comment": "undoc" },
+	{ "name": "fundingBaseSymbol1M", "type": "std::string_view", "comment": "undoc" },
+	{ "name": "fundingQuoteSymbol1M", "type": "std::string_view", "comment": "undoc" },
+	{ "name": "lowPrice", "type": "double" },
+	{ "name": "highPrice", "type": "double" },
+	{ "name": "priceChgPct", "type": "double" },
+	{ "name": "priceChg", "type": "double" }
 ]
 }
