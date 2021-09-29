@@ -28,6 +28,7 @@
 #include "roq/kucoin_futures/shared.h"
 
 #include "roq/kucoin_futures/json/contracts.h"
+#include "roq/kucoin_futures/json/order_book.h"
 #include "roq/kucoin_futures/json/token.h"
 
 namespace roq {
@@ -57,6 +58,7 @@ class Rest final : public core::web::Client::Handler {
     virtual void operator()(server::Trace<ExternalLatency> const &) = 0;
     virtual void operator()(server::Trace<ReferenceData> const &, bool is_last) = 0;
     virtual void operator()(server::Trace<MarketStatus> const &, bool is_last) = 0;
+    virtual void operator()(server::Trace<MarketByPriceUpdate> const &, bool is_last) = 0;
     // cross-communication
     virtual void operator()(PublicToken const &) = 0;
     virtual void operator()(SymbolsUpdate &) = 0;
@@ -78,6 +80,8 @@ class Rest final : public core::web::Client::Handler {
 
   void get_order_book(const std::string_view &symbol, uint16_t stream_id);
 
+  void operator()(server::Trace<json::OrderBook> const &);
+
  protected:
   void operator()(const core::web::Client::Connected &) override;
   void operator()(const core::web::Client::Disconnected &) override;
@@ -93,8 +97,8 @@ class Rest final : public core::web::Client::Handler {
   void download_public_token();
   void download_contracts();
 
-  void operator()(const json::Token &);
-  void operator()(const json::Contracts &);
+  void operator()(json::Token const &);
+  void operator()(json::Contracts const &);
 
  private:
   Handler &handler_;

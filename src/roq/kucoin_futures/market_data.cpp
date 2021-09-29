@@ -484,22 +484,20 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
-    auto iter = order_book_ready_.find(symbol);
-    if (iter == order_book_ready_.end()) {
-      log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
-      auto res = order_book_ready_.emplace(symbol, false);
-      assert(res.second);
-      iter = res.first;
-      const RequestL2Snapshot request{
-          .stream_id = stream_id_,
-          .symbol = symbol,
-      };
-      handler_(request);
-    }
-    if ((*iter).second) {
-      // publish
+    auto &[ready, collection] = shared_.mbp_collector[symbol];
+    if (ROQ_UNLIKELY(!ready)) {
+      if (ROQ_UNLIKELY(collection.empty())) {
+        log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+        const RequestL2Snapshot request{
+            .stream_id = stream_id_,
+            .symbol = symbol,
+        };
+        handler_(request);
+      }
+      log::debug("COLLECT: {}"_sv, data.change);
+      collection.emplace_back(data.sequence, data.change);
     } else {
-      // collect
+      log::debug("PUBLISH: {}"_sv, data.change);
     }
   });
 }

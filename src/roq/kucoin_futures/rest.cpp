@@ -9,6 +9,7 @@
 #include "roq/utils/safe_cast.h"
 #include "roq/utils/update.h"
 
+#include "roq/core/back_emplacer.h"
 #include "roq/core/charconv.h"
 
 #include "roq/core/json/parser.h"
@@ -17,7 +18,7 @@
 
 #include "roq/kucoin_futures/flags.h"
 
-#include "roq/kucoin_futures/json/order_book.h"
+#include "roq/kucoin_futures/tools/splitter.h"
 
 using namespace roq::literals;
 
@@ -38,6 +39,16 @@ struct create_metrics final : public core::metrics::Factory {
   explicit create_metrics(const std::string_view &group, const std::string_view &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
+
+void emplace(MBPUpdate &result, double price, double size) {
+  new (&result) MBPUpdate{
+      .price = price,
+      .quantity = size,
+      .implied_quantity = NaN,
+      .price_level = {},
+      .number_of_orders = {},
+  };
+}
 }  // namespace
 
 Rest::Rest(
@@ -157,7 +168,6 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
       .quality_of_service = {},
       .rate_limit_weight = 1,
   };
-  log::debug("HERE"_sv);
   connection_(
       "order_book"_sv,
       request,
@@ -165,13 +175,13 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
           [[maybe_unused]] auto &request_id, auto &response) {
         profile_.order_book([&]() {
           try {
+            server::TraceInfo trace_info;
             response.expect(core::http::Status::OK);
             auto body = response.body();
             log::debug(R"(body="{}")"_sv, body);
             core::json::Buffer buffer(decode_buffer_);
             auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-            log::debug("order_book={}"_sv, order_book);
-            // XXX HANS publish mbp snapshot
+            server::create_trace_and_dispatch(trace_info, order_book, *this);
             Level2Snapshot response{
                 .symbol = symbol,
                 .sequence = order_book.data.sequence,
@@ -404,6 +414,47 @@ void Rest::operator()(const json::Contracts &contracts) {
     };
     server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
   }
+}
+
+void Rest::operator()(server::Trace<json::OrderBook> const &event) {
+  auto &[trace_info, order_book] = event;
+  log::debug("order_book={}"_sv, order_book);
+  auto &data = order_book.data;
+  auto &symbol = data.symbol;
+  core::back_emplacer bids(shared_.bids), asks(shared_.asks);
+  for (auto &item : data.bids)
+    bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+  for (auto &item : data.asks)
+    asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+  const MarketByPriceUpdate market_by_price_update{
+      .stream_id = stream_id_,
+      .exchange = Flags::exchange(),
+      .symbol = symbol,
+      .bids = bids,
+      .asks = asks,
+      .snapshot = true,
+      .exchange_time_utc = utils::safe_cast(data.ts),
+  };
+  auto &tmp = shared_.mbp_collector[symbol];
+  auto &ready = tmp.first;
+  auto &collection = tmp.second;
+  server::create_trace_and_dispatch(
+      trace_info, market_by_price_update, shared_, true, [&](auto &market_by_price) {
+        log::debug("sequence={}"_sv, data.sequence);
+        std::pair<int64_t, std::string> current{data.sequence, {}};
+        auto iter = std::upper_bound(
+            collection.begin(), collection.end(), current, [](auto &lhs, auto &rhs) {
+              return lhs.first < rhs.first;
+            });
+        for (; iter != collection.end(); ++iter) {
+          auto [sequence, change] = *iter;
+          auto [side, price, quantity] = tools::split(change);
+          log::debug("{},{} => {},{},{}"_sv, sequence, change, side, price, quantity);
+          market_by_price(side, price, quantity);
+        }
+      });
+  ready = true;
+  collection.clear();
 }
 
 }  // namespace kucoin_futures

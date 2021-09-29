@@ -2,7 +2,10 @@
 
 #pragma once
 
+#include <absl/container/flat_hash_map.h>
+
 #include <utility>
+#include <vector>
 
 #include "roq/api.h"
 #include "roq/server.h"
@@ -27,8 +30,16 @@ struct Shared final {
     return dispatcher_.update_order(std::forward<Args>(args)...);
   }
 
+  template <typename... Args>
+  auto operator()(Args &&...args) {
+    return dispatcher_(std::forward<Args>(args)...);
+  }
+
  public:
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
+
+  absl::flat_hash_map<std::string, std::pair<bool, std::vector<std::pair<int64_t, std::string>>>>
+      mbp_collector;
 
  private:
   server::Dispatcher &dispatcher_;

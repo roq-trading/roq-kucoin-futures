@@ -1,6 +1,6 @@
 set(TARGET_NAME "${PROJECT_NAME}-tools")
 
-set(SOURCES hasher.cpp)
+set(SOURCES hasher.cpp splitter.cpp)
 
 add_library("${TARGET_NAME}" STATIC ${SOURCES})
 
