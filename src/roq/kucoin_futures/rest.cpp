@@ -182,20 +182,9 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
             core::json::Buffer buffer(decode_buffer_);
             auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
             server::create_trace_and_dispatch(trace_info, order_book, *this);
-            Level2Snapshot response{
-                .symbol = symbol,
-                .sequence = order_book.data.sequence,
-                .stream_id = stream_id,
-            };
-            handler_(response);
           } catch (core::NetworkError &e) {
             log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            Level2Snapshot response{
-                .symbol = symbol,
-                .sequence = -1,
-                .stream_id = stream_id,
-            };
-            handler_(response);
+            get_order_book_retry(symbol);
           }
         });
       });
@@ -420,41 +409,64 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   auto &[trace_info, order_book] = event;
   log::debug("order_book={}"_sv, order_book);
   auto &data = order_book.data;
+  auto sequence = data.sequence;
   auto &symbol = data.symbol;
-  core::back_emplacer bids(shared_.bids), asks(shared_.asks);
-  for (auto &item : data.bids)
-    bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
-  for (auto &item : data.asks)
-    asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
-  const MarketByPriceUpdate market_by_price_update{
-      .stream_id = stream_id_,
-      .exchange = Flags::exchange(),
-      .symbol = symbol,
-      .bids = bids,
-      .asks = asks,
-      .snapshot = true,
-      .exchange_time_utc = utils::safe_cast(data.ts),
-  };
-  auto &tmp = shared_.mbp_collector[symbol];
-  auto &ready = tmp.first;
-  auto &collection = tmp.second;
-  server::create_trace_and_dispatch(
-      trace_info, market_by_price_update, shared_, true, [&](auto &market_by_price) {
-        log::debug("sequence={}"_sv, data.sequence);
-        std::pair<int64_t, std::string> current{data.sequence, {}};
-        auto iter = std::upper_bound(
-            collection.begin(), collection.end(), current, [](auto &lhs, auto &rhs) {
-              return lhs.first < rhs.first;
-            });
-        for (; iter != collection.end(); ++iter) {
-          auto [sequence, change] = *iter;
-          auto [side, price, quantity] = tools::split(change);
-          log::debug("{},{} => {},{},{}"_sv, sequence, change, side, price, quantity);
-          market_by_price(side, price, quantity);
-        }
-      });
-  ready = true;
-  collection.clear();
+  auto &collector = shared_.mbp_collector[symbol];
+  auto &history = collector.history;
+  if (history.empty()) {
+    log::fatal("Unexpected"_sv);
+  }
+  // we need the next sequence number to be available
+  if ((sequence + 1) < history.front().first) {
+    log::warn(
+        "No change history for order-book snapshot, sequence={}, first={}"_sv,
+        sequence,
+        history.front().first);
+    get_order_book_retry(symbol);
+  } else {
+    core::back_emplacer bids(shared_.bids), asks(shared_.asks);
+    for (auto &item : data.bids)
+      bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+    for (auto &item : data.asks)
+      asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+    const MarketByPriceUpdate market_by_price_update{
+        .stream_id = stream_id_,
+        .exchange = Flags::exchange(),
+        .symbol = symbol,
+        .bids = bids,
+        .asks = asks,
+        .snapshot = true,
+        .exchange_time_utc = utils::safe_cast(data.ts),
+    };
+    server::create_trace_and_dispatch(
+        trace_info, market_by_price_update, shared_, true, [&](auto &market_by_price) {
+          std::pair<int64_t, std::string> current{sequence, {}};
+          auto iter =
+              std::upper_bound(history.begin(), history.end(), current, [](auto &lhs, auto &rhs) {
+                return lhs.first < rhs.first;
+              });
+          for (auto expected = data.sequence + 1; iter != history.end(); ++iter, ++expected) {
+            auto [sequence, change] = *iter;
+            if (sequence != expected)
+              log::fatal("Wrong sequence: expected={}, got={}"_sv, expected, sequence);
+            auto [side, price, quantity] = tools::split(change);
+            log::debug("{},{} => {},{},{}"_sv, sequence, change, side, price, quantity);
+            market_by_price(side, price, quantity);
+          }
+        });
+    collector.ready = true;
+    history.clear();
+  }
+}
+
+void Rest::get_order_book_retry(const std::string_view &symbol) {
+  auto &collector = shared_.mbp_collector[symbol];
+  if (++collector.retries < Flags::ws_mbp_request_max_retries()) {
+    log::warn(R"(Retrying order-book for symbol="{}")"_sv, symbol);
+    get_order_book(symbol, stream_id_);
+  } else {
+    log::fatal("Reached max retries"_sv);
+  }
 }
 
 }  // namespace kucoin_futures

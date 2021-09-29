@@ -4,13 +4,12 @@
 
 #include <absl/container/flat_hash_map.h>
 
-#include <utility>
-#include <vector>
-
 #include "roq/api.h"
 #include "roq/server.h"
 
 #include "roq/core/memory.h"
+
+#include "roq/kucoin_futures/collector.h"
 
 namespace roq {
 namespace kucoin_futures {
@@ -38,8 +37,7 @@ struct Shared final {
  public:
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
-  absl::flat_hash_map<std::string, std::pair<bool, std::vector<std::pair<int64_t, std::string>>>>
-      mbp_collector;
+  absl::flat_hash_map<std::string, Collector> mbp_collector;
 
  private:
   server::Dispatcher &dispatcher_;

@@ -192,17 +192,6 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
   }
 }
 
-void Gateway::operator()(Rest::Level2Snapshot const &response) {
-  for (auto &iter : market_data_) {
-    auto &market_data = *iter;
-    if (market_data.stream_id() == response.stream_id) {
-      market_data.release_level2(response.symbol, response.sequence);
-      return;
-    }
-    log::warn("Did not find market data with stream_id={}"_sv, response.stream_id);
-  }
-}
-
 void Gateway::operator()(MarketData::RequestL2Snapshot const &request) {
   rest_.get_order_book(request.symbol, request.stream_id);
 }

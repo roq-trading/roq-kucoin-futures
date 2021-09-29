@@ -131,6 +131,19 @@
       "description": "depth update frequency"
     },
     {
+      "name": "ws_mbp_request_delay",
+      "type": "std::chrono::nanoseconds",
+      "validator": "roq::core::flags::TimePeriod",
+      "default": "500ms",
+      "description": "request delay"
+    },
+    {
+      "name": "ws_mbp_request_max_retries",
+      "type": "uint32_t",
+      "default": 3,
+      "description": "request max retries"
+    },
+    {
       "name": "encode_buffer_size",
       "type": "uint32_t",
       "validator": "roq::core::flags::NonZero<uint32_t>",

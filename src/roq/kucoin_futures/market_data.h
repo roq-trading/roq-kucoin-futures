@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <deque>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -69,7 +70,7 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
 
   void update_subscriptions(std::vector<std::string> &symbols);
 
-  void release_level2(const std::string_view &symbol, int64_t sequence);
+  void check_request_queue(std::chrono::nanoseconds now);
 
  protected:
   void operator()(const core::web::Socket::Connected &) override;
@@ -141,7 +142,9 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   server::Download<MarketDataState> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
+  // experimental
   absl::flat_hash_map<std::string, bool> order_book_ready_;
+  std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue_;
 };
 
 }  // namespace kucoin_futures

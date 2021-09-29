@@ -47,12 +47,6 @@ class Rest final : public core::web::Client::Handler {
     std::vector<std::string> &symbols;
   };
 
-  struct Level2Snapshot final {
-    std::string_view symbol;
-    int64_t sequence = {};  // <=0 means failed
-    uint16_t stream_id = {};
-  };
-
   struct Handler {
     virtual void operator()(server::Trace<StreamStatus> const &) = 0;
     virtual void operator()(server::Trace<ExternalLatency> const &) = 0;
@@ -62,7 +56,6 @@ class Rest final : public core::web::Client::Handler {
     // cross-communication
     virtual void operator()(PublicToken const &) = 0;
     virtual void operator()(SymbolsUpdate &) = 0;
-    virtual void operator()(Level2Snapshot const &) = 0;
   };
 
   Rest(Handler &, core::io::Context &context, uint16_t stream_id, Security &, Shared &);
@@ -99,6 +92,8 @@ class Rest final : public core::web::Client::Handler {
 
   void operator()(json::Token const &);
   void operator()(json::Contracts const &);
+
+  void get_order_book_retry(const std::string_view &symbol);
 
  private:
   Handler &handler_;

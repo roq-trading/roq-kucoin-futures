@@ -111,8 +111,11 @@ void MarketData::operator()(const Event<Timer> &event) {
   auto now = event.value.now;
   connection_.refresh(now);
   if (connection_.ready()) {
-    if (welcome_ && next_ping_ < now)
-      send_ping(now);
+    if (welcome_) {
+      if (next_ping_ < now)
+        send_ping(now);
+      check_request_queue(now);
+    }
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
     log::warn("Did not receive the welcome message, disconnecting now..."_sv);
@@ -178,6 +181,8 @@ void MarketData::operator()(const core::web::Socket::Disconnected &) {
   welcome_ = false;
   logon_timeout_ = {};
   next_ping_ = {};
+  // experimental
+  shared_.mbp_collector.clear();
 }
 
 void MarketData::operator()(const core::web::Socket::Ready &) {
@@ -484,18 +489,25 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
-    auto &[ready, collection] = shared_.mbp_collector[symbol];
-    if (ROQ_UNLIKELY(!ready)) {
-      if (ROQ_UNLIKELY(collection.empty())) {
-        log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
-        const RequestL2Snapshot request{
-            .stream_id = stream_id_,
-            .symbol = symbol,
-        };
-        handler_(request);
+    auto &collector = shared_.mbp_collector[symbol];
+    if (ROQ_UNLIKELY(!collector.ready)) {
+      if (ROQ_UNLIKELY(!collector.created.count())) {
+        auto now = trace_info.source_receive_time;
+        collector.created = now;
+        request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
+      /*
+            if (ROQ_UNLIKELY(collector.history.empty())) {
+              log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+              const RequestL2Snapshot request{
+                  .stream_id = stream_id_,
+                  .symbol = symbol,
+              };
+              handler_(request);
+            }
+            */
       log::debug("COLLECT: {}"_sv, data.change);
-      collection.emplace_back(data.sequence, data.change);
+      collector.history.emplace_back(data.sequence, data.change);
     } else {
       log::debug("PUBLISH: {}"_sv, data.change);
     }
@@ -561,8 +573,19 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
   });
 }
 
-void MarketData::release_level2(const std::string_view &symbol, int64_t sequence) {
-  log::debug(R"(Release symbol="{}", sequence={})"_sv, symbol, sequence);
+void MarketData::check_request_queue(std::chrono::nanoseconds now) {
+  while (!request_queue_.empty()) {
+    auto &[request_time, symbol] = request_queue_.front();
+    if (now < request_time)
+      break;
+    log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+    const RequestL2Snapshot request{
+        .stream_id = stream_id_,
+        .symbol = symbol,
+    };
+    handler_(request);
+    request_queue_.pop_front();
+  }
 }
 
 }  // namespace kucoin_futures
