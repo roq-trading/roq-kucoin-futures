@@ -52,7 +52,8 @@ class Rest final : public core::web::Client::Handler {
     virtual void operator()(server::Trace<ExternalLatency> const &) = 0;
     virtual void operator()(server::Trace<ReferenceData> const &, bool is_last) = 0;
     virtual void operator()(server::Trace<MarketStatus> const &, bool is_last) = 0;
-    virtual void operator()(server::Trace<MarketByPriceUpdate> const &, bool is_last) = 0;
+    virtual void operator()(
+        server::Trace<MarketByPriceUpdate> const &, bool is_last, bool refresh) = 0;
     // cross-communication
     virtual void operator()(PublicToken const &) = 0;
     virtual void operator()(SymbolsUpdate &) = 0;
