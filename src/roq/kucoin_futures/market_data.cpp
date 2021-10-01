@@ -19,6 +19,8 @@
 
 #include "roq/kucoin_futures/json/utils.h"
 
+#include "roq/kucoin_futures/tools/splitter.h"
+
 using namespace roq::literals;
 
 namespace roq {
@@ -510,6 +512,27 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
       collector.history.emplace_back(data.sequence, data.change);
     } else {
       log::debug("PUBLISH: {}"_sv, data.change);
+      auto [side, price, quantity] = tools::split(data.change);
+      auto is_bid = side == Side::BUY;
+      auto is_ask = side == Side::SELL;
+      MBPUpdate mbp_update{
+          .price = price,
+          .quantity = quantity,
+          .implied_quantity = NaN,
+          .price_level = {},
+          .number_of_orders = {},
+      };
+      roq::span<MBPUpdate> bid_or_ask{&mbp_update, 1}, empty;
+      MarketByPriceUpdate market_by_price_update{
+          .stream_id = stream_id_,
+          .exchange = Flags::exchange(),
+          .symbol = symbol,
+          .bids = is_bid ? bid_or_ask : empty,
+          .asks = is_ask ? bid_or_ask : empty,
+          .snapshot = false,
+          .exchange_time_utc = data.timestamp,
+      };
+      server::create_trace_and_dispatch(trace_info, market_by_price_update, handler_, true, false);
     }
   });
 }
