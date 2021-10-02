@@ -108,7 +108,7 @@
       "name": "ws_max_subscriptions_per_stream",
       "type": "uint32_t",
       "validator": "roq::core::flags::NonZero<uint32_t>",
-      "default": 128,
+      "default": 32,
       "description": "max symbols per connection (count)"
     },
     {
@@ -116,19 +116,6 @@
       "type": "bool",
       "default": false,
       "description": "subscribe ticker v2? (bool)"
-    },
-    {
-      "name": "ws_subscribe_depth_levels",
-      "type": "uint32_t",
-      "default": 20,
-      "description": "depth levels (count)"
-    },
-    {
-      "name": "ws_subscribe_depth_freq",
-      "type": "std::chrono::nanoseconds",
-      "validator": "roq::core::flags::TimePeriod",
-      "default": "100ms",
-      "description": "depth update frequency"
     },
     {
       "name": "ws_mbp_request_delay",

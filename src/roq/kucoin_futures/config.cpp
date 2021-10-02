@@ -65,7 +65,7 @@ void Config::dispatch(server::Config::Handler &handler) const {
           SupportType::CANCEL_ORDER,
           SupportType::ORDER_ACK,
           SupportType::FUNDS},
-      .mbp_max_depth = Flags::ws_subscribe_depth_levels(),
+      .mbp_max_depth = {},
       .mbp_tick_size_multiplier = NaN,
       .mbp_min_trade_vol_multiplier = NaN,
       .mbp_allow_remove_non_existing = {},

@@ -15,7 +15,7 @@ struct Collector final {
   std::chrono::nanoseconds created = {};
   bool ready = false;
   std::vector<std::pair<int64_t, std::string>> history;
-  int32_t retries = {};
+  uint32_t retries = {};
 };
 
 }  // namespace kucoin_futures

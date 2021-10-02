@@ -1,12 +1,13 @@
-symbols = ".*"
+#symbols = ".*"
+symbols = ".*USDM"
 
 [accounts]
 
   [accounts.A1]
   master = true
-  login = "YOUR_KUCOIN_API_KEY_GOES_HERE"
-  password = "YOUR_KUCOIN_PASSPHRASE_GOES_HERE"
-  secret = "YOUR_KUCOIN_SECRET_GOES_HERE"
+  login = "YOUR_KUCOIN_FUTURES_API_KEY_GOES_HERE"
+  password = "YOUR_KUCOIN_FUTURES_PASSPHRASE_GOES_HERE"
+  secret = "YOUR_KUCOIN_FUTURES_SECRET_GOES_HERE"
   symbols = ".*"
 
 [users]
@@ -14,7 +15,7 @@ symbols = ".*"
   [users.trader]
   password = "secret"
   accounts = [ "A1" ]
-  symbols = [ "BTCUSDT" ]
+  symbols = [ "XBTUSDM" ]
 
 [rate_limits]
 

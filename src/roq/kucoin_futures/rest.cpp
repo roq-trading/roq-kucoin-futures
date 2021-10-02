@@ -407,14 +407,14 @@ void Rest::operator()(const json::Contracts &contracts) {
 
 void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   auto &[trace_info, order_book] = event;
-  log::debug("order_book={}"_sv, order_book);
+  log::debug("event={{trace_info={}, order_book={}}}"_sv, trace_info, order_book);
   auto &data = order_book.data;
   auto sequence = data.sequence;
   auto &symbol = data.symbol;
   auto &collector = shared_.mbp_collector[symbol];
   auto &history = collector.history;
   if (history.empty()) {
-    log::fatal("Unexpected"_sv);
+    log::fatal(R"(Unexpected: symbol="{}")"_sv, symbol);
   }
   // we need the next sequence number to be available
   if ((sequence + 1) < history.front().first) {
@@ -450,7 +450,6 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
             if (sequence != expected)
               log::fatal("Wrong sequence: expected={}, got={}"_sv, expected, sequence);
             auto [side, price, quantity] = tools::split(change);
-            log::debug("{},{} => {},{},{}"_sv, sequence, change, side, price, quantity);
             market_by_price(side, price, quantity);
           }
         });

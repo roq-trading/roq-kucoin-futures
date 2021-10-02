@@ -40,17 +40,6 @@ struct create_metrics final : public core::metrics::Factory {
   explicit create_metrics(const std::string_view &group, const std::string_view &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
-
-template <typename T>
-void emplace(MBPUpdate &result, const T &value) {
-  new (&result) MBPUpdate{
-      .price = value.price,
-      .quantity = value.qty,
-      .implied_quantity = NaN,
-      .price_level = {},
-      .number_of_orders = {},
-  };
-}
 }  // namespace
 
 MarketData::MarketData(
@@ -300,7 +289,6 @@ void MarketData::send_ping(std::chrono::nanoseconds now) {
 void MarketData::parse(const std::string_view &message) {
   profile_.parse([&]() {
     try {
-      log::debug(R"(message="{}")"_sv, message);
       server::TraceInfo trace_info;
       core::json::Buffer buffer(decode_buffer_);
       json::Parser::dispatch(*this, message, buffer, trace_info);
@@ -370,38 +358,21 @@ void MarketData::operator()(server::Trace<json::TickerV2> const &event) {
     auto &[trace_info, ticker_v2] = event;
     log::info<4>("event={{trace_info={}, ticker_v2={}}}"_sv, trace_info, ticker_v2);
     auto &data = ticker_v2.data;
-    auto symbol = json::strip_symbol_from_topic(ticker_v2.topic);
+    auto symbol = data.symbol;
     const TopOfBook top_of_book{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
         .symbol = symbol,
         .layer{
-            .bid_price = data.best_bid,
+            .bid_price = data.best_bid_price,
             .bid_quantity = data.best_bid_size,
-            .ask_price = data.best_ask,
+            .ask_price = data.best_ask_price,
             .ask_quantity = data.best_ask_size,
         },
         .snapshot = false,
-        .exchange_time_utc = utils::safe_cast(data.time),
+        .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
-    if (std::isnan(data.price) == false && std::isnan(data.size) == false) {
-      // note! what is this? accumulation of all done trades?
-      Trade trade{
-          .side = Side::UNDEFINED,
-          .price = data.price,
-          .quantity = data.size,
-          .trade_id = {},
-      };
-      const TradeSummary trade_summary{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .trades = {&trade, 1},
-          .exchange_time_utc = utils::safe_cast(data.time),
-      };
-      server::create_trace_and_dispatch(trace_info, trade_summary, handler_, true);
-    }
   });
 }
 
@@ -498,20 +469,8 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
         collector.created = now;
         request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
-      /*
-            if (ROQ_UNLIKELY(collector.history.empty())) {
-              log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
-              const RequestL2Snapshot request{
-                  .stream_id = stream_id_,
-                  .symbol = symbol,
-              };
-              handler_(request);
-            }
-            */
-      log::debug("COLLECT: {}"_sv, data.change);
       collector.history.emplace_back(data.sequence, data.change);
     } else {
-      log::debug("PUBLISH: {}"_sv, data.change);
       auto [side, price, quantity] = tools::split(data.change);
       auto is_bid = side == Side::BUY;
       auto is_ask = side == Side::SELL;
