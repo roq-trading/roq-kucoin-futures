@@ -84,6 +84,17 @@ class OrderEntry final : public core::web::Client::Handler {
 
   uint32_t download(OrderEntryState state);
 
+  void create_order_ack(
+      const core::web::Response &, const uint8_t user_id, const uint32_t order_id);
+
+  void cancel_order_ack(
+      const core::web::Response &,
+      const uint8_t user_id,
+      const uint32_t order_id,
+      const uint32_t version);
+
+  void cancel_all_orders_ack(const core::web::Response &);
+
  private:
   Handler &handler_;
   // config
@@ -98,7 +109,9 @@ class OrderEntry final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile private_token;
+    core::metrics::Profile private_token,               //
+        create_order, cancel_order, cancel_all_orders,  //
+        create_order_ack, cancel_order_ack, cancel_all_orders_ack;
   } profile_;
   struct {
     core::metrics::Latency ping;

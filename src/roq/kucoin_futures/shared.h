@@ -4,6 +4,9 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <string>
+#include <utility>
+
 #include "roq/api.h"
 #include "roq/server.h"
 

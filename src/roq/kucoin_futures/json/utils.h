@@ -78,6 +78,18 @@ inline roq::Side map(json::Side value) {
   return {};
 }
 
+inline json::Side map(roq::Side value) {
+  switch (value) {
+    case roq::Side::UNDEFINED:
+      break;
+    case roq::Side::BUY:
+      return json::Side::BUY;
+    case roq::Side::SELL:
+      return json::Side::SELL;
+  }
+  return {};
+}
+
 }  // namespace json
 }  // namespace kucoin_futures
 }  // namespace roq
