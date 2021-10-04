@@ -1,6 +1,6 @@
-#symbols = ".*"
+symbols = ".*"
 #symbols=".*USDM"
-symbols="XBTUSDM"
+#symbols = "YGGUSDTM"
 
 [accounts]
 

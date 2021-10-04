@@ -16,6 +16,7 @@ struct Collector final {
   bool ready = false;
   std::vector<std::pair<int64_t, std::string>> history;
   uint32_t retries = {};
+  int64_t last_sequence = {};
 };
 
 }  // namespace kucoin_futures

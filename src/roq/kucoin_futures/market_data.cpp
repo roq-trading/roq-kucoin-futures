@@ -463,14 +463,20 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
     auto &collector = shared_.mbp_collector[symbol];
+    if (ROQ_UNLIKELY(collector.last_sequence && data.sequence != (collector.last_sequence + 1))) {
+      log::fatal("HERE level2={}"_sv, level2);
+    }
+    collector.last_sequence = data.sequence;
     if (ROQ_UNLIKELY(!collector.ready)) {
       if (ROQ_UNLIKELY(!collector.created.count())) {
         auto now = trace_info.source_receive_time;
         collector.created = now;
         request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
+      log::debug("COLLECT level2={}"_sv, level2);
       collector.history.emplace_back(data.sequence, data.change);
     } else {
+      log::debug("PUBLISH level2={}"_sv, level2);
       auto [side, price, quantity] = tools::split(data.change);
       auto is_bid = side == Side::BUY;
       auto is_ask = side == Side::SELL;

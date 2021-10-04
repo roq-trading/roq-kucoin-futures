@@ -178,7 +178,7 @@ void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
             server::TraceInfo trace_info;
             response.expect(core::http::Status::OK);
             auto body = response.body();
-            log::debug(R"(body="{}")"_sv, body);
+            // log::debug(R"(body="{}")"_sv, body);
             core::json::Buffer buffer(decode_buffer_);
             auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
             server::create_trace_and_dispatch(trace_info, order_book, *this);
@@ -414,7 +414,8 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   auto &collector = shared_.mbp_collector[symbol];
   auto &history = collector.history;
   if (history.empty()) {
-    log::fatal(R"(Unexpected: symbol="{}")"_sv, symbol);
+    // note! probably disconnected
+    return;
   }
   // we need the next sequence number to be available
   if ((sequence + 1) < history.front().first) {

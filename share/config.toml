@@ -1,5 +1,4 @@
-#symbols = ".*"
-symbols = ".*USDM"
+symbols = ".*"
 
 [accounts]
 
