@@ -282,7 +282,7 @@ void MarketData::send_ping(std::chrono::nanoseconds now) {
   assert(ping_frequency_.count() > 0);
   next_ping_ = now + ping_frequency_ / 2;
   auto message = fmt::format(R"({{"id":{},"type":"ping"}})"_sv, now.count());
-  log::debug(R"(message="{}")"_sv, message);
+  log::debug<1>(R"(message="{}")"_sv, message);
   connection_.send_text(message);
 }
 
@@ -473,10 +473,10 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
         collector.created = now;
         request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
-      log::debug("COLLECT level2={}"_sv, level2);
+      log::debug<1>("COLLECT level2={}"_sv, level2);
       collector.history.emplace_back(data.sequence, data.change);
     } else {
-      log::debug("PUBLISH level2={}"_sv, level2);
+      log::debug<1>("PUBLISH level2={}"_sv, level2);
       auto [side, price, quantity] = tools::split(data.change);
       auto is_bid = side == Side::BUY;
       auto is_ask = side == Side::SELL;
@@ -497,7 +497,19 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
           .snapshot = false,
           .exchange_time_utc = data.timestamp,
       };
-      server::create_trace_and_dispatch(trace_info, market_by_price_update, handler_, true, false);
+      try {
+        server::create_trace_and_dispatch(
+            trace_info, market_by_price_update, handler_, true, false);
+      } catch (market::BadState &) {
+        log::warn<0>("*** RESUBSCRIBE ***"_sv);
+        log::info<0>(R"(Resubscribing symbol="{}")"_sv, symbol);
+        assert(collector.history.empty());
+        collector = {};
+        collector.history.emplace_back(data.sequence, data.change);
+        collector.last_sequence = data.sequence;
+        auto now = trace_info.source_receive_time;
+        request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+      }
     }
   });
 }
