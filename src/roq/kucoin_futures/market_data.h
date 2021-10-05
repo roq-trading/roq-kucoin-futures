@@ -72,6 +72,7 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
 
   void update_subscriptions(std::vector<std::string> &symbols);
 
+  void check_subscribe_queue(std::chrono::nanoseconds now);
   void check_request_queue(std::chrono::nanoseconds now);
 
  protected:
@@ -145,8 +146,9 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   // experimental
-  absl::flat_hash_map<std::string, bool> order_book_ready_;
+  std::deque<std::pair<std::chrono::nanoseconds, std::string> > subscribe_queue_;
   std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue_;
+  absl::flat_hash_map<std::string, bool> order_book_ready_;
 };
 
 }  // namespace kucoin_futures

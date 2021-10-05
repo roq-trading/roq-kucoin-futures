@@ -20,6 +20,6 @@ $PREFIX ./roq-kucoin-futures \
 	--name "kucoin-futures" \
 	--config_file "$CONFIG_FILE" \
 	--client_listen_address $CWD/$NAME.sock \
-	--metrics_listen_address 1234 \
+	--metrics_listen_address 3456 \
 	--rest_uri "$REST_URI" \
 	$@

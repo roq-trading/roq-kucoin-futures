@@ -459,6 +459,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   }
 }
 
+// XXX HANS we need to count this towards the rate limiter
 void Rest::get_order_book_retry(const std::string_view &symbol) {
   auto &collector = shared_.mbp_collector[symbol];
   if (++collector.retries < Flags::ws_mbp_request_max_retries()) {

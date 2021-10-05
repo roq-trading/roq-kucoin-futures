@@ -4,6 +4,8 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <chrono>
+#include <deque>
 #include <string>
 #include <utility>
 
@@ -37,6 +39,17 @@ struct Shared final {
     return dispatcher_(std::forward<Args>(args)...);
   }
 
+  template <typename F>
+  bool can_request(std::chrono::nanoseconds now, F callback) {
+    auto result = can_request_helper(now);
+    if (result)
+      callback();
+    return result;
+  }
+
+ protected:
+  bool can_request_helper(std::chrono::nanoseconds now);
+
  public:
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
@@ -44,6 +57,9 @@ struct Shared final {
 
  private:
   server::Dispatcher &dispatcher_;
+
+  std::deque<std::chrono::nanoseconds> request_history_;
+  bool request_is_blocked_ = false;
 };
 
 }  // namespace kucoin_futures

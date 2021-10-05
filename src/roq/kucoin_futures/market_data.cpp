@@ -105,6 +105,7 @@ void MarketData::operator()(const Event<Timer> &event) {
     if (welcome_) {
       if (next_ping_ < now)
         send_ping(now);
+      check_subscribe_queue(now);
       check_request_queue(now);
     }
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
@@ -173,7 +174,7 @@ void MarketData::operator()(const core::web::Socket::Disconnected &) {
   logon_timeout_ = {};
   next_ping_ = {};
   // experimental
-  shared_.mbp_collector.clear();
+  shared_.mbp_collector.clear();  // XXX HANS this is SHARED !!!
 }
 
 void MarketData::operator()(const core::web::Socket::Ready &) {
@@ -256,7 +257,8 @@ void MarketData::subscribe(const std::string_view &topic) {
       now.count(),
       topic);
   log::debug("message={}"_sv, message);
-  connection_.send_text(message);
+  subscribe_queue_.emplace_back(now, message);
+  // connection_.send_text(message);
 }
 
 void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
@@ -274,7 +276,8 @@ void MarketData::subscribe(const std::string_view &topic, const roq::span<std::s
         topic,
         symbol);
     log::debug("message={}"_sv, message);
-    connection_.send_text(message);
+    subscribe_queue_.emplace_back(now, message);
+    // connection_.send_text(message);
   }
 }
 
@@ -309,10 +312,11 @@ void MarketData::operator()(server::Trace<json::Welcome> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Error> const &) {
+void MarketData::operator()(server::Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
-    // auto &[trace_info, error] = event;
+    auto &[trace_info, error] = event;
+    log::warn("error={}"_sv, error);
     // log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
   });
 }
@@ -573,18 +577,41 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
   });
 }
 
+void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
+  while (!subscribe_queue_.empty()) {
+    auto &tmp = subscribe_queue_.front();
+    if (now < tmp.first)
+      break;
+    if (shared_.can_request(now, [&]() {
+          auto &message = tmp.second;
+          log::debug(R"(Subscribe: "{}")"_sv, message);
+          connection_.send_text(message);
+          subscribe_queue_.pop_front();
+        })) {
+    } else {
+      return;
+    }
+  }
+}
+
 void MarketData::check_request_queue(std::chrono::nanoseconds now) {
   while (!request_queue_.empty()) {
-    auto &[request_time, symbol] = request_queue_.front();
-    if (now < request_time)
+    auto &tmp = request_queue_.front();
+    if (now < tmp.first)
       break;
-    log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
-    const RequestL2Snapshot request{
-        .stream_id = stream_id_,
-        .symbol = symbol,
-    };
-    handler_(request);
-    request_queue_.pop_front();
+    if (shared_.can_request(now, [&]() {
+          auto &symbol = tmp.second;
+          log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+          const RequestL2Snapshot request{
+              .stream_id = stream_id_,
+              .symbol = symbol,
+          };
+          handler_(request);
+          request_queue_.pop_front();
+        })) {
+    } else {
+      return;
+    }
   }
 }
 
