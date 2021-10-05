@@ -41,17 +41,18 @@ DropCopy::DropCopy(
     uint16_t stream_id,
     Security &security,
     Shared &shared,
-    const std::string_view &listen_key)
+    const std::string_view &uri,
+    std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
-      connection_(
-          *this,
-          context,
-          core::URI(Flags::ws_account_uri()),
-          create_query(listen_key),
-          Flags::ws_ping_freq(),
-          Flags::decode_buffer_size(),
-          Flags::encode_buffer_size(),
-          []() { return std::string(); }),
+      ping_frequency_(ping_frequency), connection_(
+                                           *this,
+                                           context,
+                                           core::URI{uri},
+                                           {},
+                                           Flags::ws_ping_freq(),
+                                           Flags::decode_buffer_size(),
+                                           Flags::encode_buffer_size(),
+                                           []() { return std::string(); }),
       decode_buffer_(Flags::decode_buffer_size()),
       counter_{
           .disconnect = create_metrics(name_, "disconnect"_sv),

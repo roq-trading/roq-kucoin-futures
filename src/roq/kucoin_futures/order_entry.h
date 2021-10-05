@@ -27,14 +27,19 @@
 #include "roq/kucoin_futures/security.h"
 #include "roq/kucoin_futures/shared.h"
 
+#include "roq/kucoin_futures/json/token.h"
+
 namespace roq {
 namespace kucoin_futures {
 
 class OrderEntry final : public core::web::Client::Handler {
  public:
   struct PrivateToken final {
+    std::string_view account;
     std::string_view token;
     std::string_view endpoint;
+    std::string_view uri;
+    std::chrono::nanoseconds ping_frequency = {};
   };
 
   struct Handler {
@@ -85,8 +90,8 @@ class OrderEntry final : public core::web::Client::Handler {
   uint32_t download(OrderEntryState state);
 
   void get_private_token();
-
   void get_private_token_ack(const core::web::Response &);
+  void operator()(const json::Token &);
 
   void create_order_ack(
       const core::web::Response &, const uint8_t user_id, const uint32_t order_id);

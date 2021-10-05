@@ -37,7 +37,8 @@ class DropCopy final : public core::web::Socket::Handler {
       uint16_t stream_id,
       Security &,
       Shared &,
-      const std::string_view &listen_key);
+      const std::string_view &uri,
+      std::chrono::nanoseconds ping_frequency);
 
   DropCopy(DropCopy &&) = delete;
   DropCopy(const DropCopy &) = delete;
@@ -72,6 +73,7 @@ class DropCopy final : public core::web::Socket::Handler {
   const std::string name_;
   // web socket
   core::web::Socket connection_;
+  const std::chrono::nanoseconds ping_frequency_;
   // buffers
   core::Buffer decode_buffer_;
   // metrics

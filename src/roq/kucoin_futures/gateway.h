@@ -98,7 +98,7 @@ class Gateway final : public server::Handler,
   // websocket uri's
   std::string public_ws_uri_;
   std::chrono::nanoseconds public_ws_ping_frequency_;
-  std::string private_ws_uri_;
+  std::string private_ws_uri_;  // XXX HANS this is BY ACCOUNT !!!
 };
 
 }  // namespace kucoin_futures

@@ -158,7 +158,7 @@ void Gateway::operator()(const server::Trace<FundsUpdate> &event, bool is_last) 
 void Gateway::operator()(Rest::PublicToken const &public_token) {
   public_ws_uri_ = public_token.uri;
   public_ws_ping_frequency_ = public_token.ping_frequency;
-  // note! could create first market data here, but this message will always arrive first
+  // note! could create first MarketData here, but this message will always arrive first
 }
 
 void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
@@ -189,6 +189,22 @@ void Gateway::operator()(MarketData::RequestL2Snapshot const &request) {
 }
 
 void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
+  auto account = private_token.account;
+  auto &drop_copy = drop_copy_[account];
+  if (!drop_copy) {
+    auto tmp = std::make_unique<DropCopy>(
+        *this,
+        context_,
+        ++stream_id_,
+        *security_[account],
+        shared_,
+        private_token.uri,
+        private_token.ping_frequency);
+    MessageInfo message_info;  // XXX something sensible
+    Start start;
+    create_event_and_dispatch(*tmp, message_info, start);
+    drop_copy = std::move(tmp);
+  }
 }
 
 uint16_t Gateway::operator()(const Event<CreateOrder> &event, const std::string_view &request_id) {

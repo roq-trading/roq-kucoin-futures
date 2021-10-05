@@ -11,7 +11,6 @@
 
 #include "roq/kucoin_futures/flags.h"
 
-#include "roq/kucoin_futures/json/token.h"
 #include "roq/kucoin_futures/json/utils.h"
 
 using namespace roq::literals;
@@ -335,6 +334,7 @@ void OrderEntry::get_private_token_ack(const core::web::Response &response) {
     auto token = core::json::Parser::create<json::Token>(body, buffer);
     if (utils::compare(token.code, "200000"_sv) == 0) {
       log::info<1>("token={}"_sv, token);
+      (*this)(token);
     } else {
       log::warn("token={}"_sv, token);
       log::fatal("Unexpected"_sv);
@@ -344,6 +344,24 @@ void OrderEntry::get_private_token_ack(const core::web::Response &response) {
     log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
     download_.retry(OrderEntryState::PRIVATE_TOKEN);
   }
+}
+
+void OrderEntry::operator()(const json::Token &token) {
+  log::info<2>("token={}"_sv, token);
+  if (std::empty(token.data.instance_servers))
+    log::fatal("Unexpected: no instance servers"_sv);
+  auto &instance_server = token.data.instance_servers[0];
+  auto uri = fmt::format("{}?token={}"_sv, instance_server.endpoint, token.data.token);
+  PrivateToken const private_token{
+      .account = security_.get_account(),
+      .token = token.data.token,
+      .endpoint = instance_server.endpoint,
+      .uri = uri,
+      .ping_frequency = instance_server.ping_interval,
+  };
+  if (private_token.ping_frequency.count() == 0)
+    log::fatal("Unexpected: ping_interval={}"_sv, instance_server.ping_interval);
+  handler_(private_token);
 }
 
 void OrderEntry::create_order_ack(
