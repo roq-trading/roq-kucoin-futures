@@ -2,6 +2,7 @@
 "name": "OrderEntryState",
 "type": "enum",
 "values": [
+	{ "name": "private_token" },
 	{ "name": "done" }
 ]
 }

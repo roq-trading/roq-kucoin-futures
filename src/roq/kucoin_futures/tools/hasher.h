@@ -16,22 +16,31 @@ namespace tools {
 
 class Hasher final {
  public:
-  explicit Hasher(const std::string_view &secret);
+  Hasher(const std::string_view &secret, const std::string_view &passphrase);
 
   Hasher(Hasher &&) = delete;
   Hasher(const Hasher &) = delete;
 
-  std::string create_headers(
+  std::string create_headers_v1(
       core::http::Method,
       const std::string_view &path,
       const std::string_view &query,
       const std::string_view &body,
       const std::string_view &key,
-      const std::string_view &passphrase,
+      std::chrono::milliseconds now);
+
+  std::string create_headers_v2(
+      core::http::Method,
+      const std::string_view &path,
+      const std::string_view &query,
+      const std::string_view &body,
+      const std::string_view &key,
       std::chrono::milliseconds now);
 
  private:
-  core::crypto::HMAC_SHA512 hmac_;
+  core::crypto::HMAC_SHA256 hmac_;
+  const std::string passphrase_;
+  const std::string signed_passphrase_;
 };
 
 }  // namespace tools

@@ -11,6 +11,7 @@
 
 #include "roq/kucoin_futures/flags.h"
 
+#include "roq/kucoin_futures/json/token.h"
 #include "roq/kucoin_futures/json/utils.h"
 
 using namespace roq::literals;
@@ -63,6 +64,7 @@ OrderEntry::OrderEntry(
       },
       profile_{
           .private_token = create_metrics(name_, "private_token"_sv),
+          .private_token_ack = create_metrics(name_, "private_token_ack"_sv),
           .create_order = create_metrics(name_, "create_order"_sv),
           .cancel_order = create_metrics(name_, "cancel_order"_sv),
           .cancel_all_orders = create_metrics(name_, "cancel_all_orders"_sv),
@@ -95,6 +97,7 @@ void OrderEntry::operator()(metrics::Writer &writer) {
       .write(counter_.disconnect, metrics::COUNTER)
       // profile
       .write(profile_.private_token, metrics::PROFILE)
+      .write(profile_.private_token_ack, metrics::PROFILE)
       .write(profile_.create_order, metrics::PROFILE)
       .write(profile_.cancel_order, metrics::PROFILE)
       .write(profile_.cancel_all_orders, metrics::PROFILE)
@@ -289,12 +292,58 @@ uint32_t OrderEntry::download(OrderEntryState state) {
     case OrderEntryState::UNDEFINED:
       assert(false);
       break;
+    case OrderEntryState::PRIVATE_TOKEN:
+      get_private_token();
+      return 1;
     case OrderEntryState::DONE:
       (*this)(ConnectionStatus::READY);
       return {};
   }
   assert(false);
   return {};
+}
+
+void OrderEntry::get_private_token() {
+  profile_.private_token([&]() {
+    auto method = core::http::Method::POST;
+    auto path = "/api/v1/bullet-private"_sv;
+    auto headers = security_.create_signature_api_v1(method, path, {}, {});
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = headers,
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_(
+        "private_token", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+          profile_.private_token_ack([&]() { get_private_token_ack(response); });
+        });
+  });
+}
+
+void OrderEntry::get_private_token_ack(const core::web::Response &response) {
+  try {
+    response.expect(core::http::Status::OK);
+    auto body = response.body();
+    log::debug(R"(body="{}")"_sv, body);
+    core::json::Buffer buffer(decode_buffer_);
+    auto token = core::json::Parser::create<json::Token>(body, buffer);
+    if (utils::compare(token.code, "200000"_sv) == 0) {
+      log::info<1>("token={}"_sv, token);
+    } else {
+      log::warn("token={}"_sv, token);
+      log::fatal("Unexpected"_sv);
+    }
+    download_.check(OrderEntryState::PRIVATE_TOKEN);
+  } catch (core::NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+    download_.retry(OrderEntryState::PRIVATE_TOKEN);
+  }
 }
 
 void OrderEntry::create_order_ack(

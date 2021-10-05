@@ -8,6 +8,8 @@
 
 #include "roq/literals.h"
 
+#include "roq/logging.h"
+
 #include "roq/core/binascii/base64.h"
 
 #include "roq/core/crypto/sha.h"
@@ -20,27 +22,36 @@ namespace tools {
 
 namespace {
 static auto create_hmac(const std::string_view &secret) {
-  auto raw_secret = core::binascii::Base64::decode(secret, true);
-  return core::crypto::HMAC_SHA512(raw_secret);
+  return core::crypto::HMAC_SHA256(secret);
+}
+static auto create_signed_passphrase(
+    core::crypto::HMAC_SHA256 &hmac, const std::string_view &passphrase) {
+  hmac.clear();
+  hmac.update(passphrase);
+  std::array<char, 32> buffer;
+  auto length = hmac.digest(buffer);
+  assert(length == std::size(buffer));
+  return core::binascii::Base64::encode(buffer, false);
 }
 }  // namespace
 
-Hasher::Hasher(const std::string_view &secret) : hmac_(create_hmac(secret)) {
+Hasher::Hasher(const std::string_view &secret, const std::string_view &passphrase)
+    : hmac_(create_hmac(secret)), passphrase_(passphrase),
+      signed_passphrase_(create_signed_passphrase(hmac_, passphrase)) {
 }
 
-std::string Hasher::create_headers(
+std::string Hasher::create_headers_v1(
     core::http::Method method,
     const std::string_view &path,
     const std::string_view &query,
     const std::string_view &body,
     const std::string_view &key,
-    const std::string_view &passphrase,
     std::chrono::milliseconds timestamp) {
   assert(!path.empty());
   auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
-  std::array<char, 64> buffer;
+  std::array<char, 32> buffer;
   auto length = hmac_.digest(buffer);
   assert(length == std::size(buffer));
   auto signature = core::binascii::Base64::encode(buffer, false);
@@ -53,7 +64,35 @@ std::string Hasher::create_headers(
       key,
       signature,
       timestamp.count(),
-      passphrase);
+      passphrase_);
+  return result;
+}
+
+std::string Hasher::create_headers_v2(
+    core::http::Method method,
+    const std::string_view &path,
+    const std::string_view &query,
+    const std::string_view &body,
+    const std::string_view &key,
+    std::chrono::milliseconds timestamp) {
+  assert(!path.empty());
+  auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
+  hmac_.clear();
+  hmac_.update(tmp);
+  std::array<char, 32> buffer;
+  auto length = hmac_.digest(buffer);
+  assert(length == std::size(buffer));
+  auto signature = core::binascii::Base64::encode(buffer, false);
+  auto result = fmt::format(
+      "KC-API-KEY: {}\r\n"
+      "KC-API-SIGN: {}\r\n"
+      "KC-API-TIMESTAMP: {}\r\n"
+      "KC-API-PASSPHRASE: {}\r\n"
+      "KC-API-VERSION: 2\r\n"_sv,
+      key,
+      signature,
+      timestamp.count(),
+      signed_passphrase_);
   return result;
 }
 

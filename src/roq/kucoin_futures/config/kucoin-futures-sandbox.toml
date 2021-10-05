@@ -4,9 +4,9 @@ symbols = ".*"
 
   [accounts.A1]
   master = true
-  login = "_UwQLvb_YZtdY_W2uub4Ecax"
-  password = "XXX"
-  secret = "d1BmhI2QcgnzNzU8y9YZqYpCffYXKg-EXWujke56btbGRCSs"
+  login = "615c6357bc85c200065b02cd"
+  password = "roq1234"
+  secret = "c8af6554-d05f-4833-bb51-b26e685e2c0d"
   symbols = ".*"
 
 [users]

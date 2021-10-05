@@ -158,17 +158,7 @@ void Gateway::operator()(const server::Trace<FundsUpdate> &event, bool is_last) 
 void Gateway::operator()(Rest::PublicToken const &public_token) {
   public_ws_uri_ = public_token.uri;
   public_ws_ping_frequency_ = public_token.ping_frequency;
-  /*
-  if (std::empty(market_data_)) {
-    log::info("Create market-data (public-stream)"_sv);
-    auto market_data = std::make_unique<MarketData>(
-        *this, context_, ++stream_id_, shared_, public_ws_uri_, public_ws_ping_frequency_);
-    MessageInfo message_info;  // XXX something sensible
-    Start start;
-    create_event_and_dispatch(*market_data, message_info, start);
-    market_data_.emplace_back(std::move(market_data));
-  }
-  */
+  // note! could create first market data here, but this message will always arrive first
 }
 
 void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {

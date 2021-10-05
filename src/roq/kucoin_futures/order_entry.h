@@ -84,6 +84,10 @@ class OrderEntry final : public core::web::Client::Handler {
 
   uint32_t download(OrderEntryState state);
 
+  void get_private_token();
+
+  void get_private_token_ack(const core::web::Response &);
+
   void create_order_ack(
       const core::web::Response &, const uint8_t user_id, const uint32_t order_id);
 
@@ -109,8 +113,8 @@ class OrderEntry final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile private_token,               //
-        create_order, cancel_order, cancel_all_orders,  //
+    core::metrics::Profile private_token, private_token_ack,  //
+        create_order, cancel_order, cancel_all_orders,        //
         create_order_ack, cancel_order_ack, cancel_all_orders_ack;
   } profile_;
   struct {
