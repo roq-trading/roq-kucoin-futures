@@ -5,6 +5,8 @@ set(SOURCES parser.cpp)
 include(RoqAutogen)
 
 set(AUTOGEN_SCHEMAS
+    account.json
+    account_data.json
     ack.json
     contract.json
     contracts.json
@@ -29,6 +31,8 @@ set(AUTOGEN_SCHEMAS
     order_book_data.json
     order_book_data_item.json
     pong.json
+    position.json
+    positions.json
     side.json
     snapshot24h.json
     snapshot24h_data.json

@@ -1,3 +1,7 @@
+account.h
+account.cpp
+account_data.h
+account_data.cpp
 ack.h
 ack.cpp
 contract.h
@@ -46,6 +50,10 @@ order_book_data_item.h
 order_book_data_item.cpp
 pong.h
 pong.cpp
+position.h
+position.cpp
+positions.h
+positions.cpp
 side.h
 side.cpp
 snapshot24h.h

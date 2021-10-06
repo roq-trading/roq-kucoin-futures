@@ -64,6 +64,10 @@ OrderEntry::OrderEntry(
       profile_{
           .private_token = create_metrics(name_, "private_token"_sv),
           .private_token_ack = create_metrics(name_, "private_token_ack"_sv),
+          .account = create_metrics(name_, "account"_sv),
+          .account_ack = create_metrics(name_, "account_ack"_sv),
+          .positions = create_metrics(name_, "positions"_sv),
+          .positions_ack = create_metrics(name_, "positions_ack"_sv),
           .create_order = create_metrics(name_, "create_order"_sv),
           .cancel_order = create_metrics(name_, "cancel_order"_sv),
           .cancel_all_orders = create_metrics(name_, "cancel_all_orders"_sv),
@@ -97,6 +101,10 @@ void OrderEntry::operator()(metrics::Writer &writer) {
       // profile
       .write(profile_.private_token, metrics::PROFILE)
       .write(profile_.private_token_ack, metrics::PROFILE)
+      .write(profile_.account, metrics::PROFILE)
+      .write(profile_.account_ack, metrics::PROFILE)
+      .write(profile_.positions, metrics::PROFILE)
+      .write(profile_.positions_ack, metrics::PROFILE)
       .write(profile_.create_order, metrics::PROFILE)
       .write(profile_.cancel_order, metrics::PROFILE)
       .write(profile_.cancel_all_orders, metrics::PROFILE)
@@ -294,6 +302,20 @@ uint32_t OrderEntry::download(OrderEntryState state) {
     case OrderEntryState::PRIVATE_TOKEN:
       get_private_token();
       return 1;
+    case OrderEntryState::ACCOUNT:
+      get_account();
+      return 1;
+    case OrderEntryState::POSITIONS:
+      get_positions();
+      return 1;
+    case OrderEntryState::ORDERS:
+      // get_orders();
+      // return 1;
+      return {};
+    case OrderEntryState::FILLS:
+      // get_fills();
+      // return 1;
+      return {};
     case OrderEntryState::DONE:
       (*this)(ConnectionStatus::READY);
       return {};
@@ -302,11 +324,13 @@ uint32_t OrderEntry::download(OrderEntryState state) {
   return {};
 }
 
+// private token
+
 void OrderEntry::get_private_token() {
   profile_.private_token([&]() {
     auto method = core::http::Method::POST;
     auto path = "/api/v1/bullet-private"_sv;
-    auto headers = security_.create_signature_api_v1(method, path, {}, {});
+    auto headers = security_.create_signature_api_v2(method, path, {}, {});
     core::web::Request request{
         .method = method,
         .path = path,
@@ -363,6 +387,118 @@ void OrderEntry::operator()(const json::Token &token) {
     log::fatal("Unexpected: ping_interval={}"_sv, instance_server.ping_interval);
   handler_(private_token);
 }
+
+// account
+
+void OrderEntry::get_account() {
+  profile_.account([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/account-overview"_sv;
+    auto headers = security_.create_signature_api_v2(method, path, {}, {});
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = headers,
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_("account", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      profile_.account_ack([&]() { get_account_ack(response); });
+    });
+  });
+}
+
+void OrderEntry::get_account_ack(const core::web::Response &response) {
+  try {
+    auto category = core::http::to_category(response.raw_status());
+    switch (category) {
+      case core::http::Category::SUCCESS:  // 2xx
+        break;
+      case core::http::Category::CLIENT_ERROR:  // 4xx
+        log::fatal("{}"_sv, response.body());
+        break;
+      default:
+        response.expect(core::http::Status::OK);  // throws
+    }
+    response.expect(core::http::Status::OK);
+    auto body = response.body();
+    log::debug(R"(body="{}")"_sv, body);
+    core::json::Buffer buffer(decode_buffer_);
+    auto account = core::json::Parser::create<json::Account>(body, buffer);
+    log::debug("account={}"_sv, account);
+    if (utils::compare(account.code, "200000"_sv) == 0) {
+      log::info<1>("account={}"_sv, account);
+      (*this)(account);
+    } else {
+      log::warn("account={}"_sv, account);
+      log::fatal("Unexpected"_sv);
+    }
+    download_.check(OrderEntryState::ACCOUNT);
+  } catch (core::NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+    download_.retry(OrderEntryState::ACCOUNT);
+  }
+}
+
+void OrderEntry::operator()(const json::Account &account) {
+  log::info<2>("account={}"_sv, account);
+}
+
+// positions
+
+void OrderEntry::get_positions() {
+  profile_.positions([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/positions"_sv;
+    auto headers = security_.create_signature_api_v2(method, path, {}, {});
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = headers,
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_("positions", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      profile_.positions_ack([&]() { get_positions_ack(response); });
+    });
+  });
+}
+
+void OrderEntry::get_positions_ack(const core::web::Response &response) {
+  try {
+    response.expect(core::http::Status::OK);
+    auto body = response.body();
+    log::debug(R"(body="{}")"_sv, body);
+    core::json::Buffer buffer(decode_buffer_);
+    auto positions = core::json::Parser::create<json::Positions>(body, buffer);
+    log::debug("positions={}"_sv, positions);
+    if (utils::compare(positions.code, "200000"_sv) == 0) {
+      log::info<1>("positions={}"_sv, positions);
+      (*this)(positions);
+    } else {
+      log::warn("positions={}"_sv, positions);
+      log::fatal("Unexpected"_sv);
+    }
+    download_.check(OrderEntryState::POSITIONS);
+  } catch (core::NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+    download_.retry(OrderEntryState::POSITIONS);
+  }
+}
+
+void OrderEntry::operator()(const json::Positions &positions) {
+  log::info<2>("positions={}"_sv, positions);
+}
+
+// create-order
 
 void OrderEntry::create_order_ack(
     const core::web::Response &response, const uint8_t user_id, const uint32_t order_id) {

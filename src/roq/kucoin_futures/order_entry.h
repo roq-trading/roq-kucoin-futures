@@ -27,6 +27,8 @@
 #include "roq/kucoin_futures/security.h"
 #include "roq/kucoin_futures/shared.h"
 
+#include "roq/kucoin_futures/json/account.h"
+#include "roq/kucoin_futures/json/positions.h"
 #include "roq/kucoin_futures/json/token.h"
 
 namespace roq {
@@ -93,6 +95,14 @@ class OrderEntry final : public core::web::Client::Handler {
   void get_private_token_ack(const core::web::Response &);
   void operator()(const json::Token &);
 
+  void get_account();
+  void get_account_ack(const core::web::Response &);
+  void operator()(const json::Account &);
+
+  void get_positions();
+  void get_positions_ack(const core::web::Response &);
+  void operator()(const json::Positions &);
+
   void create_order_ack(
       const core::web::Response &, const uint8_t user_id, const uint32_t order_id);
 
@@ -119,6 +129,8 @@ class OrderEntry final : public core::web::Client::Handler {
   } counter_;
   struct {
     core::metrics::Profile private_token, private_token_ack,  //
+        account, account_ack,                                 //
+        positions, positions_ack,                             //
         create_order, cancel_order, cancel_all_orders,        //
         create_order_ack, cancel_order_ack, cancel_all_orders_ack;
   } profile_;
