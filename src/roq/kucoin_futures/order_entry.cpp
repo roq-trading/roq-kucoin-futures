@@ -400,7 +400,7 @@ void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = core::http::Method::GET;
     auto path = "/api/v1/account-overview"_sv;
-    auto headers = security_.create_signature_api_v2(method, path, {}, {});
+    auto headers = security_.create_signature_api_v1(method, path, {}, {});
     core::web::Request request{
         .method = method,
         .path = path,
