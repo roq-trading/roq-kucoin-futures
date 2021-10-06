@@ -28,6 +28,8 @@
 #include "roq/kucoin_futures/shared.h"
 
 #include "roq/kucoin_futures/json/account.h"
+#include "roq/kucoin_futures/json/fills.h"
+#include "roq/kucoin_futures/json/orders.h"
 #include "roq/kucoin_futures/json/positions.h"
 #include "roq/kucoin_futures/json/token.h"
 
@@ -103,6 +105,14 @@ class OrderEntry final : public core::web::Client::Handler {
   void get_positions_ack(const core::web::Response &);
   void operator()(const json::Positions &);
 
+  void get_orders();
+  void get_orders_ack(const core::web::Response &);
+  void operator()(const json::Orders &);
+
+  void get_fills();
+  void get_fills_ack(const core::web::Response &);
+  void operator()(const json::Fills &);
+
   void create_order_ack(
       const core::web::Response &, const uint8_t user_id, const uint32_t order_id);
 
@@ -131,6 +141,8 @@ class OrderEntry final : public core::web::Client::Handler {
     core::metrics::Profile private_token, private_token_ack,  //
         account, account_ack,                                 //
         positions, positions_ack,                             //
+        orders, orders_ack,                                   //
+        fills, fills_ack,                                     //
         create_order, cancel_order, cancel_all_orders,        //
         create_order_ack, cancel_order_ack, cancel_all_orders_ack;
   } profile_;

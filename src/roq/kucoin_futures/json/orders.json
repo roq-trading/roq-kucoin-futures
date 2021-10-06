@@ -1,0 +1,8 @@
+{
+"name": "Orders",
+"type": "comp",
+"values": [
+	{ "name": "code", "type": "std::string_view" },
+	{ "name": "data", "type": "OrdersData" }
+]
+}

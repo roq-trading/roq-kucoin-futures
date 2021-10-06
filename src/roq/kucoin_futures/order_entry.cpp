@@ -68,6 +68,10 @@ OrderEntry::OrderEntry(
           .account_ack = create_metrics(name_, "account_ack"_sv),
           .positions = create_metrics(name_, "positions"_sv),
           .positions_ack = create_metrics(name_, "positions_ack"_sv),
+          .orders = create_metrics(name_, "orders"_sv),
+          .orders_ack = create_metrics(name_, "orders_ack"_sv),
+          .fills = create_metrics(name_, "fills"_sv),
+          .fills_ack = create_metrics(name_, "fills_ack"_sv),
           .create_order = create_metrics(name_, "create_order"_sv),
           .cancel_order = create_metrics(name_, "cancel_order"_sv),
           .cancel_all_orders = create_metrics(name_, "cancel_all_orders"_sv),
@@ -105,6 +109,10 @@ void OrderEntry::operator()(metrics::Writer &writer) {
       .write(profile_.account_ack, metrics::PROFILE)
       .write(profile_.positions, metrics::PROFILE)
       .write(profile_.positions_ack, metrics::PROFILE)
+      .write(profile_.orders, metrics::PROFILE)
+      .write(profile_.orders_ack, metrics::PROFILE)
+      .write(profile_.fills, metrics::PROFILE)
+      .write(profile_.fills_ack, metrics::PROFILE)
       .write(profile_.create_order, metrics::PROFILE)
       .write(profile_.cancel_order, metrics::PROFILE)
       .write(profile_.cancel_all_orders, metrics::PROFILE)
@@ -309,12 +317,12 @@ uint32_t OrderEntry::download(OrderEntryState state) {
       get_positions();
       return 1;
     case OrderEntryState::ORDERS:
-      // get_orders();
-      // return 1;
+      get_orders();
+      return 1;
       return {};
     case OrderEntryState::FILLS:
-      // get_fills();
-      // return 1;
+      get_fills();
+      return 1;
       return {};
     case OrderEntryState::DONE:
       (*this)(ConnectionStatus::READY);
@@ -496,6 +504,107 @@ void OrderEntry::get_positions_ack(const core::web::Response &response) {
 
 void OrderEntry::operator()(const json::Positions &positions) {
   log::info<2>("positions={}"_sv, positions);
+}
+
+// orders
+
+void OrderEntry::get_orders() {
+  profile_.orders([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/orders"_sv;
+    auto query = "?status=active"_sv;
+    auto headers = security_.create_signature_api_v2(method, path, query, {});
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = query,
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = headers,
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_("orders", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      profile_.orders_ack([&]() { get_orders_ack(response); });
+    });
+  });
+}
+
+void OrderEntry::get_orders_ack(const core::web::Response &response) {
+  try {
+    response.expect(core::http::Status::OK);
+    auto body = response.body();
+    log::debug(R"(body="{}")"_sv, body);
+    core::json::Buffer buffer(decode_buffer_);
+    auto orders = core::json::Parser::create<json::Orders>(body, buffer);
+    log::debug("orders={}"_sv, orders);
+    if (utils::compare(orders.code, "200000"_sv) == 0) {
+      log::info<1>("orders={}"_sv, orders);
+      (*this)(orders);
+    } else {
+      log::warn("orders={}"_sv, orders);
+      log::fatal("Unexpected"_sv);
+    }
+    download_.check(OrderEntryState::ORDERS);
+  } catch (core::NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+    download_.retry(OrderEntryState::ORDERS);
+  }
+}
+
+void OrderEntry::operator()(const json::Orders &orders) {
+  log::info<2>("orders={}"_sv, orders);
+}
+
+// fills
+
+void OrderEntry::get_fills() {
+  profile_.fills([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/fills"_sv;
+    auto headers = security_.create_signature_api_v2(method, path, {}, {});
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = headers,
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_("fills", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      profile_.fills_ack([&]() { get_fills_ack(response); });
+    });
+  });
+}
+
+void OrderEntry::get_fills_ack(const core::web::Response &response) {
+  try {
+    response.expect(core::http::Status::OK);
+    auto body = response.body();
+    log::debug(R"(body="{}")"_sv, body);
+    core::json::Buffer buffer(decode_buffer_);
+    auto fills = core::json::Parser::create<json::Positions>(body, buffer);
+    log::debug("fills={}"_sv, fills);
+    if (utils::compare(fills.code, "200000"_sv) == 0) {
+      log::info<1>("fills={}"_sv, fills);
+      (*this)(fills);
+    } else {
+      log::warn("fills={}"_sv, fills);
+      log::fatal("Unexpected"_sv);
+    }
+    download_.check(OrderEntryState::POSITIONS);
+  } catch (core::NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+    download_.retry(OrderEntryState::POSITIONS);
+  }
+}
+
+void OrderEntry::operator()(const json::Fills &fills) {
+  log::info<2>("fills={}"_sv, fills);
 }
 
 // create-order

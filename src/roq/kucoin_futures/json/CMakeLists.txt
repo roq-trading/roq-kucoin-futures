@@ -12,6 +12,9 @@ set(AUTOGEN_SCHEMAS
     contracts.json
     error.json
     fair_method.json
+    fills.json
+    fills_data.json
+    fills_data_item.json
     funding_begin.json
     funding_begin_data.json
     funding_end.json
@@ -30,6 +33,9 @@ set(AUTOGEN_SCHEMAS
     order_book.json
     order_book_data.json
     order_book_data_item.json
+    orders.json
+    orders_data.json
+    orders_data_item.json
     pong.json
     position.json
     positions.json

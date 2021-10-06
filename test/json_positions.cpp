@@ -1,0 +1,97 @@
+/* Copyright (c) 2017-2021, Hans Erik Thrane */
+
+#include <gtest/gtest.h>
+
+#include <cmath>
+
+#include "roq/core/datetime.h"
+
+#include "roq/core/json/parser.h"
+
+#include "roq/kucoin_futures/json/positions.h"
+
+using namespace roq;
+using namespace roq::kucoin_futures;
+
+TEST(json_positions, simple) {
+  const auto message = R"({)"
+                       R"("code":"200000",)"
+                       R"("data":[{)"
+                       R"("id":"615d67c7fa1b4f000638dd66",)"
+                       R"("symbol":"XBTUSDTM",)"
+                       R"("autoDeposit":false,)"
+                       R"("maintMarginReq":0.005,)"
+                       R"("riskLimit":200,)"
+                       R"("realLeverage":0.00,)"
+                       R"("crossMode":false,)"
+                       R"("delevPercentage":0.0,)"
+                       R"("currentTimestamp":1633511367833,)"
+                       R"("currentQty":0,)"
+                       R"("currentCost":0.00000000,)"
+                       R"("currentComm":0.00000000,)"
+                       R"("unrealisedCost":0.00000000,)"
+                       R"("realisedGrossCost":0.00000000,)"
+                       R"("realisedCost":0.00000000,)"
+                       R"("isOpen":false,)"
+                       R"("markPrice":50664.85,)"
+                       R"("markValue":0.00000000,)"
+                       R"("posCost":0.00000000,)"
+                       R"("posCross":0,)"
+                       R"("posInit":0.00000000,)"
+                       R"("posComm":0.00000000,)"
+                       R"("posLoss":0.00000000,)"
+                       R"("posMargin":0.00000000,)"
+                       R"("posMaint":0.00000000,)"
+                       R"("maintMargin":0.00000000,)"
+                       R"("realisedGrossPnl":0.00000000,)"
+                       R"("realisedPnl":0.00000000,)"
+                       R"("unrealisedPnl":0.00000000,)"
+                       R"("unrealisedPnlPcnt":0,)"
+                       R"("unrealisedRoePcnt":0,)"
+                       R"("avgEntryPrice":0.00,)"
+                       R"("liquidationPrice":0.00,)"
+                       R"("bankruptPrice":0.00,)"
+                       R"("settleCurrency":"USDT")"
+                       R"(},{)"
+                       R"("id":"615d67c71b8efa0006eecd0e",)"
+                       R"("symbol":"XBTUSDM",)"
+                       R"("autoDeposit":false,)"
+                       R"("maintMarginReq":0.005,)"
+                       R"("riskLimit":200,)"
+                       R"("realLeverage":0.00,)"
+                       R"("crossMode":false,)"
+                       R"("delevPercentage":0.0,)"
+                       R"("currentTimestamp":1633511367864,)"
+                       R"("currentQty":0,)"
+                       R"("currentCost":0.00000000,)"
+                       R"("currentComm":0.00000000,)"
+                       R"("unrealisedCost":0.00000000,)"
+                       R"("realisedGrossCost":0.00000000,)"
+                       R"("realisedCost":0.00000000,)"
+                       R"("isOpen":false,)"
+                       R"("markPrice":32421.3400000000,)"
+                       R"("markValue":0.00000000,)"
+                       R"("posCost":0.00000000,)"
+                       R"("posCross":0,)"
+                       R"("posInit":0.00000000,)"
+                       R"("posComm":0.00000000,)"
+                       R"("posLoss":0.00000000,)"
+                       R"("posMargin":0.00000000,)"
+                       R"("posMaint":0.00000000,)"
+                       R"("maintMargin":0.00000000,)"
+                       R"("realisedGrossPnl":0.00000000,)"
+                       R"("realisedPnl":0.00000000,)"
+                       R"("unrealisedPnl":0.00000000,)"
+                       R"("unrealisedPnlPcnt":0,)"
+                       R"("unrealisedRoePcnt":0,)"
+                       R"("avgEntryPrice":0.00,)"
+                       R"("liquidationPrice":0.00,)"
+                       R"("bankruptPrice":0.00,)"
+                       R"("settleCurrency":"XBT")"
+                       R"(})"
+                       R"(])"
+                       R"(})";
+  core::Buffer buffer(8192);
+  core::json::Buffer buffer_(buffer);
+  auto obj = core::json::Parser::create<json::Positions>(message, buffer_);
+}

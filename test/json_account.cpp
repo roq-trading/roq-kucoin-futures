@@ -13,8 +13,8 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
-TEST(json_position_item_item, unlisted) {
-  const auto message = R"({")"
+TEST(json_account, simple) {
+  const auto message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
                        R"("accountEquity":0.00000000,)"

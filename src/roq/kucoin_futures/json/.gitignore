@@ -12,6 +12,12 @@ error.h
 error.cpp
 fair_method.h
 fair_method.cpp
+fills.h
+fills.cpp
+fills_data.h
+fills_data.cpp
+fills_data_item.h
+fills_data_item.cpp
 funding_begin.h
 funding_begin.cpp
 funding_begin_data.h
@@ -48,6 +54,12 @@ order_book_data.h
 order_book_data.cpp
 order_book_data_item.h
 order_book_data_item.cpp
+orders.h
+orders.cpp
+orders_data.h
+orders_data.cpp
+orders_data_item.h
+orders_data_item.cpp
 pong.h
 pong.cpp
 position.h
