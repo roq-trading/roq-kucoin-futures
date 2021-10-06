@@ -54,6 +54,10 @@ DropCopy::DropCopy(
       },
       profile_{
           .parse = create_metrics(name_, "parse"_sv),
+          .welcome = create_metrics(name_, "welcome"_sv),
+          .error = create_metrics(name_, "error"_sv),
+          .pong = create_metrics(name_, "pong"_sv),
+          .ack = create_metrics(name_, "ack"_sv),
       },
       latency_{
           .ping = create_metrics(name_, "ping"_sv),
@@ -76,7 +80,18 @@ void DropCopy::operator()(const Event<Stop> &) {
 }
 
 void DropCopy::operator()(const Event<Timer> &event) {
-  connection_.refresh(event.value.now);
+  auto now = event.value.now;
+  connection_.refresh(now);
+  if (connection_.ready()) {
+    if (welcome_) {
+      if (next_ping_ < now)
+        send_ping(now);
+    }
+  } else if (logon_timeout_.count() && logon_timeout_ < now) {
+    assert(!welcome_);
+    log::warn("Did not receive the welcome message, disconnecting now..."_sv);
+    connection_.close();
+  }
 }
 
 void DropCopy::operator()(metrics::Writer &writer) {
@@ -85,12 +100,19 @@ void DropCopy::operator()(metrics::Writer &writer) {
       .write(counter_.disconnect, metrics::COUNTER)
       // profile
       .write(profile_.parse, metrics::PROFILE)
+      .write(profile_.welcome, metrics::PROFILE)
+      .write(profile_.error, metrics::PROFILE)
+      .write(profile_.pong, metrics::PROFILE)
+      .write(profile_.ack, metrics::PROFILE)
       // latency
       .write(latency_.ping, metrics::LATENCY)
       .write(latency_.heartbeat, metrics::LATENCY);
 }
 
 void DropCopy::operator()(const core::web::Socket::Connected &) {
+  assert(logon_timeout_.count() == 0);
+  auto now = core::get_system_clock();
+  logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
 void DropCopy::operator()(const core::web::Socket::Disconnected &) {
@@ -98,6 +120,9 @@ void DropCopy::operator()(const core::web::Socket::Disconnected &) {
   ready_ = false;
   (*this)(ConnectionStatus::DISCONNECTED);
   download_.reset();
+  welcome_ = false;
+  logon_timeout_ = {};
+  next_ping_ = {};
 }
 
 void DropCopy::operator()(const core::web::Socket::Ready &) {
@@ -177,6 +202,14 @@ void DropCopy::subscribe(const std::string_view &topic) {
   connection_.send_text(message);
 }
 
+void DropCopy::send_ping(std::chrono::nanoseconds now) {
+  assert(ping_frequency_.count() > 0);
+  next_ping_ = now + ping_frequency_ / 2;
+  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"_sv, now.count());
+  log::debug<1>(R"(message="{}")"_sv, message);
+  connection_.send_text(message);
+}
+
 void DropCopy::parse(const std::string_view &message) {
   profile_.parse([&]() {
     try {
@@ -190,16 +223,37 @@ void DropCopy::parse(const std::string_view &message) {
   });
 }
 
-void DropCopy::operator()(server::Trace<json::Welcome> const &) {
+void DropCopy::operator()(server::Trace<json::Welcome> const &event) {
+  profile_.welcome([&]() {
+    auto &[trace_info, welcome] = event;
+    log::info<1>("event={{trace_info={}, welcome={}}}"_sv, trace_info, welcome);
+    welcome_ = true;
+    (*this)(ConnectionStatus::DOWNLOADING);
+    download_.begin();
+  });
 }
 
-void DropCopy::operator()(server::Trace<json::Error> const &) {
+void DropCopy::operator()(server::Trace<json::Error> const &event) {
+  profile_.error([&]() {
+    // XXX HANS DEBUG
+    auto &[trace_info, error] = event;
+    log::warn("error={}"_sv, error);
+    // log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
+  });
 }
 
-void DropCopy::operator()(server::Trace<json::Pong> const &) {
+void DropCopy::operator()(server::Trace<json::Pong> const &event) {
+  profile_.pong([&]() {
+    auto &[trace_info, pong] = event;
+    log::info<4>("event={{trace_info={}, pong={}}}"_sv, trace_info, pong);
+  });
 }
 
-void DropCopy::operator()(server::Trace<json::Ack> const &) {
+void DropCopy::operator()(server::Trace<json::Ack> const &event) {
+  profile_.ack([&]() {
+    auto &[trace_info, ack] = event;
+    log::info<2>("event={{trace_info={}, ack={}}}"_sv, trace_info, ack);
+  });
 }
 
 void DropCopy::operator()(server::Trace<json::Ticker> const &) {

@@ -70,6 +70,8 @@ class DropCopy final : public core::web::Socket::Handler, public json::Parser::H
 
   void subscribe(const std::string_view &topic);
 
+  void send_ping(std::chrono::nanoseconds now);
+
   void parse(const std::string_view &message);
 
   void operator()(server::Trace<json::Welcome> const &) override;
@@ -109,7 +111,8 @@ class DropCopy final : public core::web::Socket::Handler, public json::Parser::H
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile parse;
+    core::metrics::Profile parse,  //
+        welcome, error, pong, ack;
   } profile_;
   struct {
     core::metrics::Latency ping, heartbeat;
@@ -119,10 +122,12 @@ class DropCopy final : public core::web::Socket::Handler, public json::Parser::H
   // cache
   Shared &shared_;
   // state
-  // state
+  bool welcome_ = false;
   bool ready_ = false;
   ConnectionStatus status_ = {};
   server::Download<DropCopyState> download_;
+  std::chrono::nanoseconds logon_timeout_ = {};
+  std::chrono::nanoseconds next_ping_ = {};
 };
 
 }  // namespace kucoin_futures
