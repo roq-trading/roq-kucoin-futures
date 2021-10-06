@@ -319,11 +319,9 @@ uint32_t OrderEntry::download(OrderEntryState state) {
     case OrderEntryState::ORDERS:
       get_orders();
       return 1;
-      return {};
     case OrderEntryState::FILLS:
       get_fills();
       return 1;
-      return {};
     case OrderEntryState::DONE:
       (*this)(ConnectionStatus::READY);
       return {};
@@ -587,7 +585,7 @@ void OrderEntry::get_fills_ack(const core::web::Response &response) {
     auto body = response.body();
     log::debug(R"(body="{}")"_sv, body);
     core::json::Buffer buffer(decode_buffer_);
-    auto fills = core::json::Parser::create<json::Positions>(body, buffer);
+    auto fills = core::json::Parser::create<json::Fills>(body, buffer);
     log::debug("fills={}"_sv, fills);
     if (utils::compare(fills.code, "200000"_sv) == 0) {
       log::info<1>("fills={}"_sv, fills);
@@ -596,10 +594,10 @@ void OrderEntry::get_fills_ack(const core::web::Response &response) {
       log::warn("fills={}"_sv, fills);
       log::fatal("Unexpected"_sv);
     }
-    download_.check(OrderEntryState::POSITIONS);
+    download_.check(OrderEntryState::FILLS);
   } catch (core::NetworkError &e) {
     log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::POSITIONS);
+    download_.retry(OrderEntryState::FILLS);
   }
 }
 
