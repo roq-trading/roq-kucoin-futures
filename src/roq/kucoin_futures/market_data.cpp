@@ -577,6 +577,24 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
   });
 }
 
+void MarketData::operator()(server::Trace<json::OrderChange> const &) {
+}
+
+void MarketData::operator()(server::Trace<json::OrderMarginChange> const &) {
+}
+
+void MarketData::operator()(server::Trace<json::AvailableBalanceChange> const &) {
+}
+
+void MarketData::operator()(server::Trace<json::WithdrawHoldChange> const &) {
+}
+
+void MarketData::operator()(server::Trace<json::PositionChange> const &) {
+}
+
+void MarketData::operator()(server::Trace<json::PositionSettlement> const &) {
+}
+
 void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
   while (!subscribe_queue_.empty()) {
     auto &tmp = subscribe_queue_.front();

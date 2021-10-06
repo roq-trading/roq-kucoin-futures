@@ -112,6 +112,13 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   void operator()(server::Trace<json::FundingEnd> const &) override;
   void operator()(server::Trace<json::Snapshot24h> const &) override;
 
+  void operator()(server::Trace<json::OrderChange> const &) override;
+  void operator()(server::Trace<json::OrderMarginChange> const &) override;
+  void operator()(server::Trace<json::AvailableBalanceChange> const &) override;
+  void operator()(server::Trace<json::WithdrawHoldChange> const &) override;
+  void operator()(server::Trace<json::PositionChange> const &) override;
+  void operator()(server::Trace<json::PositionSettlement> const &) override;
+
  private:
   Handler &handler_;
   // config

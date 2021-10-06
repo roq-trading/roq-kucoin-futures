@@ -1,0 +1,13 @@
+{
+"name": "PositionSettlementData",
+"type": "comp",
+"values": [
+	{ "name": "fundingTime", "type": "std::chrono::milliseconds" },
+	{ "name": "qty", "type": "double" },
+	{ "name": "markPrice", "type": "double" },
+	{ "name": "fundingRate", "type": "double" },
+	{ "name": "fundingFee", "type": "double" },
+	{ "name": "ts", "type": "std::chrono::nanoseconds" },
+	{ "name": "settleCurrency", "type": "std::string_view" }
+]
+}

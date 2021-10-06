@@ -20,10 +20,12 @@
 #include "roq/kucoin_futures/security.h"
 #include "roq/kucoin_futures/shared.h"
 
+#include "roq/kucoin_futures/json/parser.h"
+
 namespace roq {
 namespace kucoin_futures {
 
-class DropCopy final : public core::web::Socket::Handler {
+class DropCopy final : public core::web::Socket::Handler, public json::Parser::Handler {
  public:
   struct Handler {
     virtual void operator()(const server::Trace<StreamStatus> &) = 0;
@@ -64,7 +66,33 @@ class DropCopy final : public core::web::Socket::Handler {
 
   uint32_t download(DropCopyState);
 
+  void subscribe();
+
+  void subscribe(const std::string_view &topic);
+
   void parse(const std::string_view &message);
+
+  void operator()(server::Trace<json::Welcome> const &) override;
+  void operator()(server::Trace<json::Error> const &) override;
+  void operator()(server::Trace<json::Pong> const &) override;
+  void operator()(server::Trace<json::Ack> const &) override;
+
+  void operator()(server::Trace<json::Ticker> const &) override;
+  void operator()(server::Trace<json::TickerV2> const &) override;
+  void operator()(server::Trace<json::Match> const &) override;
+  void operator()(server::Trace<json::MarkIndexPrice> const &) override;
+  void operator()(server::Trace<json::FundingRate> const &) override;
+  void operator()(server::Trace<json::Level2> const &) override;
+  void operator()(server::Trace<json::FundingBegin> const &) override;
+  void operator()(server::Trace<json::FundingEnd> const &) override;
+  void operator()(server::Trace<json::Snapshot24h> const &) override;
+
+  void operator()(server::Trace<json::OrderChange> const &) override;
+  void operator()(server::Trace<json::OrderMarginChange> const &) override;
+  void operator()(server::Trace<json::AvailableBalanceChange> const &) override;
+  void operator()(server::Trace<json::WithdrawHoldChange> const &) override;
+  void operator()(server::Trace<json::PositionChange> const &) override;
+  void operator()(server::Trace<json::PositionSettlement> const &) override;
 
  private:
   Handler &handler_;

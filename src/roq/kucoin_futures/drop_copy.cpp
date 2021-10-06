@@ -24,11 +24,6 @@ static const auto SUPPORTS = utils::Mask{
     SupportType::FUNDS,
 };
 
-static auto create_query(const std::string_view &listen_key) {
-  assert(!listen_key.empty());
-  return fmt::format("?streams={}"_sv, listen_key);
-}
-
 struct create_metrics final : public core::metrics::Factory {
   explicit create_metrics(const std::string_view &group, const std::string_view &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
@@ -44,16 +39,16 @@ DropCopy::DropCopy(
     const std::string_view &uri,
     std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
-      ping_frequency_(ping_frequency), connection_(
-                                           *this,
-                                           context,
-                                           core::URI{uri},
-                                           {},
-                                           Flags::ws_ping_freq(),
-                                           Flags::decode_buffer_size(),
-                                           Flags::encode_buffer_size(),
-                                           []() { return std::string(); }),
-      decode_buffer_(Flags::decode_buffer_size()),
+      connection_(
+          *this,
+          context,
+          core::URI{uri},
+          {},
+          Flags::ws_ping_freq(),
+          Flags::decode_buffer_size(),
+          Flags::encode_buffer_size(),
+          []() { return std::string(); }),
+      ping_frequency_(ping_frequency), decode_buffer_(Flags::decode_buffer_size()),
       counter_{
           .disconnect = create_metrics(name_, "disconnect"_sv),
       },
@@ -148,15 +143,38 @@ uint32_t DropCopy::download(DropCopyState state) {
     case DropCopyState::UNDEFINED:
       assert(false);
       break;
+    case DropCopyState::SUBSCRIBE:
+      subscribe();
+      return {};
     case DropCopyState::DONE:
       (*this)(ConnectionStatus::READY);
       assert(!ready_);
       ready_ = true;
-      // subscribe(symbols_);
       return {};
   }
   assert(false);
   return {};
+}
+
+void DropCopy::subscribe() {
+  subscribe("/contractAccount/wallet"_sv);
+  subscribe("/contractMarket/tradeOrders"_sv);
+  subscribe("/contract/position"_sv);  // XXX HANS maybe need symbol
+}
+
+void DropCopy::subscribe(const std::string_view &topic) {
+  auto now = core::get_system_clock();
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":"{}",)"
+      R"("type":"subscribe",)"
+      R"("topic":"{}",)"
+      R"("response":true)"
+      R"(}})"_sv,
+      now.count(),
+      topic);
+  log::debug("message={}"_sv, message);
+  connection_.send_text(message);
 }
 
 void DropCopy::parse(const std::string_view &message) {
@@ -164,12 +182,69 @@ void DropCopy::parse(const std::string_view &message) {
     try {
       server::TraceInfo trace_info;
       core::json::Buffer buffer(decode_buffer_);
-      // json::UserStreamParser::dispatch(*this, message, buffer, trace_info);
+      json::Parser::dispatch(*this, message, buffer, trace_info);
     } catch (...) {
       log::warn(R"(message="{}")"_sv, message);
       core::tools::UnhandledException::terminate();
     }
   });
+}
+
+void DropCopy::operator()(server::Trace<json::Welcome> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Error> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Pong> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Ack> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Ticker> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::TickerV2> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Match> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::MarkIndexPrice> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::FundingRate> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Level2> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::FundingBegin> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::FundingEnd> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::Snapshot24h> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::OrderChange> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::OrderMarginChange> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::AvailableBalanceChange> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::WithdrawHoldChange> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::PositionChange> const &) {
+}
+
+void DropCopy::operator()(server::Trace<json::PositionSettlement> const &) {
 }
 
 }  // namespace kucoin_futures

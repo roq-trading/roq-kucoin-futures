@@ -23,7 +23,59 @@ bool Parser::dispatch(
   switch (message_.type) {
     case json::Type::UNDEFINED:
     case json::Type::UNKNOWN:
-      log::fatal("Unexpected"_sv);
+      switch (message_.subject) {
+        case json::Subject::UNDEFINED:
+        case json::Subject::UNKNOWN:
+          log::fatal("Unexpected"_sv);
+          break;
+        case json::Subject::TICKER:
+        case json::Subject::TICKER_V2:
+        case json::Subject::MATCH:
+        case json::Subject::MARK_INDEX_PRICE:
+        case json::Subject::FUNDING_RATE:
+        case json::Subject::LEVEL2:
+        case json::Subject::FUNDING_BEGIN:
+        case json::Subject::FUNDING_END:
+        case json::Subject::SNAPSHOT_24H:
+        case json::Subject::ORDER_CHANGE:
+          log::fatal("Unexpected"_sv);
+          break;
+        case json::Subject::ORDER_MARGIN_CHANGE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::OrderMarginChange order_margin_change(root, buffer);
+          create_trace_and_dispatch(trace_info, order_margin_change, handler);
+          break;
+        }
+        case json::Subject::AVAILABLE_BALANCE_CHANGE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::AvailableBalanceChange available_balance_change(root, buffer);
+          create_trace_and_dispatch(trace_info, available_balance_change, handler);
+          break;
+        }
+        case json::Subject::WITHDRAW_HOLD_CHANGE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::WithdrawHoldChange withdraw_hold_change(root, buffer);
+          create_trace_and_dispatch(trace_info, withdraw_hold_change, handler);
+          break;
+        }
+        case json::Subject::POSITION_CHANGE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::PositionChange position_change(root, buffer);
+          create_trace_and_dispatch(trace_info, position_change, handler);
+          break;
+        }
+        case json::Subject::POSITION_SETTLEMENT: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::PositionSettlement position_settlement(root, buffer);
+          create_trace_and_dispatch(trace_info, position_settlement, handler);
+          break;
+        }
+      }
       break;
     case json::Type::WELCOME: {
       core::json::Parser parser(message);
@@ -122,6 +174,20 @@ bool Parser::dispatch(
           create_trace_and_dispatch(trace_info, snapshot_24h, handler);
           break;
         }
+        case json::Subject::ORDER_CHANGE: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          json::OrderChange order_change(root, buffer);
+          create_trace_and_dispatch(trace_info, order_change, handler);
+          break;
+        }
+        case json::Subject::ORDER_MARGIN_CHANGE:
+        case json::Subject::AVAILABLE_BALANCE_CHANGE:
+        case json::Subject::WITHDRAW_HOLD_CHANGE:
+        case json::Subject::POSITION_CHANGE:
+        case json::Subject::POSITION_SETTLEMENT:
+          log::fatal("Unexpected"_sv);
+          break;
       }
       break;
   }

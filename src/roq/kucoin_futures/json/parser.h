@@ -23,6 +23,13 @@
 #include "roq/kucoin_futures/json/ticker.h"
 #include "roq/kucoin_futures/json/ticker_v2.h"
 
+#include "roq/kucoin_futures/json/available_balance_change.h"
+#include "roq/kucoin_futures/json/order_change.h"
+#include "roq/kucoin_futures/json/order_margin_change.h"
+#include "roq/kucoin_futures/json/position_change.h"
+#include "roq/kucoin_futures/json/position_settlement.h"
+#include "roq/kucoin_futures/json/withdraw_hold_change.h"
+
 namespace roq {
 namespace kucoin_futures {
 namespace json {
@@ -43,6 +50,13 @@ struct Parser final {
     virtual void operator()(server::Trace<json::FundingBegin> const &) = 0;
     virtual void operator()(server::Trace<json::FundingEnd> const &) = 0;
     virtual void operator()(server::Trace<json::Snapshot24h> const &) = 0;
+
+    virtual void operator()(server::Trace<json::OrderChange> const &) = 0;
+    virtual void operator()(server::Trace<json::OrderMarginChange> const &) = 0;
+    virtual void operator()(server::Trace<json::AvailableBalanceChange> const &) = 0;
+    virtual void operator()(server::Trace<json::WithdrawHoldChange> const &) = 0;
+    virtual void operator()(server::Trace<json::PositionChange> const &) = 0;
+    virtual void operator()(server::Trace<json::PositionSettlement> const &) = 0;
   };
 
   static bool dispatch(
