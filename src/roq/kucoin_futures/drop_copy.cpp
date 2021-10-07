@@ -126,8 +126,7 @@ void DropCopy::operator()(const core::web::Socket::Disconnected &) {
 }
 
 void DropCopy::operator()(const core::web::Socket::Ready &) {
-  (*this)(ConnectionStatus::DOWNLOADING);
-  download_.begin();
+  // note! wait for welcome
 }
 
 void DropCopy::operator()(const core::web::Socket::Close &) {
