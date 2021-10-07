@@ -8,8 +8,6 @@
 
 #include "roq/literals.h"
 
-#include "roq/logging.h"
-
 #include "roq/core/binascii/base64.h"
 
 #include "roq/core/crypto/sha.h"

@@ -330,7 +330,7 @@ uint32_t OrderEntry::download(OrderEntryState state) {
   return {};
 }
 
-// private token
+// private-token
 
 void OrderEntry::get_private_token() {
   profile_.private_token([&]() {

@@ -78,8 +78,11 @@ Rest::Rest(
       },
       profile_{
           .public_token = create_metrics(name_, "public_token"_sv),
+          .public_token_ack = create_metrics(name_, "public_token_ack"_sv),
           .contracts = create_metrics(name_, "contracts"_sv),
+          .contracts_ack = create_metrics(name_, "contracts_ack"_sv),
           .order_book = create_metrics(name_, "order_book"_sv),
+          .order_book_ack = create_metrics(name_, "order_book_ack"_sv),
       },
       latency_{
           .ping = create_metrics(name_, "ping"_sv),
@@ -106,51 +109,13 @@ void Rest::operator()(metrics::Writer &writer) {
       .write(counter_.disconnect, metrics::COUNTER)
       // profile
       .write(profile_.public_token, metrics::PROFILE)
+      .write(profile_.public_token_ack, metrics::PROFILE)
       .write(profile_.contracts, metrics::PROFILE)
+      .write(profile_.contracts_ack, metrics::PROFILE)
       .write(profile_.order_book, metrics::PROFILE)
+      .write(profile_.order_book_ack, metrics::PROFILE)
       // latency
       .write(latency_.ping, metrics::LATENCY);
-}
-
-template <>
-void Rest::get(std::function<void(const core::Promise<json::Token> &)> &&callback) {
-  core::web::Request request{
-      .method = core::http::Method::POST,
-      .path = "/api/v1/bullet-public"_sv,
-      .query = {},
-      .accept = core::http::Accept::JSON,
-      .content_type = {},
-      .headers = {},
-      .body = {},
-      .quality_of_service = {},
-      .rate_limit_weight = 1,
-  };
-  connection_(
-      "public_token"_sv,
-      request,
-      [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.public_token([&]() {
-          try {
-            response.expect(core::http::Status::OK);
-            auto body = response.body();
-            log::debug(R"(body="{}")"_sv, body);
-            core::json::Buffer buffer(decode_buffer_);
-            auto token = core::json::Parser::create<json::Token>(body, buffer);
-            if (utils::compare(token.code, "200000"_sv) == 0) {
-              log::info<1>("token={}"_sv, token);
-              core::Promise<json::Token> promise(token);
-              callback(promise);
-            } else {
-              log::warn("token={}"_sv, token);
-              log::fatal("Unexpected"_sv);
-            }
-          } catch (core::NetworkError &e) {
-            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            core::Promise<json::Token> promise(std::current_exception());
-            callback(promise);
-          }
-        });
-      });
 }
 
 void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
@@ -206,49 +171,6 @@ void Rest::operator()(ConnectionStatus status) {
   }
 }
 
-template <>
-void Rest::get(std::function<void(const core::Promise<json::Contracts> &)> &&callback) {
-  auto method = core::http::Method::GET;
-  auto path = "/api/v1/contracts/active"_sv;
-  core::web::Request request{
-      .method = method,
-      .path = path,
-      .query = {},
-      .accept = core::http::Accept::JSON,
-      .content_type = {},
-      .headers = {},
-      .body = {},
-      .quality_of_service = {},
-      .rate_limit_weight = 1,
-  };
-  connection_(
-      "contracts"_sv,
-      request,
-      [this, callback{std::move(callback)}]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.contracts([&]() {
-          try {
-            response.expect(core::http::Status::OK);
-            auto body = response.body();
-            log::debug(R"(body="{}")"_sv, body);
-            core::json::Buffer buffer(decode_buffer_);
-            auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-            if (utils::compare(contracts.code, "200000"_sv) == 0) {
-              log::info<1>("contracts={}"_sv, contracts);
-              core::Promise<json::Contracts> promise(contracts);
-              callback(promise);
-            } else {
-              log::warn("contracts={}"_sv, contracts);
-              log::fatal("Unexpected"_sv);
-            }
-          } catch (core::NetworkError &e) {
-            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            core::Promise<json::Contracts> promise(std::current_exception());
-            callback(promise);
-          }
-        });
-      });
-}
-
 void Rest::operator()(const core::web::Client::Connected &) {
   if (download_.downloading()) {
     download_.bump();
@@ -281,10 +203,10 @@ uint32_t Rest::download(RestState state) {
       assert(false);
       break;
     case RestState::PUBLIC_TOKEN:
-      download_public_token();
+      get_public_token();
       return 1;
     case RestState::CONTRACTS:
-      download_contracts();
+      get_contracts();
       return 1;
     case RestState::DONE:
       (*this)(ConnectionStatus::READY);
@@ -294,32 +216,41 @@ uint32_t Rest::download(RestState state) {
   return {};
 }
 
-void Rest::download_public_token() {
-  constexpr auto state = RestState::PUBLIC_TOKEN;
-  auto sequence = download_.sequence();
-  get<json::Token>([this, sequence](auto &promise) {
-    try {
-      if (download_.skip(sequence, state))
-        return;
-      (*this)(promise.get());
-      download_.check(state);
-    } catch (core::NetworkError &) {
-      download_.retry(state);
-    }
+// public-token
+
+void Rest::get_public_token() {
+  profile_.public_token([&]() {
+    core::web::Request request{
+        .method = core::http::Method::POST,
+        .path = "/api/v1/bullet-public"_sv,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = {},
+        .headers = {},
+        .body = {},
+        .quality_of_service = {},
+        .rate_limit_weight = 1,
+    };
+    connection_(
+        "public_token"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+          get_public_token_ack(response);
+        });
   });
 }
 
-void Rest::download_contracts() {
-  constexpr auto state = RestState::CONTRACTS;
-  auto sequence = download_.sequence();
-  get<json::Contracts>([this, sequence](auto &promise) {
+void Rest::get_public_token_ack(const core::web::Response &response) {
+  profile_.public_token_ack([&]() {
     try {
-      if (download_.skip(sequence, state))
-        return;
-      (*this)(promise.get());
-      download_.check(state);
-    } catch (core::NetworkError &) {
-      download_.retry(state);
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto token = core::json::Parser::create<json::Token>(body, buffer);
+      (*this)(token);
+      download_.check(RestState::PUBLIC_TOKEN);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(RestState::PUBLIC_TOKEN);
     }
   });
 }
@@ -339,6 +270,46 @@ void Rest::operator()(const json::Token &token) {
   if (public_token.ping_frequency.count() == 0)
     log::fatal("Unexpected: ping_interval={}"_sv, instance_server.ping_interval);
   handler_(public_token);
+}
+
+// contracts
+
+void Rest::get_contracts() {
+  profile_.contracts([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/contracts/active"_sv;
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = {},
+        .headers = {},
+        .body = {},
+        .quality_of_service = {},
+        .rate_limit_weight = 1,
+    };
+    connection_("contracts"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      get_contracts_ack(response);
+    });
+  });
+}
+
+void Rest::get_contracts_ack(const core::web::Response &response) {
+  profile_.contracts_ack([&]() {
+    try {
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
+      (*this)(contracts);
+      download_.check(RestState::CONTRACTS);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(RestState::CONTRACTS);
+    }
+  });
 }
 
 void Rest::operator()(const json::Contracts &contracts) {
@@ -403,6 +374,50 @@ void Rest::operator()(const json::Contracts &contracts) {
     };
     server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
   }
+}
+
+// order-book
+
+void Rest::get_order_book(const std::string_view &symbol) {
+  profile_.order_book([&]() {
+    auto method = core::http::Method::GET;
+    auto path = "/api/v1/level2/snapshot"_sv;
+    auto query = fmt::format("?symbol={}"_sv, symbol);
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = query,
+        .accept = core::http::Accept::JSON,
+        .content_type = {},
+        .headers = {},
+        .body = {},
+        .quality_of_service = {},
+        .rate_limit_weight = 1,
+    };
+    connection_(
+        "order_book"_sv,
+        request,
+        [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
+          get_order_book_ack(symbol, response);
+        });
+  });
+}
+
+void Rest::get_order_book_ack(const std::string_view &symbol, const core::web::Response &response) {
+  profile_.order_book_ack([&]() {
+    try {
+      server::TraceInfo trace_info;
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      // log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
+      server::create_trace_and_dispatch(trace_info, order_book, *this);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      get_order_book_retry(symbol);
+    }
+  });
 }
 
 void Rest::operator()(server::Trace<json::OrderBook> const &event) {

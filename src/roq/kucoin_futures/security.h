@@ -2,12 +2,8 @@
 
 #pragma once
 
-#include <fmt/format.h>
-
-#include <chrono>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include "roq/core/http/method.h"
 
@@ -26,10 +22,6 @@ class Security final {
   Security(const Security &) = delete;
 
   std::string_view get_account() const { return account_; }
-
-  std::string_view get_api_key() const { return key_; }  // XXX HANS remove
-
-  // std::pair<std::string, std::string> create_signature(const std::chrono::nanoseconds &now);
 
   std::string create_signature_api_v1(
       core::http::Method,

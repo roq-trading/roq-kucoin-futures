@@ -2,15 +2,9 @@
 
 #include "roq/kucoin_futures/security.h"
 
-#include <cassert>
-
 #include "roq/utils/safe_cast.h"
 
 #include "roq/core/clock.h"
-
-#include "roq/core/binascii/hex.h"
-
-#include "roq/core/crypto/hmac.h"
 
 namespace roq {
 namespace kucoin_futures {

@@ -233,9 +233,9 @@ uint32_t MarketData::download(MarketDataState state) {
 }
 
 void MarketData::subscribe(const roq::span<std::string> &symbols) {
+  subscribe("/contract/announcement"_sv);  // XXX HANS ???
   if (std::empty(symbols))
     return;
-  subscribe("/contract/announcement"_sv);
   if (Flags::ws_subscribe_ticker_v2())
     subscribe("/contractMarket/tickerV2"_sv, symbols);
   else
@@ -258,7 +258,6 @@ void MarketData::subscribe(const std::string_view &topic) {
       topic);
   log::debug("message={}"_sv, message);
   subscribe_queue_.emplace_back(now, message);
-  // connection_.send_text(message);
 }
 
 void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
@@ -277,7 +276,6 @@ void MarketData::subscribe(const std::string_view &topic, const roq::span<std::s
         symbol);
     log::debug("message={}"_sv, message);
     subscribe_queue_.emplace_back(now, message);
-    // connection_.send_text(message);
   }
 }
 

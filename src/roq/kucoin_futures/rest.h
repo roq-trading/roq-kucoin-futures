@@ -83,16 +83,19 @@ class Rest final : public core::web::Client::Handler {
 
   void operator()(ConnectionStatus);
 
-  template <typename T>
-  void get(std::function<void(const core::Promise<T> &)> &&callback);
-
   uint32_t download(RestState);
 
-  void download_public_token();
-  void download_contracts();
-
+  void get_public_token();
+  void get_public_token_ack(const core::web::Response &);
   void operator()(json::Token const &);
+
+  void get_contracts();
+  void get_contracts_ack(const core::web::Response &);
   void operator()(json::Contracts const &);
+
+  void get_order_book(const std::string_view &symbol);
+  void get_order_book_ack(const std::string_view &symbol, const core::web::Response &);
+  void operator()(json::OrderBook const &);
 
   void get_order_book_retry(const std::string_view &symbol);
 
@@ -110,7 +113,10 @@ class Rest final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile public_token, contracts, order_book;
+    core::metrics::Profile  //
+        public_token,
+        public_token_ack,  //
+        contracts, contracts_ack, order_book, order_book_ack;
   } profile_;
   struct {
     core::metrics::Latency ping;
