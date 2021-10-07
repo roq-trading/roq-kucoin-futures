@@ -619,7 +619,6 @@ void MarketData::check_request_queue(std::chrono::nanoseconds now) {
           auto &symbol = tmp.second;
           log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
           const RequestL2Snapshot request{
-              .stream_id = stream_id_,
               .symbol = symbol,
           };
           handler_(request);

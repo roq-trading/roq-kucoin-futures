@@ -185,7 +185,7 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
 }
 
 void Gateway::operator()(MarketData::RequestL2Snapshot const &request) {
-  rest_.get_order_book(request.symbol, request.stream_id);
+  rest_.get_order_book(request.symbol);
 }
 
 void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {

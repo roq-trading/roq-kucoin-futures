@@ -118,43 +118,6 @@ void Rest::operator()(metrics::Writer &writer) {
       .write(latency_.ping, metrics::LATENCY);
 }
 
-void Rest::get_order_book(const std::string_view &symbol, uint16_t stream_id) {
-  auto method = core::http::Method::GET;
-  auto path = "/api/v1/level2/snapshot"_sv;
-  auto query = fmt::format("?symbol={}"_sv, symbol);
-  core::web::Request request{
-      .method = method,
-      .path = path,
-      .query = query,
-      .accept = core::http::Accept::JSON,
-      .content_type = {},
-      .headers = {},
-      .body = {},
-      .quality_of_service = {},
-      .rate_limit_weight = 1,
-  };
-  connection_(
-      "order_book"_sv,
-      request,
-      [this, symbol = std::string{symbol}, stream_id](
-          [[maybe_unused]] auto &request_id, auto &response) {
-        profile_.order_book([&]() {
-          try {
-            server::TraceInfo trace_info;
-            response.expect(core::http::Status::OK);
-            auto body = response.body();
-            // log::debug(R"(body="{}")"_sv, body);
-            core::json::Buffer buffer(decode_buffer_);
-            auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-            server::create_trace_and_dispatch(trace_info, order_book, *this);
-          } catch (core::NetworkError &e) {
-            log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-            get_order_book_retry(symbol);
-          }
-        });
-      });
-}
-
 void Rest::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
     server::TraceInfo trace_info;
@@ -412,7 +375,8 @@ void Rest::get_order_book_ack(const std::string_view &symbol, const core::web::R
       // log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-      server::create_trace_and_dispatch(trace_info, order_book, *this);
+      server::Trace event(trace_info, order_book);
+      (*this)(event);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
       get_order_book_retry(symbol);
@@ -479,7 +443,7 @@ void Rest::get_order_book_retry(const std::string_view &symbol) {
   auto &collector = shared_.mbp_collector[symbol];
   if (++collector.retries < Flags::ws_mbp_request_max_retries()) {
     log::warn(R"(Retrying order-book for symbol="{}")"_sv, symbol);
-    get_order_book(symbol, stream_id_);
+    get_order_book(symbol);
   } else {
     log::fatal("Reached max retries"_sv);
   }

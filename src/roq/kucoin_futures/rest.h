@@ -72,9 +72,7 @@ class Rest final : public core::web::Client::Handler {
 
   void operator()(metrics::Writer &);
 
-  void get_order_book(const std::string_view &symbol, uint16_t stream_id);
-
-  void operator()(server::Trace<json::OrderBook> const &);
+  void get_order_book(const std::string_view &symbol);
 
  protected:
   void operator()(const core::web::Client::Connected &) override;
@@ -93,9 +91,8 @@ class Rest final : public core::web::Client::Handler {
   void get_contracts_ack(const core::web::Response &);
   void operator()(json::Contracts const &);
 
-  void get_order_book(const std::string_view &symbol);
   void get_order_book_ack(const std::string_view &symbol, const core::web::Response &);
-  void operator()(json::OrderBook const &);
+  void operator()(server::Trace<json::OrderBook> const &);
 
   void get_order_book_retry(const std::string_view &symbol);
 

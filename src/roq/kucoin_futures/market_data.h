@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <absl/container/flat_hash_map.h>
-
 #include <deque>
 #include <string>
 #include <string_view>
@@ -32,7 +30,6 @@ namespace kucoin_futures {
 class MarketData final : public core::web::Socket::Handler, public json::Parser::Handler {
  public:
   struct RequestL2Snapshot final {
-    uint16_t stream_id = {};
     std::string_view symbol;
   };
 
@@ -155,7 +152,6 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   // experimental
   std::deque<std::pair<std::chrono::nanoseconds, std::string> > subscribe_queue_;
   std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue_;
-  absl::flat_hash_map<std::string, bool> order_book_ready_;
 };
 
 }  // namespace kucoin_futures
