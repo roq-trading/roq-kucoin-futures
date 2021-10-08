@@ -471,7 +471,7 @@ void OrderEntry::operator()(const json::Fills &fills) {
 // create-order
 
 uint16_t OrderEntry::operator()(
-    const Event<CreateOrder> &event, const std::string_view &request_id) {
+    const Event<CreateOrder> &event, const oms::Order &, const std::string_view &request_id) {
   profile_.create_order([&]() {
     if (!ready())
       throw oms::NotReadyException();
