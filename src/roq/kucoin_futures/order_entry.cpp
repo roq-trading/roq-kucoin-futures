@@ -73,10 +73,10 @@ OrderEntry::OrderEntry(
           .fills = create_metrics(name_, "fills"_sv),
           .fills_ack = create_metrics(name_, "fills_ack"_sv),
           .create_order = create_metrics(name_, "create_order"_sv),
-          .cancel_order = create_metrics(name_, "cancel_order"_sv),
-          .cancel_all_orders = create_metrics(name_, "cancel_all_orders"_sv),
           .create_order_ack = create_metrics(name_, "create_order_ack"_sv),
+          .cancel_order = create_metrics(name_, "cancel_order"_sv),
           .cancel_order_ack = create_metrics(name_, "cancel_order_ack"_sv),
+          .cancel_all_orders = create_metrics(name_, "cancel_all_orders"_sv),
           .cancel_all_orders_ack = create_metrics(name_, "cancel_all_orders_ack"_sv),
       },
       latency_{
@@ -114,150 +114,13 @@ void OrderEntry::operator()(metrics::Writer &writer) {
       .write(profile_.fills, metrics::PROFILE)
       .write(profile_.fills_ack, metrics::PROFILE)
       .write(profile_.create_order, metrics::PROFILE)
-      .write(profile_.cancel_order, metrics::PROFILE)
-      .write(profile_.cancel_all_orders, metrics::PROFILE)
       .write(profile_.create_order_ack, metrics::PROFILE)
+      .write(profile_.cancel_order, metrics::PROFILE)
       .write(profile_.cancel_order_ack, metrics::PROFILE)
+      .write(profile_.cancel_all_orders, metrics::PROFILE)
       .write(profile_.cancel_all_orders_ack, metrics::PROFILE)
       // latency
       .write(latency_.ping, metrics::LATENCY);
-}
-
-uint16_t OrderEntry::operator()(
-    const Event<CreateOrder> &event, const std::string_view &request_id) {
-  throw oms::NotSupportedException();
-  profile_.create_order([&]() {
-    if (!ready())
-      throw oms::NotReadyException();
-    auto &[message_info, create_order] = event;
-    auto method = core::http::Method::POST;
-    auto path = "/api/v1/orders"_sv;
-    auto side = json::map(create_order.side).as_raw_text();
-    auto type = "limit"_sv;  // limit or market
-    auto leverage = ""_sv;
-    auto remark = ""_sv;
-    auto reduce_only = create_order.execution_instruction == ExecutionInstruction::DO_NOT_INCREASE;
-    auto time_in_force = "GTC"_sv;  // GTC, IOC
-    // XXX use encode buffer
-    auto body = fmt::format(
-        R"({{)"
-        R"("clientOid":"{}",)"
-        R"("side":"{}",)"
-        R"("symbol":"{}",)"
-        R"("type":"{}",)"
-        R"("leverage":"{}",)"
-        R"("remark":"{}",)"
-        R"("reduceOnly":{},)"
-        R"("price":{},)"
-        R"("size":{},)"
-        R"("timeInForce":"{}")"
-        R"(}})"_sv,
-        request_id,
-        side,
-        create_order.symbol,
-        type,
-        leverage,
-        remark,
-        reduce_only,
-        create_order.price,
-        create_order.quantity,
-        time_in_force);
-    log::debug(R"(body="{}")"_sv, body);
-    core::web::Request request{
-        .method = method,
-        .path = path,
-        .query = {},
-        .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
-        .headers = {},
-        .body = body,
-        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
-    };
-    connection_(
-        request_id,
-        request,
-        [this, user_id = message_info.source, order_id = create_order.order_id](
-            [[maybe_unused]] auto &request_id, auto &response) {
-          profile_.create_order_ack([&]() { create_order_ack(response, user_id, order_id); });
-        });
-  });
-  return stream_id_;
-}
-
-uint16_t OrderEntry::operator()(
-    const Event<ModifyOrder> &,
-    const oms::Order &,
-    [[maybe_unused]] const std::string_view &request_id,
-    [[maybe_unused]] const std::string_view &previous_request_id) {
-  throw oms::NotSupportedException();
-}
-
-uint16_t OrderEntry::operator()(
-    const Event<CancelOrder> &event,
-    const oms::Order &order,
-    [[maybe_unused]] const std::string_view &request_id,
-    [[maybe_unused]] const std::string_view &previous_request_id) {
-  throw oms::NotSupportedException();
-  profile_.cancel_order([&]() {
-    if (!ready())
-      throw oms::NotReadyException();
-    auto &[message_info, cancel_order] = event;
-    auto method = core::http::Method::DELETE;
-    auto path = fmt::format("/api/v1/orders/{}"_sv, order.external_order_id);
-    core::web::Request request{
-        .method = method,
-        .path = path,
-        .query = {},
-        .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
-        .headers = {},
-        .body = {},
-        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
-    };
-    connection_(
-        request_id,
-        request,
-        [this,
-         user_id = message_info.source,
-         order_id = cancel_order.order_id,
-         version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
-          profile_.cancel_order_ack(
-              [&]() { cancel_order_ack(response, user_id, order_id, version); });
-        });
-  });
-  return stream_id_;
-}
-
-uint16_t OrderEntry::operator()(
-    const Event<CancelAllOrders> &event, [[maybe_unused]] const std::string_view &request_id) {
-  profile_.cancel_all_orders([&]() {
-    if (ready()) {
-      auto method = core::http::Method::DELETE;
-      auto path = "/api/v1/orders"_sv;
-      core::web::Request request{
-          .method = method,
-          .path = path,
-          .query = {},
-          .accept = core::http::Accept::JSON,
-          .content_type = core::http::ContentType::JSON,
-          .headers = {},
-          .body = {},
-          .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-          .rate_limit_weight = 1,
-      };
-      connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.cancel_all_orders_ack([&]() { cancel_all_orders_ack(response); });
-      });
-    } else {
-      auto &[message_info, cancel_all_orders] = event;
-      log::warn(
-          R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"_sv,
-          cancel_all_orders.account);
-    }
-  });
-  return stream_id_;
 }
 
 void OrderEntry::operator()(const core::web::Client::Connected &) {
@@ -607,6 +470,67 @@ void OrderEntry::operator()(const json::Fills &fills) {
 
 // create-order
 
+uint16_t OrderEntry::operator()(
+    const Event<CreateOrder> &event, const std::string_view &request_id) {
+  profile_.create_order([&]() {
+    if (!ready())
+      throw oms::NotReadyException();
+    auto &[message_info, create_order] = event;
+    auto method = core::http::Method::POST;
+    auto path = "/api/v1/orders"_sv;
+    auto side = json::map(create_order.side).as_raw_text();
+    auto type = "limit"_sv;  // limit or market
+    auto leverage = ""_sv;
+    auto remark = ""_sv;
+    auto reduce_only = create_order.execution_instruction == ExecutionInstruction::DO_NOT_INCREASE;
+    auto time_in_force = "GTC"_sv;  // GTC, IOC
+    // XXX use encode buffer
+    auto body = fmt::format(
+        R"({{)"
+        R"("clientOid":"{}",)"
+        R"("side":"{}",)"
+        R"("symbol":"{}",)"
+        R"("type":"{}",)"
+        R"("leverage":"{}",)"
+        R"("remark":"{}",)"
+        R"("reduceOnly":{},)"
+        R"("price":{},)"
+        R"("size":{},)"
+        R"("timeInForce":"{}")"
+        R"(}})"_sv,
+        request_id,
+        side,
+        create_order.symbol,
+        type,
+        leverage,
+        remark,
+        reduce_only,
+        create_order.price,
+        create_order.quantity,
+        time_in_force);
+    log::debug(R"(body="{}")"_sv, body);
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = {},
+        .body = body,
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_(
+        request_id,
+        request,
+        [this, user_id = message_info.source, order_id = create_order.order_id](
+            [[maybe_unused]] auto &request_id, auto &response) {
+          profile_.create_order_ack([&]() { create_order_ack(response, user_id, order_id); });
+        });
+  });
+  return stream_id_;
+}
+
 void OrderEntry::create_order_ack(
     const core::web::Response &response, const uint8_t user_id, const uint32_t order_id) {
   log::debug("user_id={}, order_id={}"_sv, user_id, order_id);
@@ -670,6 +594,54 @@ void OrderEntry::create_order_ack(
       log::warn("Did not find order: user_id={}, order_id={}"_sv, user_id, order_id);
     }
   }
+}
+
+// modify-order
+
+uint16_t OrderEntry::operator()(
+    const Event<ModifyOrder> &,
+    const oms::Order &,
+    [[maybe_unused]] const std::string_view &request_id,
+    [[maybe_unused]] const std::string_view &previous_request_id) {
+  throw oms::NotSupportedException();
+}
+
+// cancel-order
+
+uint16_t OrderEntry::operator()(
+    const Event<CancelOrder> &event,
+    const oms::Order &order,
+    [[maybe_unused]] const std::string_view &request_id,
+    [[maybe_unused]] const std::string_view &previous_request_id) {
+  profile_.cancel_order([&]() {
+    if (!ready())
+      throw oms::NotReadyException();
+    auto &[message_info, cancel_order] = event;
+    auto method = core::http::Method::DELETE;
+    auto path = fmt::format("/api/v1/orders/{}"_sv, order.external_order_id);
+    core::web::Request request{
+        .method = method,
+        .path = path,
+        .query = {},
+        .accept = core::http::Accept::JSON,
+        .content_type = core::http::ContentType::JSON,
+        .headers = {},
+        .body = {},
+        .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+        .rate_limit_weight = 1,
+    };
+    connection_(
+        request_id,
+        request,
+        [this,
+         user_id = message_info.source,
+         order_id = cancel_order.order_id,
+         version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
+          profile_.cancel_order_ack(
+              [&]() { cancel_order_ack(response, user_id, order_id, version); });
+        });
+  });
+  return stream_id_;
 }
 
 void OrderEntry::cancel_order_ack(
@@ -742,6 +714,38 @@ void OrderEntry::cancel_order_ack(
           "Did not find order: user_id={}, order_id={}, version={}"_sv, user_id, order_id, version);
     }
   }
+}
+
+// cancel-all-orders
+
+uint16_t OrderEntry::operator()(
+    const Event<CancelAllOrders> &event, [[maybe_unused]] const std::string_view &request_id) {
+  profile_.cancel_all_orders([&]() {
+    if (ready()) {
+      auto method = core::http::Method::DELETE;
+      auto path = "/api/v1/orders"_sv;
+      core::web::Request request{
+          .method = method,
+          .path = path,
+          .query = {},
+          .accept = core::http::Accept::JSON,
+          .content_type = core::http::ContentType::JSON,
+          .headers = {},
+          .body = {},
+          .quality_of_service = core::web::QualityOfService::IMMEDIATE,
+          .rate_limit_weight = 1,
+      };
+      connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+        profile_.cancel_all_orders_ack([&]() { cancel_all_orders_ack(response); });
+      });
+    } else {
+      auto &[message_info, cancel_all_orders] = event;
+      log::warn(
+          R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"_sv,
+          cancel_all_orders.account);
+    }
+  });
+  return stream_id_;
 }
 
 void OrderEntry::cancel_all_orders_ack(const core::web::Response &response) {

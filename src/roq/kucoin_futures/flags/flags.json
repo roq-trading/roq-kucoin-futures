@@ -84,13 +84,6 @@
       "description": "cancel orders on disconnect? (bool)"
     },
     {
-      "name": "ws_account_uri",
-      "type": "roq::core::URI",
-      "validator": "roq::core::flags::URI<std::string>",
-      "default": "wss://api.kucoin.pro/ws/v2",
-      "description": "WebSocket end-point (URI) for account and order"
-    },
-    {
       "name": "ws_ping_freq",
       "type": "std::chrono::nanoseconds",
       "validator": "roq::core::flags::TimePeriod",

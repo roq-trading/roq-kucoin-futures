@@ -88,8 +88,8 @@ class OrderEntry final : public core::web::Client::Handler {
 
   void operator()(ConnectionStatus);
 
-  template <typename T>
-  void get(std::function<void(const core::Promise<T> &)> &&);
+  // template <typename T>
+  // void get(std::function<void(const core::Promise<T> &)> &&);
 
   uint32_t download(OrderEntryState state);
 
@@ -138,13 +138,18 @@ class OrderEntry final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile private_token, private_token_ack,  //
-        account, account_ack,                                 //
-        positions, positions_ack,                             //
-        orders, orders_ack,                                   //
-        fills, fills_ack,                                     //
-        create_order, cancel_order, cancel_all_orders,        //
-        create_order_ack, cancel_order_ack, cancel_all_orders_ack;
+    core::metrics::Profile  //
+        private_token,
+        private_token_ack,         //
+        account, account_ack,      //
+        positions, positions_ack,  //
+        orders, orders_ack,        //
+        fills, fills_ack,          //
+        create_order,
+        create_order_ack,  //
+        cancel_order,
+        cancel_order_ack,  //
+        cancel_all_orders, cancel_all_orders_ack;
   } profile_;
   struct {
     core::metrics::Latency ping;
