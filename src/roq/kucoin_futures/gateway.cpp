@@ -59,11 +59,9 @@ static auto create_drop_copy(T &security) {
 Gateway::Gateway(server::Dispatcher &dispatcher, const Config &config)
     : dispatcher_(dispatcher), master_account_(config.get_master_account()),
       security_(create_security(config)), shared_(dispatcher),
-      rest_(*this, context_, ++stream_id_, *security_[master_account_], shared_),
+      rest_(*this, context_, ++stream_id_, shared_),
       order_entry_(create_order_entry(*this, context_, stream_id_, security_, shared_)),
       drop_copy_(create_drop_copy(security_)) {
-  if (ROQ_UNLIKELY(Flags::rest_cancel_on_disconnect()))
-    log::fatal("Exchange does *NOT* support cancel on disconnect"_sv);
 }
 
 void Gateway::operator()(const Event<Start> &event) {
@@ -156,7 +154,13 @@ void Gateway::operator()(const server::Trace<FundsUpdate> &event, bool is_last) 
 }
 
 void Gateway::operator()(Rest::PublicToken const &public_token) {
+  log::debug(
+      R"(uri="{}", query="{}", ping_frequency={})"_sv,
+      public_token.uri,
+      public_token.query,
+      public_token.ping_frequency);
   public_ws_uri_ = public_token.uri;
+  public_ws_query_ = public_token.query;
   public_ws_ping_frequency_ = public_token.ping_frequency;
   // note! could create first MarketData here, but this message will always arrive first
 }
@@ -175,7 +179,13 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
     assert(!std::empty(public_ws_uri_));
     assert(public_ws_ping_frequency_.count() > 0);
     auto market_data = std::make_unique<MarketData>(
-        *this, context_, ++stream_id_, shared_, public_ws_uri_, public_ws_ping_frequency_);
+        *this,
+        context_,
+        ++stream_id_,
+        shared_,
+        public_ws_uri_,
+        public_ws_query_,
+        public_ws_ping_frequency_);
     (*market_data).update_subscriptions(symbols);
     MessageInfo message_info;  // XXX something sensible
     Start start;
@@ -189,6 +199,11 @@ void Gateway::operator()(MarketData::RequestL2Snapshot const &request) {
 }
 
 void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
+  log::debug(
+      R"(uri="{}", query="{}", ping_frequency={})"_sv,
+      private_token.uri,
+      private_token.query,
+      private_token.ping_frequency);
   auto account = private_token.account;
   auto &drop_copy = drop_copy_[account];
   if (!drop_copy) {
@@ -199,6 +214,7 @@ void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
         *security_[account],
         shared_,
         private_token.uri,
+        private_token.query,
         private_token.ping_frequency);
     MessageInfo message_info;  // XXX something sensible
     Start start;

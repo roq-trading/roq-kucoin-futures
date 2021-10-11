@@ -98,6 +98,7 @@ class Gateway final : public server::Handler,
   std::vector<std::unique_ptr<MarketData>> market_data_;
   // websocket uri's
   std::string public_ws_uri_;
+  std::string public_ws_query_;
   std::chrono::nanoseconds public_ws_ping_frequency_;
   std::string private_ws_uri_;  // XXX HANS this is BY ACCOUNT !!!
 };

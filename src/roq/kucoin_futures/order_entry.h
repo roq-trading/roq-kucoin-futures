@@ -40,9 +40,8 @@ class OrderEntry final : public core::web::Client::Handler {
  public:
   struct PrivateToken final {
     std::string_view account;
-    std::string_view token;
-    std::string_view endpoint;
     std::string_view uri;
+    std::string_view query;
     std::chrono::nanoseconds ping_frequency = {};
   };
 

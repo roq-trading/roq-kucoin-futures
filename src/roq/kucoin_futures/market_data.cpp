@@ -48,13 +48,14 @@ MarketData::MarketData(
     uint32_t stream_id,
     Shared &shared,
     const std::string_view &uri,
+    const std::string_view &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
       ping_frequency_(ping_frequency), connection_(
                                            *this,
                                            context,
                                            core::URI{uri},
-                                           {},  // query
+                                           query,
                                            Flags::ws_ping_freq(),
                                            Flags::decode_buffer_size(),
                                            Flags::encode_buffer_size(),

@@ -51,12 +51,7 @@ void emplace(MBPUpdate &result, double price, double size) {
 }
 }  // namespace
 
-Rest::Rest(
-    Handler &handler,
-    core::io::Context &context,
-    uint16_t stream_id,
-    Security &security,
-    Shared &shared)
+Rest::Rest(Handler &handler, core::io::Context &context, uint16_t stream_id, Shared &shared)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
       connection_(
           *this,
@@ -87,7 +82,7 @@ Rest::Rest(
       latency_{
           .ping = create_metrics(name_, "ping"_sv),
       },
-      security_(security), shared_(shared),
+      shared_(shared),
       download_(Flags::rest_request_timeout(), [this](auto state) { return download(state); }) {
 }
 
@@ -223,11 +218,10 @@ void Rest::operator()(const json::Token &token) {
   if (std::empty(token.data.instance_servers))
     log::fatal("Unexpected: no instance servers"_sv);
   auto &instance_server = token.data.instance_servers[0];
-  auto uri = fmt::format("{}?token={}"_sv, instance_server.endpoint, token.data.token);
+  auto query = fmt::format("?token={}"_sv, token.data.token);
   PublicToken const public_token{
-      .token = token.data.token,
-      .endpoint = instance_server.endpoint,
-      .uri = uri,
+      .uri = instance_server.endpoint,
+      .query = query,
       .ping_frequency = instance_server.ping_interval,
   };
   if (public_token.ping_frequency.count() == 0)

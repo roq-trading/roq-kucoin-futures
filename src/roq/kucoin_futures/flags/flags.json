@@ -64,24 +64,11 @@
       "description": "rate limit: max requests (per interval)"
     },
     {
-      "name": "rest_listen_key_refresh",
+      "name": "rest_token_refresh_freq",
       "type": "std::chrono::nanoseconds",
       "validator": "roq::core::flags::TimePeriod",
-      "default": "1800s",
-      "description": "listen key refresh period"
-    },
-    {
-      "name": "rest_order_recv_window",
-      "type": "std::chrono::nanoseconds",
-      "validator": "roq::core::flags::TimePeriod",
-      "default": "5000ms",
-      "description": "receive window, please refer to Binance documentation!"
-    },
-    {
-      "name": "rest_cancel_on_disconnect",
-      "type": "bool",
-      "default": false,
-      "description": "cancel orders on disconnect? (bool)"
+      "default": "8h",
+      "description": "token refresh frequency"
     },
     {
       "name": "ws_ping_freq",

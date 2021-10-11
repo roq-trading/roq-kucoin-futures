@@ -40,6 +40,7 @@ class DropCopy final : public core::web::Socket::Handler, public json::Parser::H
       Security &,
       Shared &,
       const std::string_view &uri,
+      const std::string_view &query,
       std::chrono::nanoseconds ping_frequency);
 
   DropCopy(DropCopy &&) = delete;

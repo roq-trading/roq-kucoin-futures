@@ -52,6 +52,7 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
       uint32_t stream_id,
       Shared &,
       const std::string_view &uri,
+      const std::string_view &query,
       std::chrono::nanoseconds ping_frequency);
 
   MarketData(MarketData &&) = delete;

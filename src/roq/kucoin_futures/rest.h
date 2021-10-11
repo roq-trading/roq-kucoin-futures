@@ -24,7 +24,6 @@
 #include "roq/server.h"
 
 #include "roq/kucoin_futures/rest_state.h"
-#include "roq/kucoin_futures/security.h"
 #include "roq/kucoin_futures/shared.h"
 
 #include "roq/kucoin_futures/json/contracts.h"
@@ -37,9 +36,8 @@ namespace kucoin_futures {
 class Rest final : public core::web::Client::Handler {
  public:
   struct PublicToken final {
-    std::string_view token;
-    std::string_view endpoint;
     std::string_view uri;
+    std::string_view query;
     std::chrono::nanoseconds ping_frequency = {};
   };
 
@@ -59,7 +57,7 @@ class Rest final : public core::web::Client::Handler {
     virtual void operator()(SymbolsUpdate &) = 0;
   };
 
-  Rest(Handler &, core::io::Context &context, uint16_t stream_id, Security &, Shared &);
+  Rest(Handler &, core::io::Context &context, uint16_t stream_id, Shared &);
 
   Rest(Rest &&) = delete;
   Rest(const Rest &) = delete;
@@ -118,8 +116,6 @@ class Rest final : public core::web::Client::Handler {
   struct {
     core::metrics::Latency ping;
   } latency_;
-  // security
-  Security &security_;
   // cache
   Shared &shared_;
   absl::flat_hash_set<std::string> all_symbols_;

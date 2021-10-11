@@ -244,12 +244,11 @@ void OrderEntry::operator()(const json::Token &token) {
   if (std::empty(token.data.instance_servers))
     log::fatal("Unexpected: no instance servers"_sv);
   auto &instance_server = token.data.instance_servers[0];
-  auto uri = fmt::format("{}?token={}"_sv, instance_server.endpoint, token.data.token);
+  auto query = fmt::format("?token={}"_sv, token.data.token);
   PrivateToken const private_token{
       .account = security_.get_account(),
-      .token = token.data.token,
-      .endpoint = instance_server.endpoint,
-      .uri = uri,
+      .uri = instance_server.endpoint,
+      .query = query,
       .ping_frequency = instance_server.ping_interval,
   };
   if (private_token.ping_frequency.count() == 0)
