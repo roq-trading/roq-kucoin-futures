@@ -7,7 +7,7 @@
 using namespace roq::literals;
 
 namespace {
-static const auto DESCRIPTION = "Roq Binance Gateway"_sv;
+static const auto DESCRIPTION = "Roq KuCoin Futures Gateway"_sv;
 }  // namespace
 
 int main(int argc, char **argv) {
