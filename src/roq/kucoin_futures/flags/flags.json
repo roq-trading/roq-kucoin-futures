@@ -18,7 +18,7 @@
       "name": "exchange",
       "type": "std::string",
       "validator": "roq::core::flags::NonEmpty<std::string>",
-      "default": "kucoin",
+      "default": "kucoin-futures",
       "description": "exchange identifier (string)"
     },
     {
