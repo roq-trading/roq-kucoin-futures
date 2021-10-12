@@ -349,7 +349,7 @@ void MarketData::operator()(server::Trace<json::Ticker> const &event) {
             .ask_price = data.best_ask_price,
             .ask_quantity = data.best_ask_size,
         },
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
@@ -372,7 +372,7 @@ void MarketData::operator()(server::Trace<json::TickerV2> const &event) {
             .ask_price = data.best_ask_price,
             .ask_quantity = data.best_ask_size,
         },
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(trace_info, top_of_book, handler_, true);
@@ -426,7 +426,7 @@ void MarketData::operator()(server::Trace<json::MarkIndexPrice> const &event) {
         .exchange = Flags::exchange(),
         .symbol = symbol,
         .statistics = statistics,
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
     server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
@@ -452,7 +452,7 @@ void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
         .exchange = Flags::exchange(),
         .symbol = symbol,
         .statistics = statistics,
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
     server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
@@ -497,7 +497,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
           .symbol = symbol,
           .bids = is_bid ? bid_or_ask : empty,
           .asks = is_ask ? bid_or_ask : empty,
-          .snapshot = false,
+          .update_type = UpdateType::INCREMENTAL,
           .exchange_time_utc = data.timestamp,
       };
       try {
@@ -535,7 +535,7 @@ void MarketData::operator()(server::Trace<json::FundingBegin> const &event) {
         .exchange = Flags::exchange(),
         .symbol = data.symbol,
         .statistics = statistics,
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
     server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);
@@ -569,7 +569,7 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
         .exchange = Flags::exchange(),
         .symbol = symbol,
         .statistics = statistics,
-        .snapshot = false,
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(trace_info, statistics_update, handler_, true);

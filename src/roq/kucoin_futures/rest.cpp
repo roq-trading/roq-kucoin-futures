@@ -409,7 +409,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
         .symbol = symbol,
         .bids = bids,
         .asks = asks,
-        .snapshot = true,
+        .update_type = UpdateType::SNAPSHOT,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
     server::create_trace_and_dispatch(
