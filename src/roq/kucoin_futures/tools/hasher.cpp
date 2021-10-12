@@ -33,8 +33,9 @@ static auto create_signed_passphrase(
 }
 }  // namespace
 
-Hasher::Hasher(const std::string_view &secret, const std::string_view &passphrase)
-    : hmac_(create_hmac(secret)), passphrase_(passphrase),
+Hasher::Hasher(
+    const std::string_view &key, const std::string_view &secret, const std::string_view &passphrase)
+    : key_(key), hmac_(create_hmac(secret)), passphrase_(passphrase),
       signed_passphrase_(create_signed_passphrase(hmac_, passphrase)) {
 }
 
@@ -43,7 +44,6 @@ std::string Hasher::create_headers_v1(
     const std::string_view &path,
     const std::string_view &query,
     const std::string_view &body,
-    const std::string_view &key,
     std::chrono::milliseconds timestamp) {
   assert(!path.empty());
   auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
@@ -59,7 +59,7 @@ std::string Hasher::create_headers_v1(
       "KC-API-TIMESTAMP: {}\r\n"
       "KC-API-PASSPHRASE: {}\r\n"
       "KC-API-KEY-VERSION: 1\r\n"_sv,
-      key,
+      key_,
       signature,
       timestamp.count(),
       passphrase_);
@@ -71,7 +71,6 @@ std::string Hasher::create_headers_v2(
     const std::string_view &path,
     const std::string_view &query,
     const std::string_view &body,
-    const std::string_view &key,
     std::chrono::milliseconds timestamp) {
   assert(!path.empty());
   auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
@@ -87,7 +86,7 @@ std::string Hasher::create_headers_v2(
       "KC-API-TIMESTAMP: {}\r\n"
       "KC-API-PASSPHRASE: {}\r\n"
       "KC-API-KEY-VERSION: 2\r\n"_sv,
-      key,
+      key_,
       signature,
       timestamp.count(),
       signed_passphrase_);

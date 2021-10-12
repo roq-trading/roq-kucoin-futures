@@ -36,8 +36,6 @@ class Security final {
 
  private:
   const std::string account_;
-  const std::string key_;
-  const std::string passphrase_;
   tools::Hasher hasher_;
 };
 

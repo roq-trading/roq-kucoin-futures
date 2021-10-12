@@ -10,9 +10,10 @@ namespace roq {
 namespace kucoin_futures {
 
 Security::Security(const Config &config, const std::string_view &account)
-    : account_(account), key_(config.get_api_key(account_)),
-      passphrase_(config.get_passphrase(account_)),
-      hasher_(config.get_secret(account_), passphrase_) {
+    : account_(account), hasher_(
+                             config.get_api_key(account_),
+                             config.get_secret(account_),
+                             config.get_passphrase(account_)) {
 }
 
 std::string Security::create_signature_api_v1(
@@ -21,7 +22,7 @@ std::string Security::create_signature_api_v1(
     const std::string_view &query,
     const std::string_view &body) {
   auto now = core::get_realtime_clock();
-  return hasher_.create_headers_v1(method, path, query, body, key_, utils::safe_cast(now));
+  return hasher_.create_headers_v1(method, path, query, body, utils::safe_cast(now));
 }
 
 std::string Security::create_signature_api_v2(
@@ -30,7 +31,7 @@ std::string Security::create_signature_api_v2(
     const std::string_view &query,
     const std::string_view &body) {
   auto now = core::get_realtime_clock();
-  return hasher_.create_headers_v2(method, path, query, body, key_, utils::safe_cast(now));
+  return hasher_.create_headers_v2(method, path, query, body, utils::safe_cast(now));
 }
 
 }  // namespace kucoin_futures

@@ -16,7 +16,10 @@ namespace tools {
 
 class Hasher final {
  public:
-  Hasher(const std::string_view &secret, const std::string_view &passphrase);
+  Hasher(
+      const std::string_view &key,
+      const std::string_view &secret,
+      const std::string_view &passphrase);
 
   Hasher(Hasher &&) = delete;
   Hasher(const Hasher &) = delete;
@@ -26,7 +29,6 @@ class Hasher final {
       const std::string_view &path,
       const std::string_view &query,
       const std::string_view &body,
-      const std::string_view &key,
       std::chrono::milliseconds now);
 
   std::string create_headers_v2(
@@ -34,10 +36,10 @@ class Hasher final {
       const std::string_view &path,
       const std::string_view &query,
       const std::string_view &body,
-      const std::string_view &key,
       std::chrono::milliseconds now);
 
  private:
+  const std::string key_;
   core::crypto::HMAC_SHA256 hmac_;
   const std::string passphrase_;
   const std::string signed_passphrase_;
