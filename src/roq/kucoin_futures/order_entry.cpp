@@ -205,7 +205,7 @@ void OrderEntry::get_private_token() {
         .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
@@ -213,33 +213,40 @@ void OrderEntry::get_private_token() {
     };
     connection_(
         "private_token", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-          profile_.private_token_ack([&]() { get_private_token_ack(response); });
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_private_token_ack(event);
         });
   });
 }
 
-void OrderEntry::get_private_token_ack(const core::web::Response &response) {
-  try {
-    response.expect(core::http::Status::OK);
-    auto body = response.body();
-    log::debug(R"(body="{}")"_sv, body);
-    core::json::Buffer buffer(decode_buffer_);
-    auto token = core::json::Parser::create<json::Token>(body, buffer);
-    if (token.code == 200000) {
-      log::info<1>("token={}"_sv, token);
-      (*this)(token);
-    } else {
-      log::warn("token={}"_sv, token);
-      log::fatal("Unexpected"_sv);
+void OrderEntry::get_private_token_ack(const server::Trace<core::web::Response> &event) {
+  profile_.private_token_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto token = core::json::Parser::create<json::Token>(body, buffer);
+      if (token.code == 200000) {
+        log::info<1>("token={}"_sv, token);
+        server::Trace event(trace_info, token);
+        (*this)(event);
+      } else {
+        log::warn("token={}"_sv, token);
+        log::fatal("Unexpected"_sv);
+      }
+      download_.check(OrderEntryState::PRIVATE_TOKEN);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(OrderEntryState::PRIVATE_TOKEN);
     }
-    download_.check(OrderEntryState::PRIVATE_TOKEN);
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::PRIVATE_TOKEN);
-  }
+  });
 }
 
-void OrderEntry::operator()(const json::Token &token) {
+void OrderEntry::operator()(const server::Trace<json::Token> &event) {
+  auto &[trace_info, token] = event;
   log::info<2>("token={}"_sv, token);
   if (std::empty(token.data.instance_servers))
     log::fatal("Unexpected: no instance servers"_sv);
@@ -268,51 +275,58 @@ void OrderEntry::get_account() {
         .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
     connection_("account", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      profile_.account_ack([&]() { get_account_ack(response); });
+      server::TraceInfo trace_info;
+      server::Trace event(trace_info, response);
+      get_account_ack(event);
     });
   });
 }
 
-void OrderEntry::get_account_ack(const core::web::Response &response) {
-  try {
-    auto category = core::http::to_category(response.raw_status());
-    switch (category) {
-      case core::http::Category::SUCCESS:  // 2xx
-        break;
-      case core::http::Category::CLIENT_ERROR:  // 4xx
-        log::fatal("{}"_sv, response.body());
-        break;
-      default:
-        response.expect(core::http::Status::OK);  // throws
+void OrderEntry::get_account_ack(const server::Trace<core::web::Response> &event) {
+  profile_.account_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      auto category = core::http::to_category(response.raw_status());
+      switch (category) {
+        case core::http::Category::SUCCESS:  // 2xx
+          break;
+        case core::http::Category::CLIENT_ERROR:  // 4xx
+          log::fatal("{}"_sv, response.body());
+          break;
+        default:
+          response.expect(core::http::Status::OK);  // throws
+      }
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto account = core::json::Parser::create<json::Account>(body, buffer);
+      log::debug("account={}"_sv, account);
+      if (account.code == 200000) {
+        log::info<1>("account={}"_sv, account);
+        server::Trace event(trace_info, account);
+        (*this)(event);
+      } else {
+        log::warn("account={}"_sv, account);
+        log::fatal("Unexpected"_sv);
+      }
+      download_.check(OrderEntryState::ACCOUNT);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(OrderEntryState::ACCOUNT);
     }
-    response.expect(core::http::Status::OK);
-    auto body = response.body();
-    log::debug(R"(body="{}")"_sv, body);
-    core::json::Buffer buffer(decode_buffer_);
-    auto account = core::json::Parser::create<json::Account>(body, buffer);
-    log::debug("account={}"_sv, account);
-    if (account.code == 200000) {
-      log::info<1>("account={}"_sv, account);
-      (*this)(account);
-    } else {
-      log::warn("account={}"_sv, account);
-      log::fatal("Unexpected"_sv);
-    }
-    download_.check(OrderEntryState::ACCOUNT);
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::ACCOUNT);
-  }
+  });
 }
 
-void OrderEntry::operator()(const json::Account &account) {
+void OrderEntry::operator()(const server::Trace<json::Account> &event) {
+  auto &[trace_info, account] = event;
   log::info<2>("account={}"_sv, account);
 }
 
@@ -328,41 +342,48 @@ void OrderEntry::get_positions() {
         .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
     connection_("positions", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      profile_.positions_ack([&]() { get_positions_ack(response); });
+      server::TraceInfo trace_info;
+      server::Trace event(trace_info, response);
+      get_positions_ack(event);
     });
   });
 }
 
-void OrderEntry::get_positions_ack(const core::web::Response &response) {
-  try {
-    response.expect(core::http::Status::OK);
-    auto body = response.body();
-    log::debug(R"(body="{}")"_sv, body);
-    core::json::Buffer buffer(decode_buffer_);
-    auto positions = core::json::Parser::create<json::Positions>(body, buffer);
-    log::debug("positions={}"_sv, positions);
-    if (positions.code == 200000) {
-      log::info<1>("positions={}"_sv, positions);
-      (*this)(positions);
-    } else {
-      log::warn("positions={}"_sv, positions);
-      log::fatal("Unexpected"_sv);
+void OrderEntry::get_positions_ack(const server::Trace<core::web::Response> &event) {
+  profile_.positions_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto positions = core::json::Parser::create<json::Positions>(body, buffer);
+      log::debug("positions={}"_sv, positions);
+      if (positions.code == 200000) {
+        log::info<1>("positions={}"_sv, positions);
+        server::Trace event(trace_info, positions);
+        (*this)(event);
+      } else {
+        log::warn("positions={}"_sv, positions);
+        log::fatal("Unexpected"_sv);
+      }
+      download_.check(OrderEntryState::POSITIONS);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(OrderEntryState::POSITIONS);
     }
-    download_.check(OrderEntryState::POSITIONS);
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::POSITIONS);
-  }
+  });
 }
 
-void OrderEntry::operator()(const json::Positions &positions) {
+void OrderEntry::operator()(const server::Trace<json::Positions> &event) {
+  auto &[trace_info, positions] = event;
   log::info<2>("positions={}"_sv, positions);
 }
 
@@ -379,41 +400,48 @@ void OrderEntry::get_orders() {
         .path = path,
         .query = query,
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
     connection_("orders", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      profile_.orders_ack([&]() { get_orders_ack(response); });
+      server::TraceInfo trace_info;
+      server::Trace event(trace_info, response);
+      get_orders_ack(event);
     });
   });
 }
 
-void OrderEntry::get_orders_ack(const core::web::Response &response) {
-  try {
-    response.expect(core::http::Status::OK);
-    auto body = response.body();
-    log::debug(R"(body="{}")"_sv, body);
-    core::json::Buffer buffer(decode_buffer_);
-    auto orders = core::json::Parser::create<json::Orders>(body, buffer);
-    log::debug("orders={}"_sv, orders);
-    if (orders.code == 200000) {
-      log::info<1>("orders={}"_sv, orders);
-      (*this)(orders);
-    } else {
-      log::warn("orders={}"_sv, orders);
-      log::fatal("Unexpected"_sv);
+void OrderEntry::get_orders_ack(const server::Trace<core::web::Response> &event) {
+  profile_.orders_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto orders = core::json::Parser::create<json::Orders>(body, buffer);
+      log::debug("orders={}"_sv, orders);
+      if (orders.code == 200000) {
+        log::info<1>("orders={}"_sv, orders);
+        server::Trace event(trace_info, orders);
+        (*this)(event);
+      } else {
+        log::warn("orders={}"_sv, orders);
+        log::fatal("Unexpected"_sv);
+      }
+      download_.check(OrderEntryState::ORDERS);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(OrderEntryState::ORDERS);
     }
-    download_.check(OrderEntryState::ORDERS);
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::ORDERS);
-  }
+  });
 }
 
-void OrderEntry::operator()(const json::Orders &orders) {
+void OrderEntry::operator()(const server::Trace<json::Orders> &event) {
+  auto &[trace_info, orders] = event;
   log::info<2>("orders={}"_sv, orders);
 }
 
@@ -429,41 +457,48 @@ void OrderEntry::get_fills() {
         .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
     connection_("fills", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      profile_.fills_ack([&]() { get_fills_ack(response); });
+      server::TraceInfo trace_info;
+      server::Trace event(trace_info, response);
+      get_fills_ack(event);
     });
   });
 }
 
-void OrderEntry::get_fills_ack(const core::web::Response &response) {
-  try {
-    response.expect(core::http::Status::OK);
-    auto body = response.body();
-    log::debug(R"(body="{}")"_sv, body);
-    core::json::Buffer buffer(decode_buffer_);
-    auto fills = core::json::Parser::create<json::Fills>(body, buffer);
-    log::debug("fills={}"_sv, fills);
-    if (fills.code == 200000) {
-      log::info<1>("fills={}"_sv, fills);
-      (*this)(fills);
-    } else {
-      log::warn("fills={}"_sv, fills);
-      log::fatal("Unexpected"_sv);
+void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event) {
+  profile_.fills_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      response.expect(core::http::Status::OK);
+      auto body = response.body();
+      log::debug(R"(body="{}")"_sv, body);
+      core::json::Buffer buffer(decode_buffer_);
+      auto fills = core::json::Parser::create<json::Fills>(body, buffer);
+      log::debug("fills={}"_sv, fills);
+      if (fills.code == 200000) {
+        log::info<1>("fills={}"_sv, fills);
+        server::Trace event(trace_info, fills);
+        (*this)(event);
+      } else {
+        log::warn("fills={}"_sv, fills);
+        log::fatal("Unexpected"_sv);
+      }
+      download_.check(OrderEntryState::FILLS);
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      download_.retry(OrderEntryState::FILLS);
     }
-    download_.check(OrderEntryState::FILLS);
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    download_.retry(OrderEntryState::FILLS);
-  }
+  });
 }
 
-void OrderEntry::operator()(const json::Fills &fills) {
+void OrderEntry::operator()(const server::Trace<json::Fills> &event) {
+  auto &[trace_info, fills] = event;
   log::info<2>("fills={}"_sv, fills);
 }
 
@@ -524,75 +559,86 @@ uint16_t OrderEntry::operator()(
         request,
         [this, user_id = message_info.source, order_id = create_order.order_id](
             [[maybe_unused]] auto &request_id, auto &response) {
-          profile_.create_order_ack([&]() { create_order_ack(response, user_id, order_id); });
+          uint32_t version = 1;
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          create_order_ack(event, user_id, order_id, version);
         });
   });
   return stream_id_;
 }
 
 void OrderEntry::create_order_ack(
-    const core::web::Response &response, const uint8_t user_id, const uint32_t order_id) {
-  log::debug("user_id={}, order_id={}"_sv, user_id, order_id);
-  server::TraceInfo trace_info;
-  uint8_t version = 1;
-  try {
-    auto category = core::http::to_category(response.raw_status());
-    switch (category) {
-      case core::http::Category::SUCCESS: {  // 2xx
-        auto body = response.body();
-        // XXX HANS PARSE
-        break;
-      }
-      case core::http::Category::CLIENT_ERROR: {
-        std::string_view text;
-        auto body = response.body();
-        // XXX HANS PARSE
-        oms::Response response{
-            .type = RequestType::CREATE_ORDER,
-            .origin = Origin::EXCHANGE,
-            .status = RequestStatus::REJECTED,
-            .error = Error::UNKNOWN,
-            .text = text,
-            .version = version,
-            .request_id = {},
-            .quantity = NaN,
-            .price = NaN,
-        };
-        if (shared_.update_order(
-                user_id,
-                order_id,
-                stream_id_,
-                trace_info,
-                response,
-                []([[maybe_unused]] auto &order) {})) {
-        } else {
-          log::warn("Did not find order: user_id={}, order_id={}"_sv, user_id, order_id);
+    const server::Trace<core::web::Response> &event,
+    uint8_t user_id,
+    uint32_t order_id,
+    uint32_t version) {
+  profile_.create_order_ack([&]() {
+    auto &[trace_info, response] = event;
+    log::debug("user_id={}, order_id={}"_sv, user_id, order_id);
+    try {
+      auto category = core::http::to_category(response.raw_status());
+      switch (category) {
+        case core::http::Category::SUCCESS: {  // 2xx
+          auto body = response.body();
+          // XXX HANS PARSE
+          break;
         }
-        break;
+        case core::http::Category::CLIENT_ERROR: {
+          std::string_view text;
+          auto body = response.body();
+          // XXX HANS PARSE
+          oms::Response response{
+              .type = RequestType::CREATE_ORDER,
+              .origin = Origin::EXCHANGE,
+              .status = RequestStatus::REJECTED,
+              .error = Error::UNKNOWN,
+              .text = text,
+              .version = version,
+              .request_id = {},
+              .quantity = NaN,
+              .price = NaN,
+          };
+          if (shared_.update_order(
+                  user_id,
+                  order_id,
+                  stream_id_,
+                  trace_info,
+                  response,
+                  []([[maybe_unused]] auto &order) {})) {
+          } else {
+            log::warn("Did not find order: user_id={}, order_id={}"_sv, user_id, order_id);
+          }
+          break;
+        }
+        default:
+          response.expect(core::http::Status::OK);  // throws
       }
-      default:
-        response.expect(core::http::Status::OK);  // throws
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      oms::Response response{
+          .type = RequestType::CREATE_ORDER,
+          .origin = Origin::GATEWAY,
+          .status = e.request_status(),
+          .error = e.error(),
+          .text = e.what(),
+          .version = version,
+          .request_id = {},
+          .quantity = NaN,
+          .price = NaN,
+      };
+      if (shared_.update_order(
+              user_id,
+              order_id,
+              stream_id_,
+              trace_info,
+              response,
+              []([[maybe_unused]] auto &order) {})) {
+      } else {
+        log::warn("Did not find order: user_id={}, order_id={}"_sv, user_id, order_id);
+      }
     }
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    oms::Response response{
-        .type = RequestType::CREATE_ORDER,
-        .origin = Origin::GATEWAY,
-        .status = e.request_status(),
-        .error = e.error(),
-        .text = e.what(),
-        .version = version,
-        .request_id = {},
-        .quantity = NaN,
-        .price = NaN,
-    };
-    if (shared_.update_order(
-            user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {
-            })) {
-    } else {
-      log::warn("Did not find order: user_id={}, order_id={}"_sv, user_id, order_id);
-    }
-  }
+  });
 }
 
 // modify-order
@@ -623,7 +669,7 @@ uint16_t OrderEntry::operator()(
         .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
-        .content_type = core::http::ContentType::JSON,
+        .content_type = {},
         .headers = {},
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
@@ -636,83 +682,93 @@ uint16_t OrderEntry::operator()(
          user_id = message_info.source,
          order_id = cancel_order.order_id,
          version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
-          profile_.cancel_order_ack(
-              [&]() { cancel_order_ack(response, user_id, order_id, version); });
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          cancel_order_ack(event, user_id, order_id, version);
         });
   });
   return stream_id_;
 }
 
 void OrderEntry::cancel_order_ack(
-    const core::web::Response &response,
-    const uint8_t user_id,
-    const uint32_t order_id,
-    const uint32_t version) {
-  log::debug("user_id={}, order_id={}, version={}"_sv, user_id, order_id, version);
-  server::TraceInfo trace_info;
-  try {
-    auto category = core::http::to_category(response.raw_status());
-    switch (category) {
-      case core::http::Category::SUCCESS: {  // 2xx
-        core::json::Buffer buffer(decode_buffer_);
-        // XXX HANS PARSE
-        break;
-      }
-      case core::http::Category::CLIENT_ERROR: {  // 4xx
-        std::string_view text;
-        auto body = response.body();
-        // XXX HANS PARSE
-        oms::Response response{
-            .type = RequestType::CANCEL_ORDER,
-            .origin = Origin::EXCHANGE,
-            .status = RequestStatus::REJECTED,
-            .error = Error::UNKNOWN,
-            .text = text,
-            .version = version,
-            .request_id = {},
-            .quantity = NaN,
-            .price = NaN,
-        };
-        if (shared_.update_order(
+    const server::Trace<core::web::Response> &event,
+    uint8_t user_id,
+    uint32_t order_id,
+    uint32_t version) {
+  profile_.cancel_order_ack([&]() {
+    auto &[trace_info, response] = event;
+    log::debug("user_id={}, order_id={}, version={}"_sv, user_id, order_id, version);
+    try {
+      auto category = core::http::to_category(response.raw_status());
+      switch (category) {
+        case core::http::Category::SUCCESS: {  // 2xx
+          core::json::Buffer buffer(decode_buffer_);
+          // XXX HANS PARSE
+          break;
+        }
+        case core::http::Category::CLIENT_ERROR: {  // 4xx
+          std::string_view text;
+          auto body = response.body();
+          // XXX HANS PARSE
+          oms::Response response{
+              .type = RequestType::CANCEL_ORDER,
+              .origin = Origin::EXCHANGE,
+              .status = RequestStatus::REJECTED,
+              .error = Error::UNKNOWN,
+              .text = text,
+              .version = version,
+              .request_id = {},
+              .quantity = NaN,
+              .price = NaN,
+          };
+          if (shared_.update_order(
+                  user_id,
+                  order_id,
+                  stream_id_,
+                  trace_info,
+                  response,
+                  []([[maybe_unused]] auto &order) {})) {
+          } else {
+            log::warn(
+                "Did not find order: user_id={}, order_id={}, version={}"_sv,
                 user_id,
                 order_id,
-                stream_id_,
-                trace_info,
-                response,
-                []([[maybe_unused]] auto &order) {})) {
-        } else {
-          log::warn(
-              "Did not find order: user_id={}, order_id={}, version={}"_sv,
+                version);
+          }
+          break;
+        }
+        default:
+          response.expect(core::http::Status::OK);  // throws
+      }
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      oms::Response response{
+          .type = RequestType::CANCEL_ORDER,
+          .origin = Origin::GATEWAY,
+          .status = e.request_status(),
+          .error = e.error(),
+          .text = e.what(),
+          .version = version,
+          .request_id = {},
+          .quantity = NaN,
+          .price = NaN,
+      };
+      if (shared_.update_order(
               user_id,
               order_id,
-              version);
-        }
-        break;
+              stream_id_,
+              trace_info,
+              response,
+              []([[maybe_unused]] auto &order) {})) {
+      } else {
+        log::warn(
+            "Did not find order: user_id={}, order_id={}, version={}"_sv,
+            user_id,
+            order_id,
+            version);
       }
-      default:
-        response.expect(core::http::Status::OK);  // throws
     }
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    oms::Response response{
-        .type = RequestType::CANCEL_ORDER,
-        .origin = Origin::GATEWAY,
-        .status = e.request_status(),
-        .error = e.error(),
-        .text = e.what(),
-        .version = version,
-        .request_id = {},
-        .quantity = NaN,
-        .price = NaN,
-    };
-    if (shared_.update_order(
-            user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {
-            })) {
-    } else {
-      log::warn(
-          "Did not find order: user_id={}, order_id={}, version={}"_sv, user_id, order_id, version);
-    }
-  }
+  });
 }
 
 // cancel-all-orders
@@ -728,14 +784,16 @@ uint16_t OrderEntry::operator()(
           .path = path,
           .query = {},
           .accept = core::http::Accept::JSON,
-          .content_type = core::http::ContentType::JSON,
+          .content_type = {},
           .headers = {},
           .body = {},
           .quality_of_service = core::web::QualityOfService::IMMEDIATE,
           .rate_limit_weight = 1,
       };
       connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-        profile_.cancel_all_orders_ack([&]() { cancel_all_orders_ack(response); });
+        server::TraceInfo trace_info;
+        server::Trace event(trace_info, response);
+        cancel_all_orders_ack(event);
       });
     } else {
       auto &[message_info, cancel_all_orders] = event;
@@ -747,29 +805,31 @@ uint16_t OrderEntry::operator()(
   return stream_id_;
 }
 
-void OrderEntry::cancel_all_orders_ack(const core::web::Response &response) {
-  server::TraceInfo trace_info;
-  try {
-    auto category = core::http::to_category(response.raw_status());
-    switch (category) {
-      case core::http::Category::SUCCESS: {  // 2xx
-        core::json::Buffer buffer(decode_buffer_);
-        // XXX HANS PARSE
-        break;
+void OrderEntry::cancel_all_orders_ack(const server::Trace<core::web::Response> &event) {
+  profile_.cancel_all_orders_ack([&]() {
+    auto &[trace_info, response] = event;
+    try {
+      auto category = core::http::to_category(response.raw_status());
+      switch (category) {
+        case core::http::Category::SUCCESS: {  // 2xx
+          core::json::Buffer buffer(decode_buffer_);
+          // XXX HANS PARSE
+          break;
+        }
+        case core::http::Category::CLIENT_ERROR: {  // 4xx
+          auto body = response.body();
+          // XXX HANS PARSE
+          // note! this event does not require a response
+          break;
+        }
+        default:
+          response.expect(core::http::Status::OK);  // throws
       }
-      case core::http::Category::CLIENT_ERROR: {  // 4xx
-        auto body = response.body();
-        // XXX HANS PARSE
-        // note! this event does not require a response
-        break;
-      }
-      default:
-        response.expect(core::http::Status::OK);  // throws
+    } catch (core::NetworkError &e) {
+      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      // note! this event does not require a response
     }
-  } catch (core::NetworkError &e) {
-    log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-    // note! this event does not require a response
-  }
+  });
 }
 
 }  // namespace kucoin_futures

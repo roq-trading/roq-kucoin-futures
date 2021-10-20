@@ -70,8 +70,6 @@ class Rest final : public core::web::Client::Handler {
 
   void operator()(metrics::Writer &);
 
-  void get_order_book(const std::string_view &symbol);
-
  protected:
   void operator()(const core::web::Client::Connected &) override;
   void operator()(const core::web::Client::Disconnected &) override;
@@ -82,17 +80,19 @@ class Rest final : public core::web::Client::Handler {
   uint32_t download(RestState);
 
   void get_public_token();
-  void get_public_token_ack(const core::web::Response &);
-  void operator()(json::Token const &);
+  void get_public_token_ack(const server::Trace<core::web::Response> &);
+  void operator()(server::Trace<json::Token> const &);
 
   void get_contracts();
-  void get_contracts_ack(const core::web::Response &);
-  void operator()(json::Contracts const &);
+  void get_contracts_ack(const server::Trace<core::web::Response> &);
+  void operator()(server::Trace<json::Contracts> const &);
 
-  void get_order_book_ack(const std::string_view &symbol, const core::web::Response &);
+  void get_order_book(const std::string_view &symbol);
+  void get_order_book_ack(
+      const server::Trace<core::web::Response> &, const std::string_view &symbol);
   void operator()(server::Trace<json::OrderBook> const &);
 
-  void get_order_book_retry(const std::string_view &symbol);
+  void check_request_queue(std::chrono::nanoseconds now);
 
  private:
   Handler &handler_;
@@ -108,10 +108,9 @@ class Rest final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile  //
-        public_token,
-        public_token_ack,  //
-        contracts, contracts_ack, order_book, order_book_ack;
+    core::metrics::Profile public_token, public_token_ack,  //
+        contracts, contracts_ack,                           //
+        order_book, order_book_ack;
   } profile_;
   struct {
     core::metrics::Latency ping;

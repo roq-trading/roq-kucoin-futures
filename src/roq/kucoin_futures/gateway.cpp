@@ -194,10 +194,6 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
   }
 }
 
-void Gateway::operator()(MarketData::RequestL2Snapshot const &request) {
-  rest_.get_order_book(request.symbol);
-}
-
 void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
   log::debug(
       R"(uri="{}", query="{}", ping_frequency={})"_sv,

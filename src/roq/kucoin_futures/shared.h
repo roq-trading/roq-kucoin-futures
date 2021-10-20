@@ -14,7 +14,9 @@
 
 #include "roq/core/memory.h"
 
-#include "roq/kucoin_futures/collector.h"
+#include "roq/core/limit/rate_limiter.h"
+
+#include "roq/core/market/mbp_sequencer.h"
 
 namespace roq {
 namespace kucoin_futures {
@@ -41,10 +43,7 @@ struct Shared final {
 
   template <typename F>
   bool can_request(std::chrono::nanoseconds now, F callback) {
-    auto result = can_request_helper(now);
-    if (result)
-      callback();
-    return result;
+    return rate_limiter_.can_request(now, callback);
   }
 
  protected:
@@ -53,13 +52,14 @@ struct Shared final {
  public:
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
-  absl::flat_hash_map<std::string, Collector> mbp_collector;
+  absl::flat_hash_map<std::string, core::market::MBP_Sequencer> mbp_collector;
+
+  std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue;
 
  private:
   server::Dispatcher &dispatcher_;
 
-  std::deque<std::chrono::nanoseconds> request_history_;
-  bool request_is_blocked_ = false;
+  core::limit::RateLimiter rate_limiter_;
 };
 
 }  // namespace kucoin_futures

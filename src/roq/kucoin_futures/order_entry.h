@@ -88,41 +88,41 @@ class OrderEntry final : public core::web::Client::Handler {
 
   void operator()(ConnectionStatus);
 
-  // template <typename T>
-  // void get(std::function<void(const core::Promise<T> &)> &&);
-
   uint32_t download(OrderEntryState state);
 
   void get_private_token();
-  void get_private_token_ack(const core::web::Response &);
-  void operator()(const json::Token &);
+  void get_private_token_ack(const server::Trace<core::web::Response> &);
+  void operator()(const server::Trace<json::Token> &);
 
   void get_account();
-  void get_account_ack(const core::web::Response &);
-  void operator()(const json::Account &);
+  void get_account_ack(const server::Trace<core::web::Response> &);
+  void operator()(const server::Trace<json::Account> &);
 
   void get_positions();
-  void get_positions_ack(const core::web::Response &);
-  void operator()(const json::Positions &);
+  void get_positions_ack(const server::Trace<core::web::Response> &);
+  void operator()(const server::Trace<json::Positions> &);
 
   void get_orders();
-  void get_orders_ack(const core::web::Response &);
-  void operator()(const json::Orders &);
+  void get_orders_ack(const server::Trace<core::web::Response> &);
+  void operator()(const server::Trace<json::Orders> &);
 
   void get_fills();
-  void get_fills_ack(const core::web::Response &);
-  void operator()(const json::Fills &);
+  void get_fills_ack(const server::Trace<core::web::Response> &);
+  void operator()(const server::Trace<json::Fills> &);
 
   void create_order_ack(
-      const core::web::Response &, const uint8_t user_id, const uint32_t order_id);
+      const server::Trace<core::web::Response> &,
+      uint8_t user_id,
+      uint32_t order_id,
+      uint32_t version);
 
   void cancel_order_ack(
-      const core::web::Response &,
-      const uint8_t user_id,
-      const uint32_t order_id,
-      const uint32_t version);
+      const server::Trace<core::web::Response> &,
+      uint8_t user_id,
+      uint32_t order_id,
+      uint32_t version);
 
-  void cancel_all_orders_ack(const core::web::Response &);
+  void cancel_all_orders_ack(const server::Trace<core::web::Response> &);
 
  private:
   Handler &handler_;
@@ -138,17 +138,13 @@ class OrderEntry final : public core::web::Client::Handler {
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile  //
-        private_token,
-        private_token_ack,         //
-        account, account_ack,      //
-        positions, positions_ack,  //
-        orders, orders_ack,        //
-        fills, fills_ack,          //
-        create_order,
-        create_order_ack,  //
-        cancel_order,
-        cancel_order_ack,  //
+    core::metrics::Profile private_token, private_token_ack,  //
+        account, account_ack,                                 //
+        positions, positions_ack,                             //
+        orders, orders_ack,                                   //
+        fills, fills_ack,                                     //
+        create_order, create_order_ack,                       //
+        cancel_order, cancel_order_ack,                       //
         cancel_all_orders, cancel_all_orders_ack;
   } profile_;
   struct {

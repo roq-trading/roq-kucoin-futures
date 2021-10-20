@@ -71,8 +71,6 @@ class Gateway final : public server::Handler,
   void operator()(Rest::PublicToken const &) override;
   void operator()(Rest::SymbolsUpdate &) override;
 
-  void operator()(MarketData::RequestL2Snapshot const &) override;
-
   void operator()(OrderEntry::PrivateToken const &) override;
 
   // utilities

@@ -29,10 +29,6 @@ namespace kucoin_futures {
 
 class MarketData final : public core::web::Socket::Handler, public json::Parser::Handler {
  public:
-  struct RequestL2Snapshot final {
-    std::string_view symbol;
-  };
-
   struct Handler {
     virtual void operator()(const server::Trace<StreamStatus> &) = 0;
     virtual void operator()(const server::Trace<ExternalLatency> &) = 0;
@@ -42,8 +38,6 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
         const server::Trace<MarketByPriceUpdate> &, bool is_last, bool refresh) = 0;
     virtual void operator()(const server::Trace<TradeSummary> &, bool is_last) = 0;
     virtual void operator()(const server::Trace<StatisticsUpdate> &, bool is_last) = 0;
-    // cross-communication
-    virtual void operator()(RequestL2Snapshot const &) = 0;
   };
 
   MarketData(
@@ -69,9 +63,6 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   void operator()(metrics::Writer &);
 
   void update_subscriptions(std::vector<std::string> &symbols);
-
-  void check_subscribe_queue(std::chrono::nanoseconds now);
-  void check_request_queue(std::chrono::nanoseconds now);
 
  protected:
   void operator()(const core::web::Socket::Connected &) override;
@@ -117,6 +108,8 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   void operator()(server::Trace<json::PositionChange> const &) override;
   void operator()(server::Trace<json::PositionSettlement> const &) override;
 
+  void check_subscribe_queue(std::chrono::nanoseconds now);
+
  private:
   Handler &handler_;
   // config
@@ -150,9 +143,8 @@ class MarketData final : public core::web::Socket::Handler, public json::Parser:
   server::Download<MarketDataState> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
-  // experimental
+  // queue
   std::deque<std::pair<std::chrono::nanoseconds, std::string> > subscribe_queue_;
-  std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue_;
 };
 
 }  // namespace kucoin_futures

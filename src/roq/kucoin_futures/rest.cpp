@@ -95,7 +95,10 @@ void Rest::operator()(const Event<Stop> &) {
 }
 
 void Rest::operator()(const Event<Timer> &event) {
-  connection_.refresh(event.value.now);
+  auto now = event.value.now;
+  connection_.refresh(now);
+  if (ready())
+    check_request_queue(now);
 }
 
 void Rest::operator()(metrics::Writer &writer) {
@@ -191,20 +194,24 @@ void Rest::get_public_token() {
     };
     connection_(
         "public_token"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-          get_public_token_ack(response);
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_public_token_ack(event);
         });
   });
 }
 
-void Rest::get_public_token_ack(const core::web::Response &response) {
+void Rest::get_public_token_ack(const server::Trace<core::web::Response> &event) {
   profile_.public_token_ack([&]() {
+    auto &[trace_info, response] = event;
     try {
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto token = core::json::Parser::create<json::Token>(body, buffer);
-      (*this)(token);
+      server::Trace event(trace_info, token);
+      (*this)(event);
       download_.check(RestState::PUBLIC_TOKEN);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
@@ -213,7 +220,8 @@ void Rest::get_public_token_ack(const core::web::Response &response) {
   });
 }
 
-void Rest::operator()(const json::Token &token) {
+void Rest::operator()(const server::Trace<json::Token> &event) {
+  auto &[trace_info, token] = event;
   log::info<2>("token={}"_sv, token);
   if (std::empty(token.data.instance_servers))
     log::fatal("Unexpected: no instance servers"_sv);
@@ -247,20 +255,24 @@ void Rest::get_contracts() {
         .rate_limit_weight = 1,
     };
     connection_("contracts"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      get_contracts_ack(response);
+      server::TraceInfo trace_info;
+      server::Trace event(trace_info, response);
+      get_contracts_ack(event);
     });
   });
 }
 
-void Rest::get_contracts_ack(const core::web::Response &response) {
+void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event) {
   profile_.contracts_ack([&]() {
+    auto &[trace_info, response] = event;
     try {
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-      (*this)(contracts);
+      server::Trace event(trace_info, contracts);
+      (*this)(event);
       download_.check(RestState::CONTRACTS);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
@@ -269,9 +281,9 @@ void Rest::get_contracts_ack(const core::web::Response &response) {
   });
 }
 
-void Rest::operator()(const json::Contracts &contracts) {
+void Rest::operator()(const server::Trace<json::Contracts> &event) {
+  auto &[trace_info, contracts] = event;
   log::info<2>("contracts={}"_sv, contracts);
-  server::TraceInfo trace_info;  // XXX not correct (*parsing* already done)
   // reference data
   std::vector<std::string> symbols;
   // symbols.reserve(std::size(symbols.data));
@@ -357,13 +369,18 @@ void Rest::get_order_book(const std::string_view &symbol) {
         "order_book"_sv,
         request,
         [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
-          get_order_book_ack(symbol, response);
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_order_book_ack(event, symbol);
         });
   });
 }
 
-void Rest::get_order_book_ack(const std::string_view &symbol, const core::web::Response &response) {
+void Rest::get_order_book_ack(
+    const server::Trace<core::web::Response> &event,
+    [[maybe_unused]] const std::string_view &symbol) {
   profile_.order_book_ack([&]() {
+    auto &[trace_info, response] = event;
     try {
       server::TraceInfo trace_info;
       response.expect(core::http::Status::OK);
@@ -375,73 +392,71 @@ void Rest::get_order_book_ack(const std::string_view &symbol, const core::web::R
       (*this)(event);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      get_order_book_retry(symbol);
+      // get_order_book_retry(symbol);
     }
   });
 }
 
 void Rest::operator()(server::Trace<json::OrderBook> const &event) {
-  auto &[trace_info, order_book] = event;
+  // auto &[trace_info, order_book] = event;
+  auto &trace_info = event.trace_info;
+  auto &order_book = event.value;
   log::debug("event={{trace_info={}, order_book={}}}"_sv, trace_info, order_book);
   auto &data = order_book.data;
   auto sequence = data.sequence;
-  auto &symbol = data.symbol;
+  auto symbol = data.symbol;
   auto &collector = shared_.mbp_collector[symbol];
-  auto &history = collector.history;
-  if (history.empty()) {
-    // note! probably disconnected
-    return;
-  }
-  // we need the next sequence number to be available
-  if ((sequence + 1) < history.front().first) {
-    log::warn(
-        "No change history for order-book snapshot, sequence={}, first={}"_sv,
-        sequence,
-        history.front().first);
-    get_order_book_retry(symbol);
-  } else {
-    core::back_emplacer bids(shared_.bids), asks(shared_.asks);
-    for (auto &item : data.bids)
-      bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
-    for (auto &item : data.asks)
-      asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
-    const MarketByPriceUpdate market_by_price_update{
-        .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
-        .symbol = symbol,
-        .bids = bids,
-        .asks = asks,
-        .update_type = UpdateType::SNAPSHOT,
-        .exchange_time_utc = utils::safe_cast(data.ts),
-    };
-    server::create_trace_and_dispatch(
-        trace_info, market_by_price_update, shared_, true, [&](auto &market_by_price) {
-          std::pair<int64_t, std::string> current{sequence, {}};
-          auto iter =
-              std::upper_bound(history.begin(), history.end(), current, [](auto &lhs, auto &rhs) {
-                return lhs.first < rhs.first;
-              });
-          for (auto expected = data.sequence + 1; iter != history.end(); ++iter, ++expected) {
-            auto [sequence, change] = *iter;
-            if (sequence != expected)
-              log::fatal("Wrong sequence: expected={}, got={}"_sv, expected, sequence);
-            auto [side, price, quantity] = tools::split(change);
-            market_by_price(side, price, quantity);
-          }
+  core::back_emplacer bids(shared_.bids), asks(shared_.asks);
+  for (auto &item : data.bids)
+    bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+  for (auto &item : data.asks)
+    asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+  collector(
+      bids,
+      asks,
+      sequence,
+      [&](auto &bids, auto &asks, auto sequence) {  // snapshot
+        // log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
+        MarketByPriceUpdate market_by_price_update{
+            .stream_id = stream_id_,
+            .exchange = Flags::exchange(),
+            .symbol = symbol,
+            .bids = bids,
+            .asks = asks,
+            .update_type = UpdateType::SNAPSHOT,
+            .exchange_time_utc = {},
+        };
+        server::Trace event_2(trace_info, market_by_price_update);
+        shared_(event_2, true, [&](auto &market_by_price) {
+          collector.apply(market_by_price, sequence, false);
         });
-    collector.ready = true;
-    history.clear();
-  }
+      },
+      [&](auto retries) {  // request
+        log::debug(R"(REQUEST symbol="{}" (retries={}))"_sv, symbol, retries);
+        if (retries > Flags::ws_mbp_request_max_retries()) {
+          log::fatal("Unexpected"_sv);
+        }
+        auto now = trace_info.source_receive_time;
+        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+      });
 }
 
-// XXX HANS we need to count this towards the rate limiter
-void Rest::get_order_book_retry(const std::string_view &symbol) {
-  auto &collector = shared_.mbp_collector[symbol];
-  if (++collector.retries < Flags::ws_mbp_request_max_retries()) {
-    log::warn(R"(Retrying order-book for symbol="{}")"_sv, symbol);
-    get_order_book(symbol);
-  } else {
-    log::fatal("Reached max retries"_sv);
+// queue
+
+void Rest::check_request_queue(std::chrono::nanoseconds now) {
+  while (!shared_.request_queue.empty()) {
+    auto &tmp = shared_.request_queue.front();
+    if (now < tmp.first)
+      break;
+    if (shared_.can_request(now, [&]() {
+          auto &symbol = tmp.second;
+          log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+          get_order_book(symbol);
+          shared_.request_queue.pop_front();
+        })) {
+    } else {
+      return;
+    }
   }
 }
 

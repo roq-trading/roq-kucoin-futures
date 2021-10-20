@@ -107,7 +107,6 @@ void MarketData::operator()(const Event<Timer> &event) {
       if (next_ping_ < now)
         send_ping(now);
       check_subscribe_queue(now);
-      check_request_queue(now);
     }
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
@@ -461,11 +460,18 @@ void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
 
 void MarketData::operator()(server::Trace<json::Level2> const &event) {
   profile_.level2([&]() {
-    auto &[trace_info, level2] = event;
+    // auto &[trace_info, level2] = event;
+    auto &trace_info = event.trace_info;
+    auto &level2 = event.value;
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
+    // log::debug(R"(UPDATE symbol="{}")"_sv, symbol);
     auto &data = level2.data;
+    auto first_sequence = data.sequence;
+    auto last_sequence = data.sequence;
+    auto previous_sequence = data.sequence - 1;
     auto &collector = shared_.mbp_collector[symbol];
+    /*
     if (ROQ_UNLIKELY(collector.last_sequence && data.sequence != (collector.last_sequence + 1))) {
       log::fatal("HERE level2={}"_sv, level2);
     }
@@ -474,7 +480,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
       if (ROQ_UNLIKELY(!collector.created.count())) {
         auto now = trace_info.source_receive_time;
         collector.created = now;
-        request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
       log::debug<1>("COLLECT level2={}"_sv, level2);
       collector.history.emplace_back(data.sequence, data.change);
@@ -511,8 +517,71 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
         collector.history.emplace_back(data.sequence, data.change);
         collector.last_sequence = data.sequence;
         auto now = trace_info.source_receive_time;
-        request_queue_.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
       }
+    }
+    */
+    auto [side, price, quantity] = tools::split(data.change);
+    auto is_bid = side == Side::BUY;
+    auto is_ask = side == Side::SELL;
+    MBPUpdate mbp_update{
+        .price = price,
+        .quantity = quantity,
+        .implied_quantity = NaN,
+        .price_level = {},
+        .number_of_orders = {},
+    };
+    roq::span<MBPUpdate> bid_or_ask{&mbp_update, 1}, empty;
+    auto bids = is_bid ? bid_or_ask : empty;
+    auto asks = is_ask ? bid_or_ask : empty;
+    try {
+      collector(
+          bids,
+          asks,
+          first_sequence,
+          last_sequence,
+          previous_sequence,
+          [&](auto &bids, auto &asks) {  // update
+            // log::debug(R"(PUBLISH UPDATE symbol="{}")"_sv, symbol);
+            MarketByPriceUpdate market_by_price_update{
+                .stream_id = stream_id_,
+                .exchange = Flags::exchange(),
+                .symbol = symbol,
+                .bids = bids,
+                .asks = asks,
+                .update_type = UpdateType::INCREMENTAL,
+                .exchange_time_utc = {},
+            };
+            server::create_trace_and_dispatch(
+                event.trace_info, market_by_price_update, handler_, true, false);
+          },
+          [&](auto &bids, auto &asks, auto sequence) {  // snapshot
+            log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
+            MarketByPriceUpdate market_by_price_update{
+                .stream_id = stream_id_,
+                .exchange = Flags::exchange(),
+                .symbol = symbol,
+                .bids = bids,
+                .asks = asks,
+                .update_type = UpdateType::SNAPSHOT,
+                .exchange_time_utc = {},
+            };
+            server::Trace event_2(trace_info, market_by_price_update);
+            shared_(event_2, true, [&](auto &market_by_price) {
+              collector.apply(market_by_price, sequence, false);
+            });
+          },
+          [&](auto retries) {  // request
+            log::debug(R"(REQUEST symbol="{}" (retries={}))"_sv, symbol, retries);
+            if (retries > Flags::ws_mbp_request_max_retries()) {
+              log::fatal("Unexpected"_sv);
+            }
+            auto now = trace_info.source_receive_time;
+            shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+          });
+      // log::debug("ready={}, last_sequence={}"_sv, collector.ready(), collector.last_sequence());
+    } catch (market::BadState &) {
+      log::warn("*** RESUBSCRIBE REQUIRED HERE ***"_sv);
     }
   });
 }
@@ -577,21 +646,27 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
 }
 
 void MarketData::operator()(server::Trace<json::OrderChange> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::operator()(server::Trace<json::OrderMarginChange> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::operator()(server::Trace<json::AvailableBalanceChange> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::operator()(server::Trace<json::WithdrawHoldChange> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::operator()(server::Trace<json::PositionChange> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::operator()(server::Trace<json::PositionSettlement> const &) {
+  log::fatal("Unexpected"_sv);
 }
 
 void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
@@ -604,26 +679,6 @@ void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
           log::debug(R"(Subscribe: "{}")"_sv, message);
           connection_.send_text(message);
           subscribe_queue_.pop_front();
-        })) {
-    } else {
-      return;
-    }
-  }
-}
-
-void MarketData::check_request_queue(std::chrono::nanoseconds now) {
-  while (!request_queue_.empty()) {
-    auto &tmp = request_queue_.front();
-    if (now < tmp.first)
-      break;
-    if (shared_.can_request(now, [&]() {
-          auto &symbol = tmp.second;
-          log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
-          const RequestL2Snapshot request{
-              .symbol = symbol,
-          };
-          handler_(request);
-          request_queue_.pop_front();
         })) {
     } else {
       return;
