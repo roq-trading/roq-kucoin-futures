@@ -30,4 +30,14 @@ TEST(json_account, simple) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::Account>(message, buffer_);
+  EXPECT_EQ(obj.code, 200000);
+  auto &data = obj.data;
+  EXPECT_DOUBLE_EQ(data.account_equity, 0.0);
+  EXPECT_DOUBLE_EQ(data.unrealised_pnl, 0.0);
+  EXPECT_DOUBLE_EQ(data.margin_balance, 0.0);
+  EXPECT_DOUBLE_EQ(data.position_margin, 0.0);
+  EXPECT_DOUBLE_EQ(data.order_margin, 0.0);
+  EXPECT_DOUBLE_EQ(data.frozen_funds, 0.0);
+  EXPECT_DOUBLE_EQ(data.available_balance, 0.0);
+  EXPECT_EQ(data.currency, "XBT"_sv);
 }

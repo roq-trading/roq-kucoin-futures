@@ -13,6 +13,8 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::chrono_literals;
+
 TEST(json_token, simple) {
   const auto message =
       R"({)"
@@ -32,4 +34,19 @@ TEST(json_token, simple) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::Token>(message, buffer_);
+  EXPECT_EQ(obj.code, 200000);
+  auto &data = obj.data;
+  EXPECT_EQ(
+      data.token,
+      "2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_"
+      "wGoSf7iNyEWJ85XuAlIeRt8svl5W6NWaJ6QT7eIx7nvxtiYB9J6i9GjsxUuhPw3BlrzazF6gh"
+      "q4L_Hs1E-1pGVsVNxvpblIt0c=.sb29ayXiBOmPXNoHkkMaUA=="_sv);
+  auto &instance_servers = data.instance_servers;
+  EXPECT_EQ(std::size(instance_servers), 1);
+  auto &is0 = instance_servers[0];
+  EXPECT_EQ(is0.endpoint, "wss://push-websocket-sandbox.kucoin.com/endpoint"_sv);
+  EXPECT_EQ(is0.encrypt, true);
+  EXPECT_EQ(is0.protocol, "websocket"_sv);
+  EXPECT_EQ(is0.ping_interval, 50000ms);
+  EXPECT_EQ(is0.ping_timeout, 10000ms);
 }

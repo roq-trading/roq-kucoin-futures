@@ -2,7 +2,7 @@
 "name": "Orders",
 "type": "comp",
 "values": [
-	{ "name": "code", "type": "std::string_view" },
+	{ "name": "code", "type": "int32_t" },
 	{ "name": "data", "type": "OrdersData" }
 ]
 }

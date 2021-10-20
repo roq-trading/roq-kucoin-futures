@@ -27,4 +27,12 @@ TEST(json_fills, simple) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::Fills>(message, buffer_);
+  EXPECT_EQ(obj.code, 200000);
+  auto &data = obj.data;
+  EXPECT_EQ(data.current_page, 1);
+  EXPECT_EQ(data.page_size, 50);
+  EXPECT_EQ(data.total_num, 0);
+  EXPECT_EQ(data.total_page, 0);
+  auto &items = data.items;
+  EXPECT_EQ(std::size(items), 0);
 }

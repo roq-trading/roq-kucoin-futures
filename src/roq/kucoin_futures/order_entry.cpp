@@ -225,7 +225,7 @@ void OrderEntry::get_private_token_ack(const core::web::Response &response) {
     log::debug(R"(body="{}")"_sv, body);
     core::json::Buffer buffer(decode_buffer_);
     auto token = core::json::Parser::create<json::Token>(body, buffer);
-    if (utils::compare(token.code, "200000"_sv) == 0) {
+    if (token.code == 200000) {
       log::info<1>("token={}"_sv, token);
       (*this)(token);
     } else {
@@ -298,7 +298,7 @@ void OrderEntry::get_account_ack(const core::web::Response &response) {
     core::json::Buffer buffer(decode_buffer_);
     auto account = core::json::Parser::create<json::Account>(body, buffer);
     log::debug("account={}"_sv, account);
-    if (utils::compare(account.code, "200000"_sv) == 0) {
+    if (account.code == 200000) {
       log::info<1>("account={}"_sv, account);
       (*this)(account);
     } else {
@@ -348,7 +348,7 @@ void OrderEntry::get_positions_ack(const core::web::Response &response) {
     core::json::Buffer buffer(decode_buffer_);
     auto positions = core::json::Parser::create<json::Positions>(body, buffer);
     log::debug("positions={}"_sv, positions);
-    if (utils::compare(positions.code, "200000"_sv) == 0) {
+    if (positions.code == 200000) {
       log::info<1>("positions={}"_sv, positions);
       (*this)(positions);
     } else {
@@ -399,7 +399,7 @@ void OrderEntry::get_orders_ack(const core::web::Response &response) {
     core::json::Buffer buffer(decode_buffer_);
     auto orders = core::json::Parser::create<json::Orders>(body, buffer);
     log::debug("orders={}"_sv, orders);
-    if (utils::compare(orders.code, "200000"_sv) == 0) {
+    if (orders.code == 200000) {
       log::info<1>("orders={}"_sv, orders);
       (*this)(orders);
     } else {
@@ -449,7 +449,7 @@ void OrderEntry::get_fills_ack(const core::web::Response &response) {
     core::json::Buffer buffer(decode_buffer_);
     auto fills = core::json::Parser::create<json::Fills>(body, buffer);
     log::debug("fills={}"_sv, fills);
-    if (utils::compare(fills.code, "200000"_sv) == 0) {
+    if (fills.code == 200000) {
       log::info<1>("fills={}"_sv, fills);
       (*this)(fills);
     } else {
