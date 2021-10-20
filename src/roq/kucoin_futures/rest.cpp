@@ -290,8 +290,8 @@ void Rest::operator()(const json::Contracts &contracts) {
         .symbol = symbol,
         .description = {},
         .security_type = {},
-        .currency = item.quote_currency,            // XXX check
-        .settlement_currency = item.base_currency,  // XXX check
+        .base_currency = item.base_currency,
+        .quote_currency = item.quote_currency,
         .commission_currency = {},
         .tick_size = item.tick_size,
         .multiplier = item.multiplier,
