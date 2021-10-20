@@ -296,6 +296,8 @@ void Rest::operator()(const json::Contracts &contracts) {
         .tick_size = item.tick_size,
         .multiplier = item.multiplier,
         .min_trade_vol = 1.0,
+        .max_trade_vol = NaN,
+        .trade_vol_step_size = 1.0,
         .option_type = {},
         .strike_currency = {},
         .strike_price = NaN,
