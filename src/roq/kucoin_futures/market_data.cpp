@@ -465,65 +465,12 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
     auto &level2 = event.value;
     log::info<4>("event={{trace_info={}, level2={}}}"_sv, trace_info, level2);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
-    // log::debug(R"(UPDATE symbol="{}")"_sv, symbol);
     auto &data = level2.data;
     auto first_sequence = data.sequence;
     auto last_sequence = data.sequence;
     auto previous_sequence = data.sequence - 1;
     auto &collector = shared_.mbp_collector[symbol];
-    /*
-    if (ROQ_UNLIKELY(collector.last_sequence && data.sequence != (collector.last_sequence + 1))) {
-      log::fatal("HERE level2={}"_sv, level2);
-    }
-    collector.last_sequence = data.sequence;
-    if (ROQ_UNLIKELY(!collector.ready)) {
-      if (ROQ_UNLIKELY(!collector.created.count())) {
-        auto now = trace_info.source_receive_time;
-        collector.created = now;
-        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
-      }
-      log::debug<1>("COLLECT level2={}"_sv, level2);
-      collector.history.emplace_back(data.sequence, data.change);
-    } else {
-      log::debug<1>("PUBLISH level2={}"_sv, level2);
-      auto [side, price, quantity] = tools::split(data.change);
-      auto is_bid = side == Side::BUY;
-      auto is_ask = side == Side::SELL;
-      MBPUpdate mbp_update{
-          .price = price,
-          .quantity = quantity,
-          .implied_quantity = NaN,
-          .price_level = {},
-          .number_of_orders = {},
-      };
-      roq::span<MBPUpdate> bid_or_ask{&mbp_update, 1}, empty;
-      MarketByPriceUpdate market_by_price_update{
-          .stream_id = stream_id_,
-          .exchange = Flags::exchange(),
-          .symbol = symbol,
-          .bids = is_bid ? bid_or_ask : empty,
-          .asks = is_ask ? bid_or_ask : empty,
-          .update_type = UpdateType::INCREMENTAL,
-          .exchange_time_utc = data.timestamp,
-      };
-      try {
-        server::create_trace_and_dispatch(
-            trace_info, market_by_price_update, handler_, true, false);
-      } catch (market::BadState &) {
-        log::warn<0>("*** RESUBSCRIBE ***"_sv);
-        log::info<0>(R"(Resubscribing symbol="{}")"_sv, symbol);
-        assert(collector.history.empty());
-        collector = {};
-        collector.history.emplace_back(data.sequence, data.change);
-        collector.last_sequence = data.sequence;
-        auto now = trace_info.source_receive_time;
-        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
-      }
-    }
-    */
     auto [side, price, quantity] = tools::split(data.change);
-    auto is_bid = side == Side::BUY;
-    auto is_ask = side == Side::SELL;
     MBPUpdate mbp_update{
         .price = price,
         .quantity = quantity,
@@ -531,9 +478,9 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
         .price_level = {},
         .number_of_orders = {},
     };
-    roq::span<MBPUpdate> bid_or_ask{&mbp_update, 1}, empty;
-    auto bids = is_bid ? bid_or_ask : empty;
-    auto asks = is_ask ? bid_or_ask : empty;
+    roq::span<MBPUpdate> bids_or_asks{&mbp_update, 1}, empty;
+    auto bids = side == Side::BUY ? bids_or_asks : empty;
+    auto asks = side == Side::SELL ? bids_or_asks : empty;
     try {
       collector(
           bids,
@@ -553,7 +500,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .exchange_time_utc = {},
             };
             server::create_trace_and_dispatch(
-                event.trace_info, market_by_price_update, handler_, true, false);
+                trace_info, market_by_price_update, handler_, true, false);
           },
           [&](auto &bids, auto &asks, auto sequence) {  // snapshot
             log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
@@ -566,8 +513,8 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .update_type = UpdateType::SNAPSHOT,
                 .exchange_time_utc = {},
             };
-            server::Trace event_2(trace_info, market_by_price_update);
-            shared_(event_2, true, [&](auto &market_by_price) {
+            server::Trace event(trace_info, market_by_price_update);
+            shared_(event, true, [&](auto &market_by_price) {
               collector.apply(market_by_price, sequence, false);
             });
           },
@@ -579,9 +526,12 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
             auto now = trace_info.source_receive_time;
             shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
           });
-      // log::debug("ready={}, last_sequence={}"_sv, collector.ready(), collector.last_sequence());
     } catch (market::BadState &) {
-      log::warn("*** RESUBSCRIBE REQUIRED HERE ***"_sv);
+      log::warn(R"(RESUBSCRIBE symbol="{}")"_sv, symbol);
+      // XXX HANS publish stale
+      collector.clear();
+      auto now = trace_info.source_receive_time;
+      shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
     }
   });
 }

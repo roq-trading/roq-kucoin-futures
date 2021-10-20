@@ -411,34 +411,42 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
     bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
   for (auto &item : data.asks)
     asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
-  collector(
-      bids,
-      asks,
-      sequence,
-      [&](auto &bids, auto &asks, auto sequence) {  // snapshot
-        // log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
-        MarketByPriceUpdate market_by_price_update{
-            .stream_id = stream_id_,
-            .exchange = Flags::exchange(),
-            .symbol = symbol,
-            .bids = bids,
-            .asks = asks,
-            .update_type = UpdateType::SNAPSHOT,
-            .exchange_time_utc = {},
-        };
-        server::Trace event_2(trace_info, market_by_price_update);
-        shared_(event_2, true, [&](auto &market_by_price) {
-          collector.apply(market_by_price, sequence, false);
+  try {
+    collector(
+        bids,
+        asks,
+        sequence,
+        [&](auto &bids, auto &asks, auto sequence) {  // snapshot
+          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
+          MarketByPriceUpdate market_by_price_update{
+              .stream_id = stream_id_,
+              .exchange = Flags::exchange(),
+              .symbol = symbol,
+              .bids = bids,
+              .asks = asks,
+              .update_type = UpdateType::SNAPSHOT,
+              .exchange_time_utc = {},
+          };
+          server::Trace event(trace_info, market_by_price_update);
+          shared_(event, true, [&](auto &market_by_price) {
+            collector.apply(market_by_price, sequence, false);
+          });
+        },
+        [&](auto retries) {  // request
+          log::debug(R"(REQUEST symbol="{}" (retries={}))"_sv, symbol, retries);
+          if (retries > Flags::ws_mbp_request_max_retries()) {
+            log::fatal("Unexpected"_sv);
+          }
+          auto now = trace_info.source_receive_time;
+          shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
         });
-      },
-      [&](auto retries) {  // request
-        log::debug(R"(REQUEST symbol="{}" (retries={}))"_sv, symbol, retries);
-        if (retries > Flags::ws_mbp_request_max_retries()) {
-          log::fatal("Unexpected"_sv);
-        }
-        auto now = trace_info.source_receive_time;
-        shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
-      });
+  } catch (market::BadState &) {
+    log::warn(R"(RESUBSCRIBE symbol="{}")"_sv, symbol);
+    // XXX HANS publish stale
+    collector.clear();
+    auto now = trace_info.source_receive_time;
+    shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+  }
 }
 
 // queue
