@@ -426,6 +426,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
               .asks = asks,
               .update_type = UpdateType::SNAPSHOT,
               .exchange_time_utc = {},
+              .exchange_sequence = collector.last_sequence(),
           };
           server::Trace event(trace_info, market_by_price_update);
           shared_(event, true, [&](auto &market_by_price) {
