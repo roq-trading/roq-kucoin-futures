@@ -8,8 +8,6 @@
 #include <string_view>
 #include <vector>
 
-#include "roq/core/promise.h"
-
 #include "roq/core/buffer.h"
 
 #include "roq/core/metrics/counter.h"
