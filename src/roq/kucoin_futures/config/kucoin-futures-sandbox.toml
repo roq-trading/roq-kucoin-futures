@@ -1,18 +1,18 @@
 symbols = ".*"
 
-accounts = {}
+#accounts = {}
 
-#[accounts]
-#
-#  [accounts.A1]
-#  master = true
-#  login = "615c6357bc85c200065b02cd"
+[accounts]
+
+  [accounts.A1]
+  master = true
+  login = "615c6357bc85c200065b02cd"
+  password = "roq1234"
+  secret = "c8af6554-d05f-4833-bb51-b26e685e2c0d"
+#  login = "615d23abbc85c200065b0458"
 #  password = "roq1234"
-#  secret = "c8af6554-d05f-4833-bb51-b26e685e2c0d"
-##  login = "615d23abbc85c200065b0458"
-##  password = "roq1234"
-##  secret = "369d667b-b379-472c-8184-dbfb5499b2e7"
-#  symbols = ".*"
+#  secret = "369d667b-b379-472c-8184-dbfb5499b2e7"
+  symbols = ".*"
 
 [users]
 
