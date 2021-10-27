@@ -89,23 +89,23 @@ class OrderEntry final : public core::web::Client::Handler {
   uint32_t download(OrderEntryState state);
 
   void get_private_token();
-  void get_private_token_ack(const server::Trace<core::web::Response> &);
+  void get_private_token_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Token> &);
 
   void get_account();
-  void get_account_ack(const server::Trace<core::web::Response> &);
+  void get_account_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Account> &);
 
   void get_positions();
-  void get_positions_ack(const server::Trace<core::web::Response> &);
+  void get_positions_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Positions> &);
 
   void get_orders();
-  void get_orders_ack(const server::Trace<core::web::Response> &);
+  void get_orders_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Orders> &);
 
   void get_fills();
-  void get_fills_ack(const server::Trace<core::web::Response> &);
+  void get_fills_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Fills> &);
 
   void create_order_ack(

@@ -181,9 +181,11 @@ uint32_t Rest::download(RestState state) {
 
 void Rest::get_public_token() {
   profile_.public_token([&]() {
+    auto method = core::http::Method::POST;
+    auto path = "/api/v1/bullet-public"_sv;
     core::web::Request request{
-        .method = core::http::Method::POST,
-        .path = "/api/v1/bullet-public"_sv,
+        .method = method,
+        .path = path,
         .query = {},
         .accept = core::http::Accept::JSON,
         .content_type = {},
@@ -192,19 +194,26 @@ void Rest::get_public_token() {
         .quality_of_service = {},
         .rate_limit_weight = 1,
     };
+    auto sequence = download_.sequence();
     connection_(
-        "public_token"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+        "public_token"_sv,
+        request,
+        [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           server::TraceInfo trace_info;
           server::Trace event(trace_info, response);
-          get_public_token_ack(event);
+          get_public_token_ack(event, sequence);
         });
   });
 }
 
-void Rest::get_public_token_ack(const server::Trace<core::web::Response> &event) {
+void Rest::get_public_token_ack(
+    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = RestState::PUBLIC_TOKEN;
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -212,10 +221,10 @@ void Rest::get_public_token_ack(const server::Trace<core::web::Response> &event)
       auto token = core::json::Parser::create<json::Token>(body, buffer);
       server::Trace event(trace_info, token);
       (*this)(event);
-      download_.check(RestState::PUBLIC_TOKEN);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(RestState::PUBLIC_TOKEN);
+      download_.retry(state);
     }
   });
 }
@@ -254,18 +263,25 @@ void Rest::get_contracts() {
         .quality_of_service = {},
         .rate_limit_weight = 1,
     };
-    connection_("contracts"_sv, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      server::TraceInfo trace_info;
-      server::Trace event(trace_info, response);
-      get_contracts_ack(event);
-    });
+    auto sequence = download_.sequence();
+    connection_(
+        "contracts"_sv,
+        request,
+        [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_contracts_ack(event, sequence);
+        });
   });
 }
 
-void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event) {
+void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -273,10 +289,10 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event) {
       auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
       server::Trace event(trace_info, contracts);
       (*this)(event);
-      download_.check(RestState::CONTRACTS);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(RestState::CONTRACTS);
+      download_.retry(state);
     }
   });
 }
@@ -382,7 +398,6 @@ void Rest::get_order_book_ack(
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
     try {
-      server::TraceInfo trace_info;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       // log::debug(R"(body="{}")"_sv, body);

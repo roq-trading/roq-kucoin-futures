@@ -78,11 +78,11 @@ class Rest final : public core::web::Client::Handler {
   uint32_t download(RestState);
 
   void get_public_token();
-  void get_public_token_ack(const server::Trace<core::web::Response> &);
+  void get_public_token_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(server::Trace<json::Token> const &);
 
   void get_contracts();
-  void get_contracts_ack(const server::Trace<core::web::Response> &);
+  void get_contracts_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(server::Trace<json::Contracts> const &);
 
   void get_order_book(const std::string_view &symbol);

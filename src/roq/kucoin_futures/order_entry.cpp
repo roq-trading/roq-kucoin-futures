@@ -211,19 +211,26 @@ void OrderEntry::get_private_token() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
+    auto sequence = download_.sequence();
     connection_(
-        "private_token", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+        "private_token",
+        request,
+        [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           server::TraceInfo trace_info;
           server::Trace event(trace_info, response);
-          get_private_token_ack(event);
+          get_private_token_ack(event, sequence);
         });
   });
 }
 
-void OrderEntry::get_private_token_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::get_private_token_ack(
+    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = OrderEntryState::PRIVATE_TOKEN;
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -237,10 +244,10 @@ void OrderEntry::get_private_token_ack(const server::Trace<core::web::Response> 
         log::warn("token={}"_sv, token);
         log::fatal("Unexpected"_sv);
       }
-      download_.check(OrderEntryState::PRIVATE_TOKEN);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(OrderEntryState::PRIVATE_TOKEN);
+      download_.retry(state);
     }
   });
 }
@@ -281,18 +288,24 @@ void OrderEntry::get_account() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
-    connection_("account", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      server::TraceInfo trace_info;
-      server::Trace event(trace_info, response);
-      get_account_ack(event);
-    });
+    auto sequence = download_.sequence();
+    connection_(
+        "account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_account_ack(event, sequence);
+        });
   });
 }
 
-void OrderEntry::get_account_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::get_account_ack(
+    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = OrderEntryState::ACCOUNT;
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       auto category = core::http::to_category(response.raw_status());
       switch (category) {
         case core::http::Category::SUCCESS:  // 2xx
@@ -317,10 +330,10 @@ void OrderEntry::get_account_ack(const server::Trace<core::web::Response> &event
         log::warn("account={}"_sv, account);
         log::fatal("Unexpected"_sv);
       }
-      download_.check(OrderEntryState::ACCOUNT);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(OrderEntryState::ACCOUNT);
+      download_.retry(state);
     }
   });
 }
@@ -348,18 +361,24 @@ void OrderEntry::get_positions() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
-    connection_("positions", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      server::TraceInfo trace_info;
-      server::Trace event(trace_info, response);
-      get_positions_ack(event);
-    });
+    auto sequence = download_.sequence();
+    connection_(
+        "positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_positions_ack(event, sequence);
+        });
   });
 }
 
-void OrderEntry::get_positions_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::get_positions_ack(
+    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = OrderEntryState::POSITIONS;
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -374,10 +393,10 @@ void OrderEntry::get_positions_ack(const server::Trace<core::web::Response> &eve
         log::warn("positions={}"_sv, positions);
         log::fatal("Unexpected"_sv);
       }
-      download_.check(OrderEntryState::POSITIONS);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(OrderEntryState::POSITIONS);
+      download_.retry(state);
     }
   });
 }
@@ -406,18 +425,24 @@ void OrderEntry::get_orders() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
-    connection_("orders", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      server::TraceInfo trace_info;
-      server::Trace event(trace_info, response);
-      get_orders_ack(event);
-    });
+    auto sequence = download_.sequence();
+    connection_(
+        "orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_orders_ack(event, sequence);
+        });
   });
 }
 
-void OrderEntry::get_orders_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::get_orders_ack(
+    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = OrderEntryState::ORDERS;
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -432,10 +457,10 @@ void OrderEntry::get_orders_ack(const server::Trace<core::web::Response> &event)
         log::warn("orders={}"_sv, orders);
         log::fatal("Unexpected"_sv);
       }
-      download_.check(OrderEntryState::ORDERS);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(OrderEntryState::ORDERS);
+      download_.retry(state);
     }
   });
 }
@@ -463,18 +488,23 @@ void OrderEntry::get_fills() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
         .rate_limit_weight = 1,
     };
-    connection_("fills", request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-      server::TraceInfo trace_info;
-      server::Trace event(trace_info, response);
-      get_fills_ack(event);
-    });
+    auto sequence = download_.sequence();
+    connection_(
+        "fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+          server::TraceInfo trace_info;
+          server::Trace event(trace_info, response);
+          get_fills_ack(event, sequence);
+        });
   });
 }
 
-void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event, uint32_t sequence) {
+  auto state = OrderEntryState::FILLS;
   profile_.fills_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      if (download_.skip(sequence, state))
+        return;
       response.expect(core::http::Status::OK);
       auto body = response.body();
       log::debug(R"(body="{}")"_sv, body);
@@ -489,10 +519,10 @@ void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event) 
         log::warn("fills={}"_sv, fills);
         log::fatal("Unexpected"_sv);
       }
-      download_.check(OrderEntryState::FILLS);
+      download_.check(state);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
-      download_.retry(OrderEntryState::FILLS);
+      download_.retry(state);
     }
   });
 }
