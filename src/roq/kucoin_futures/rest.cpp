@@ -118,7 +118,7 @@ void Rest::operator()(metrics::Writer &writer) {
 
 void Rest::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
-    server::TraceInfo trace_info;
+    auto trace_info = server::create_trace_info();
     StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = {},
@@ -128,7 +128,7 @@ void Rest::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"_sv, stream_status);
-    server::create_trace_and_dispatch(trace_info, stream_status, handler_);
+    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -149,12 +149,12 @@ void Rest::operator()(const core::web::Client::Disconnected &) {
 }
 
 void Rest::operator()(const core::web::Client::Latency &latency) {
-  server::TraceInfo trace_info;
+  auto trace_info = server::create_trace_info();
   ExternalLatency external_latency{
       .stream_id = stream_id_,
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(trace_info, external_latency, handler_);
+  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -199,7 +199,7 @@ void Rest::get_public_token() {
         "public_token"_sv,
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_public_token_ack(event, sequence);
         });
@@ -270,7 +270,7 @@ void Rest::get_contracts() {
         "contracts"_sv,
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_contracts_ack(event, sequence);
         });
@@ -341,7 +341,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
         .expiry_datetime = utils::safe_cast(item.expire_date),
         .expiry_datetime_utc = utils::safe_cast(item.expire_date),
     };
-    server::create_trace_and_dispatch(trace_info, reference_data, handler_, true);
+    server::create_trace_and_dispatch(handler_, trace_info, reference_data, true);
   }
   if (!std::empty(symbols)) {
     SymbolsUpdate symbols_update{
@@ -364,7 +364,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
         .symbol = symbol,
         .trading_status = trading_status,
     };
-    server::create_trace_and_dispatch(trace_info, market_status, handler_, true);
+    server::create_trace_and_dispatch(handler_, trace_info, market_status, true);
   }
 }
 
@@ -390,7 +390,7 @@ void Rest::get_order_book(const std::string_view &symbol) {
         "order_book"_sv,
         request,
         [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_order_book_ack(event, symbol);
         });

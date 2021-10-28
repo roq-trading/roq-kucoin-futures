@@ -169,18 +169,18 @@ void OrderEntry::operator()(const core::web::Client::Disconnected &) {
 }
 
 void OrderEntry::operator()(const core::web::Client::Latency &latency) {
-  server::TraceInfo trace_info;
+  auto trace_info = server::create_trace_info();
   ExternalLatency external_latency{
       .stream_id = stream_id_,
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(trace_info, external_latency, handler_);
+  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
 void OrderEntry::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
-    server::TraceInfo trace_info;
+    auto trace_info = server::create_trace_info();
     StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
@@ -190,7 +190,7 @@ void OrderEntry::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"_sv, stream_status);
-    server::create_trace_and_dispatch(trace_info, stream_status, handler_);
+    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -245,7 +245,7 @@ void OrderEntry::get_private_token() {
         "private_token",
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_private_token_ack(event, sequence);
         });
@@ -321,7 +321,7 @@ void OrderEntry::get_account() {
     auto sequence = download_.sequence();
     connection_(
         "account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_account_ack(event, sequence);
         });
@@ -393,7 +393,7 @@ void OrderEntry::get_positions() {
     auto sequence = download_.sequence();
     connection_(
         "positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_positions_ack(event, sequence);
         });
@@ -457,7 +457,7 @@ void OrderEntry::get_orders() {
     auto sequence = download_.sequence();
     connection_(
         "orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_orders_ack(event, sequence);
         });
@@ -520,7 +520,7 @@ void OrderEntry::get_fills() {
     auto sequence = download_.sequence();
     connection_(
         "fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           get_fills_ack(event, sequence);
         });
@@ -618,7 +618,7 @@ void OrderEntry::create_order(
         [this, user_id = message_info.source, order_id = create_order.order_id](
             [[maybe_unused]] auto &request_id, auto &response) {
           uint32_t version = 1;
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           create_order_ack(event, user_id, order_id, version);
         });
@@ -728,7 +728,7 @@ void OrderEntry::cancel_order(
          user_id = message_info.source,
          order_id = cancel_order.order_id,
          version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
-          server::TraceInfo trace_info;
+          auto trace_info = server::create_trace_info();
           server::Trace event(trace_info, response);
           cancel_order_ack(event, user_id, order_id, version);
         });
@@ -836,7 +836,7 @@ void OrderEntry::cancel_all_orders(
           .rate_limit_weight = 1,
       };
       connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
-        server::TraceInfo trace_info;
+        auto trace_info = server::create_trace_info();
         server::Trace event(trace_info, response);
         cancel_all_orders_ack(event);
       });
