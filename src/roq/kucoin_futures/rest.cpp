@@ -208,15 +208,17 @@ void Rest::get_public_token() {
 
 void Rest::get_public_token_ack(
     const server::Trace<core::web::Response> &event, uint32_t sequence) {
-  auto state = RestState::PUBLIC_TOKEN;
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
+    auto state = RestState::PUBLIC_TOKEN;
     try {
-      if (download_.skip(sequence, state))
+      auto [status, category, body] = response.result();
+      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
+      if (download_.skip(sequence, state)) {
+        log::info("Download state={} has already been processed"_sv, state);
         return;
+      }
       response.expect(core::http::Status::OK);
-      auto body = response.body();
-      log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto token = core::json::Parser::create<json::Token>(body, buffer);
       server::Trace event(trace_info, token);
@@ -280,11 +282,13 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
   profile_.contracts_ack([&]() {
     auto &[trace_info, response] = event;
     try {
-      if (download_.skip(sequence, state))
+      auto [status, category, body] = response.result();
+      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
+      if (download_.skip(sequence, state)) {
+        log::info("Download state={} has already been processed"_sv, state);
         return;
+      }
       response.expect(core::http::Status::OK);
-      auto body = response.body();
-      log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
       server::Trace event(trace_info, contracts);
@@ -299,13 +303,14 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
 
 void Rest::operator()(const server::Trace<json::Contracts> &event) {
   auto &[trace_info, contracts] = event;
-  log::info<2>("contracts={}"_sv, contracts);
+  log::info<4>("contracts={}"_sv, contracts);
   // reference data
   std::vector<std::string> symbols;
   // symbols.reserve(std::size(symbols.data));
   size_t counter = 0;
   for (size_t i = 0; i < std::size(contracts.data); ++i) {
     auto &item = contracts.data[i];
+    log::info<2>("item={}"_sv, item);
     auto &symbol = item.symbol;
     if (shared_.discard_symbol(item.symbol))
       continue;
@@ -398,9 +403,9 @@ void Rest::get_order_book_ack(
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
     try {
+      auto [status, category, body] = response.result();
+      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
       response.expect(core::http::Status::OK);
-      auto body = response.body();
-      // log::debug(R"(body="{}")"_sv, body);
       core::json::Buffer buffer(decode_buffer_);
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
       server::Trace event(trace_info, order_book);
@@ -416,7 +421,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
-  log::debug("event={{trace_info={}, order_book={}}}"_sv, trace_info, order_book);
+  log::info<4>("event={{trace_info={}, order_book={}}}"_sv, trace_info, order_book);
   auto &data = order_book.data;
   auto sequence = data.sequence;
   auto symbol = data.symbol;

@@ -108,18 +108,26 @@ class OrderEntry final : public core::web::Client::Handler {
   void get_fills_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
   void operator()(const server::Trace<json::Fills> &);
 
+  void create_order(
+      const Event<CreateOrder> &, const oms::Order &, const std::string_view &request_id);
   void create_order_ack(
       const server::Trace<core::web::Response> &,
       uint8_t user_id,
       uint32_t order_id,
       uint32_t version);
 
+  void cancel_order(
+      const Event<CancelOrder> &,
+      const oms::Order &,
+      const std::string_view &request_id,
+      const std::string_view &previous_request_id);
   void cancel_order_ack(
       const server::Trace<core::web::Response> &,
       uint8_t user_id,
       uint32_t order_id,
       uint32_t version);
 
+  void cancel_all_orders(const Event<CancelAllOrders> &, const std::string_view &request_id);
   void cancel_all_orders_ack(const server::Trace<core::web::Response> &);
 
  private:
