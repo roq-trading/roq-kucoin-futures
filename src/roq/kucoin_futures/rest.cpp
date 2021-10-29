@@ -63,8 +63,6 @@ Rest::Rest(Handler &handler, core::io::Context &context, uint16_t stream_id, Sha
           core::http::Connection::KEEP_ALIVE,
           ALLOW_PIPELINING,
           Flags::rest_request_timeout(),
-          Flags::rest_rate_limit_interval(),
-          Flags::rest_rate_limit_max_requests(),
           Flags::rest_ping_freq(),
           Flags::rest_ping_path()),
       decode_buffer_(Flags::decode_buffer_size()),
@@ -192,7 +190,6 @@ void Rest::get_public_token() {
         .headers = {},
         .body = {},
         .quality_of_service = {},
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -263,7 +260,6 @@ void Rest::get_contracts() {
         .headers = {},
         .body = {},
         .quality_of_service = {},
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -384,7 +380,6 @@ void Rest::get_order_book(const std::string_view &symbol) {
         .headers = {},
         .body = {},
         .quality_of_service = {},
-        .rate_limit_weight = 1,
     };
     connection_(
         "order_book"sv,

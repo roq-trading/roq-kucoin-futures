@@ -53,8 +53,6 @@ OrderEntry::OrderEntry(
           core::http::Connection::KEEP_ALIVE,
           ALLOW_PIPELINING,
           Flags::rest_request_timeout(),
-          Flags::rest_rate_limit_interval(),
-          Flags::rest_rate_limit_max_requests(),
           Flags::rest_ping_freq(),
           Flags::rest_ping_path()),
       decode_buffer_(Flags::decode_buffer_size()),
@@ -238,7 +236,6 @@ void OrderEntry::get_private_token() {
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -316,7 +313,6 @@ void OrderEntry::get_account() {
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -388,7 +384,6 @@ void OrderEntry::get_positions() {
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -452,7 +447,6 @@ void OrderEntry::get_orders() {
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -515,7 +509,6 @@ void OrderEntry::get_fills() {
         .headers = headers,
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     auto sequence = download_.sequence();
     connection_(
@@ -610,7 +603,6 @@ void OrderEntry::create_order(
         .headers = {},
         .body = body,
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     connection_(
         request_id,
@@ -719,7 +711,6 @@ void OrderEntry::cancel_order(
         .headers = {},
         .body = {},
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-        .rate_limit_weight = 1,
     };
     connection_(
         request_id,
@@ -833,7 +824,6 @@ void OrderEntry::cancel_all_orders(
           .headers = {},
           .body = {},
           .quality_of_service = core::web::QualityOfService::IMMEDIATE,
-          .rate_limit_weight = 1,
       };
       connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
         auto trace_info = server::create_trace_info();
