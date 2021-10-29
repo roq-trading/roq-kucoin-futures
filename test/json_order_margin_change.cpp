@@ -13,6 +13,7 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::literals;
 using namespace std::chrono_literals;
 
 TEST(json_order_margin_change, example) {
@@ -29,11 +30,11 @@ TEST(json_order_margin_change, example) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::OrderMarginChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "xbc453tg732eba53a88ggyt8c"_sv);
-  EXPECT_EQ(obj.topic, "/contractAccount/wallet"_sv);
+  EXPECT_EQ(obj.user_id, "xbc453tg732eba53a88ggyt8c"sv);
+  EXPECT_EQ(obj.topic, "/contractAccount/wallet"sv);
   EXPECT_EQ(obj.subject, json::Subject::ORDER_MARGIN_CHANGE);
   auto &data = obj.data;
   EXPECT_DOUBLE_EQ(data.order_margin, 5923.0);
-  EXPECT_EQ(data.currency, "USDT"_sv);
+  EXPECT_EQ(data.currency, "USDT"sv);
   EXPECT_EQ(data.timestamp, 1553842862614ms);
 }

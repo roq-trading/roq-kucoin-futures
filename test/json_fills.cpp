@@ -13,6 +13,8 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::literals;
+
 TEST(json_fills, simple) {
   const auto message = R"({)"
                        R"("code":"200000",)"

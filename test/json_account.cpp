@@ -13,6 +13,8 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::literals;
+
 TEST(json_account, simple) {
   const auto message = R"({)"
                        R"("code":"200000",)"
@@ -39,5 +41,5 @@ TEST(json_account, simple) {
   EXPECT_DOUBLE_EQ(data.order_margin, 0.0);
   EXPECT_DOUBLE_EQ(data.frozen_funds, 0.0);
   EXPECT_DOUBLE_EQ(data.available_balance, 0.0);
-  EXPECT_EQ(data.currency, "XBT"_sv);
+  EXPECT_EQ(data.currency, "XBT"sv);
 }

@@ -20,13 +20,13 @@
 
 #include "roq/kucoin_futures/tools/splitter.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
 
 namespace {
-static const auto NAME = "rest"_sv;
+static const auto NAME = "rest"sv;
 
 static const auto SUPPORTS = utils::Mask{
     SupportType::REFERENCE_DATA,
@@ -52,7 +52,7 @@ void emplace(MBPUpdate &result, double price, double size) {
 }  // namespace
 
 Rest::Rest(Handler &handler, core::io::Context &context, uint16_t stream_id, Shared &shared)
-    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
+    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
       connection_(
           *this,
           context,
@@ -69,18 +69,18 @@ Rest::Rest(Handler &handler, core::io::Context &context, uint16_t stream_id, Sha
           Flags::rest_ping_path()),
       decode_buffer_(Flags::decode_buffer_size()),
       counter_{
-          .disconnect = create_metrics(name_, "disconnect"_sv),
+          .disconnect = create_metrics(name_, "disconnect"sv),
       },
       profile_{
-          .public_token = create_metrics(name_, "public_token"_sv),
-          .public_token_ack = create_metrics(name_, "public_token_ack"_sv),
-          .contracts = create_metrics(name_, "contracts"_sv),
-          .contracts_ack = create_metrics(name_, "contracts_ack"_sv),
-          .order_book = create_metrics(name_, "order_book"_sv),
-          .order_book_ack = create_metrics(name_, "order_book_ack"_sv),
+          .public_token = create_metrics(name_, "public_token"sv),
+          .public_token_ack = create_metrics(name_, "public_token_ack"sv),
+          .contracts = create_metrics(name_, "contracts"sv),
+          .contracts_ack = create_metrics(name_, "contracts_ack"sv),
+          .order_book = create_metrics(name_, "order_book"sv),
+          .order_book_ack = create_metrics(name_, "order_book_ack"sv),
       },
       latency_{
-          .ping = create_metrics(name_, "ping"_sv),
+          .ping = create_metrics(name_, "ping"sv),
       },
       shared_(shared),
       download_(Flags::rest_request_timeout(), [this](auto state) { return download(state); }) {
@@ -127,7 +127,7 @@ void Rest::operator()(ConnectionStatus status) {
         .type = StreamType::REST,
         .priority = Priority::PRIMARY,
     };
-    log::info("stream_status={}"_sv, stream_status);
+    log::info("stream_status={}"sv, stream_status);
     server::create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
@@ -182,7 +182,7 @@ uint32_t Rest::download(RestState state) {
 void Rest::get_public_token() {
   profile_.public_token([&]() {
     auto method = core::http::Method::POST;
-    auto path = "/api/v1/bullet-public"_sv;
+    auto path = "/api/v1/bullet-public"sv;
     core::web::Request request{
         .method = method,
         .path = path,
@@ -196,7 +196,7 @@ void Rest::get_public_token() {
     };
     auto sequence = download_.sequence();
     connection_(
-        "public_token"_sv,
+        "public_token"sv,
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
@@ -213,9 +213,9 @@ void Rest::get_public_token_ack(
     auto state = RestState::PUBLIC_TOKEN;
     try {
       auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
+      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"_sv, state);
+        log::info("Download state={} has already been processed"sv, state);
         return;
       }
       response.expect(core::http::Status::OK);
@@ -225,7 +225,7 @@ void Rest::get_public_token_ack(
       (*this)(event);
       download_.check(state);
     } catch (core::NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
   });
@@ -233,18 +233,18 @@ void Rest::get_public_token_ack(
 
 void Rest::operator()(const server::Trace<json::Token> &event) {
   auto &[trace_info, token] = event;
-  log::info<2>("token={}"_sv, token);
+  log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
-    log::fatal("Unexpected: no instance servers"_sv);
+    log::fatal("Unexpected: no instance servers"sv);
   auto &instance_server = token.data.instance_servers[0];
-  auto query = fmt::format("?token={}"_sv, token.data.token);
+  auto query = fmt::format("?token={}"sv, token.data.token);
   PublicToken const public_token{
       .uri = instance_server.endpoint,
       .query = query,
       .ping_frequency = instance_server.ping_interval,
   };
   if (public_token.ping_frequency.count() == 0)
-    log::fatal("Unexpected: ping_interval={}"_sv, instance_server.ping_interval);
+    log::fatal("Unexpected: ping_interval={}"sv, instance_server.ping_interval);
   handler_(public_token);
 }
 
@@ -253,7 +253,7 @@ void Rest::operator()(const server::Trace<json::Token> &event) {
 void Rest::get_contracts() {
   profile_.contracts([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/contracts/active"_sv;
+    auto path = "/api/v1/contracts/active"sv;
     core::web::Request request{
         .method = method,
         .path = path,
@@ -267,7 +267,7 @@ void Rest::get_contracts() {
     };
     auto sequence = download_.sequence();
     connection_(
-        "contracts"_sv,
+        "contracts"sv,
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
@@ -283,9 +283,9 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
     auto &[trace_info, response] = event;
     try {
       auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
+      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"_sv, state);
+        log::info("Download state={} has already been processed"sv, state);
         return;
       }
       response.expect(core::http::Status::OK);
@@ -295,7 +295,7 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
       (*this)(event);
       download_.check(state);
     } catch (core::NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
   });
@@ -303,14 +303,14 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
 
 void Rest::operator()(const server::Trace<json::Contracts> &event) {
   auto &[trace_info, contracts] = event;
-  log::info<4>("contracts={}"_sv, contracts);
+  log::info<4>("contracts={}"sv, contracts);
   // reference data
   std::vector<std::string> symbols;
   // symbols.reserve(std::size(symbols.data));
   size_t counter = 0;
   for (size_t i = 0; i < std::size(contracts.data); ++i) {
     auto &item = contracts.data[i];
-    log::info<2>("item={}"_sv, item);
+    log::info<2>("item={}"sv, item);
     auto &symbol = item.symbol;
     if (shared_.discard_symbol(item.symbol))
       continue;
@@ -350,7 +350,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
     handler_(symbols_update);
   }
   if (ROQ_UNLIKELY(counter > 0))
-    log::info("Contracts {} / {}"_sv, counter, std::size(contracts.data));
+    log::info("Contracts {} / {}"sv, counter, std::size(contracts.data));
   // market status
   for (auto &item : contracts.data) {
     auto &symbol = item.symbol;
@@ -373,8 +373,8 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
 void Rest::get_order_book(const std::string_view &symbol) {
   profile_.order_book([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/level2/snapshot"_sv;
-    auto query = fmt::format("?symbol={}"_sv, symbol);
+    auto path = "/api/v1/level2/snapshot"sv;
+    auto query = fmt::format("?symbol={}"sv, symbol);
     core::web::Request request{
         .method = method,
         .path = path,
@@ -387,7 +387,7 @@ void Rest::get_order_book(const std::string_view &symbol) {
         .rate_limit_weight = 1,
     };
     connection_(
-        "order_book"_sv,
+        "order_book"sv,
         request,
         [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
@@ -404,14 +404,14 @@ void Rest::get_order_book_ack(
     auto &[trace_info, response] = event;
     try {
       auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"_sv, status, category, body);
+      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
       server::Trace event(trace_info, order_book);
       (*this)(event);
     } catch (core::NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"_sv, typeid(e).name(), e.what());
+      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       // get_order_book_retry(symbol);
     }
   });
@@ -421,7 +421,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
-  log::info<4>("event={{trace_info={}, order_book={}}}"_sv, trace_info, order_book);
+  log::info<4>("event={{trace_info={}, order_book={}}}"sv, trace_info, order_book);
   auto &data = order_book.data;
   auto sequence = data.sequence;
   auto symbol = data.symbol;
@@ -437,7 +437,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
         asks,
         sequence,
         [&](auto &bids, auto &asks, auto sequence) {  // snapshot
-          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"_sv, symbol, sequence);
+          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
           MarketByPriceUpdate market_by_price_update{
               .stream_id = stream_id_,
               .exchange = Flags::exchange(),
@@ -454,15 +454,15 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
           });
         },
         [&](auto retries) {  // request
-          log::debug(R"(REQUEST symbol="{}" (retries={}))"_sv, symbol, retries);
+          log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
           if (retries > Flags::ws_mbp_request_max_retries()) {
-            log::fatal("Unexpected"_sv);
+            log::fatal("Unexpected"sv);
           }
           auto now = trace_info.source_receive_time;
           shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
         });
   } catch (market::BadState &) {
-    log::warn(R"(RESUBSCRIBE symbol="{}")"_sv, symbol);
+    log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
     // XXX HANS publish stale
     collector.clear();
     auto now = trace_info.source_receive_time;
@@ -479,7 +479,7 @@ void Rest::check_request_queue(std::chrono::nanoseconds now) {
       break;
     if (shared_.can_request(now, [&]() {
           auto &symbol = tmp.second;
-          log::debug(R"(Requesting order book snapshot symbol="{}")"_sv, symbol);
+          log::debug(R"(Requesting order book snapshot symbol="{}")"sv, symbol);
           get_order_book(symbol);
           shared_.request_queue.pop_front();
         })) {

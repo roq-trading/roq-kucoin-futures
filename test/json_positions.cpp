@@ -13,6 +13,7 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::literals;
 using namespace std::chrono_literals;
 
 TEST(json_positions, simple) {
@@ -100,8 +101,8 @@ TEST(json_positions, simple) {
   auto &data = obj.data;
   ASSERT_EQ(std::size(data), 2);
   auto &d0 = data[0];
-  EXPECT_EQ(d0.id, "615d67c7fa1b4f000638dd66"_sv);
-  EXPECT_EQ(d0.symbol, "XBTUSDTM"_sv);
+  EXPECT_EQ(d0.id, "615d67c7fa1b4f000638dd66"sv);
+  EXPECT_EQ(d0.symbol, "XBTUSDTM"sv);
   EXPECT_EQ(d0.auto_deposit, false);
   EXPECT_DOUBLE_EQ(d0.maint_margin_req, 0.005);
   EXPECT_DOUBLE_EQ(d0.risk_limit, 200.0);
@@ -134,10 +135,10 @@ TEST(json_positions, simple) {
   EXPECT_DOUBLE_EQ(d0.avg_entry_price, 0.0);
   EXPECT_DOUBLE_EQ(d0.liquidation_price, 0.0);
   EXPECT_DOUBLE_EQ(d0.bankrupt_price, 0.0);
-  EXPECT_EQ(d0.settle_currency, "USDT"_sv);
+  EXPECT_EQ(d0.settle_currency, "USDT"sv);
   auto &d1 = data[1];
-  EXPECT_EQ(d1.id, "615d67c71b8efa0006eecd0e"_sv);
-  EXPECT_EQ(d1.symbol, "XBTUSDM"_sv);
+  EXPECT_EQ(d1.id, "615d67c71b8efa0006eecd0e"sv);
+  EXPECT_EQ(d1.symbol, "XBTUSDM"sv);
   EXPECT_EQ(d1.auto_deposit, false);
   EXPECT_DOUBLE_EQ(d1.maint_margin_req, 0.005);
   EXPECT_DOUBLE_EQ(d1.risk_limit, 200.0);
@@ -170,5 +171,5 @@ TEST(json_positions, simple) {
   EXPECT_DOUBLE_EQ(d1.avg_entry_price, 0.0);
   EXPECT_DOUBLE_EQ(d1.liquidation_price, 0.0);
   EXPECT_DOUBLE_EQ(d1.bankrupt_price, 0.0);
-  EXPECT_EQ(d1.settle_currency, "XBT"_sv);
+  EXPECT_EQ(d1.settle_currency, "XBT"sv);
 }

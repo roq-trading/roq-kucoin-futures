@@ -2,12 +2,10 @@
 
 #include "roq/kucoin_futures/application.h"
 
-#include "roq/literals.h"
-
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace {
-static const auto DESCRIPTION = "Roq KuCoin Futures Gateway"_sv;
+static const auto DESCRIPTION = "Roq KuCoin Futures Gateway"sv;
 }  // namespace
 
 int main(int argc, char **argv) {

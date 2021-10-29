@@ -6,7 +6,7 @@
 
 #include "roq/kucoin_futures/json/message.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
@@ -26,7 +26,7 @@ bool Parser::dispatch(
       switch (message_.subject) {
         case json::Subject::UNDEFINED:
         case json::Subject::UNKNOWN:
-          log::fatal("Unexpected"_sv);
+          log::fatal("Unexpected"sv);
           break;
         case json::Subject::TICKER:
         case json::Subject::TICKER_V2:
@@ -38,7 +38,7 @@ bool Parser::dispatch(
         case json::Subject::FUNDING_END:
         case json::Subject::SNAPSHOT_24H:
         case json::Subject::ORDER_CHANGE:
-          log::fatal("Unexpected"_sv);
+          log::fatal("Unexpected"sv);
           break;
         case json::Subject::ORDER_MARGIN_CHANGE: {
           core::json::Parser parser(message);
@@ -109,7 +109,7 @@ bool Parser::dispatch(
       switch (message_.subject) {
         case json::Subject::UNDEFINED:
         case json::Subject::UNKNOWN:
-          log::fatal("Unexpected"_sv);
+          log::fatal("Unexpected"sv);
           break;
         case json::Subject::TICKER: {
           core::json::Parser parser(message);
@@ -186,7 +186,7 @@ bool Parser::dispatch(
         case json::Subject::WITHDRAW_HOLD_CHANGE:
         case json::Subject::POSITION_CHANGE:
         case json::Subject::POSITION_SETTLEMENT:
-          log::fatal("Unexpected"_sv);
+          log::fatal("Unexpected"sv);
           break;
       }
       break;

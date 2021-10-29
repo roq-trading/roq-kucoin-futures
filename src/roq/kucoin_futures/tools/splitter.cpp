@@ -4,7 +4,7 @@
 
 #include "roq/core/charconv.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
@@ -12,9 +12,9 @@ namespace tools {
 
 namespace {
 Side to_side(const std::string_view &text) {
-  if (text.compare("buy"_sv) == 0)
+  if (text.compare("buy"sv) == 0)
     return Side::BUY;
-  if (text.compare("sell"_sv) == 0)
+  if (text.compare("sell"sv) == 0)
     return Side::SELL;
   return {};
 }

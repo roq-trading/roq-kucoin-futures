@@ -13,13 +13,13 @@
 
 #include "roq/kucoin_futures/json/utils.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
 
 namespace {
-static const auto NAME = "ex"_sv;
+static const auto NAME = "ex"sv;
 static const auto SUPPORTS = utils::Mask{
     SupportType::FUNDS,
 };
@@ -39,7 +39,7 @@ DropCopy::DropCopy(
     const std::string_view &uri,
     const std::string_view &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"_sv, stream_id_, NAME)),
+    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
       connection_(
           *this,
           context,
@@ -51,18 +51,18 @@ DropCopy::DropCopy(
           []() { return std::string(); }),
       ping_frequency_(ping_frequency), decode_buffer_(Flags::decode_buffer_size()),
       counter_{
-          .disconnect = create_metrics(name_, "disconnect"_sv),
+          .disconnect = create_metrics(name_, "disconnect"sv),
       },
       profile_{
-          .parse = create_metrics(name_, "parse"_sv),
-          .welcome = create_metrics(name_, "welcome"_sv),
-          .error = create_metrics(name_, "error"_sv),
-          .pong = create_metrics(name_, "pong"_sv),
-          .ack = create_metrics(name_, "ack"_sv),
+          .parse = create_metrics(name_, "parse"sv),
+          .welcome = create_metrics(name_, "welcome"sv),
+          .error = create_metrics(name_, "error"sv),
+          .pong = create_metrics(name_, "pong"sv),
+          .ack = create_metrics(name_, "ack"sv),
       },
       latency_{
-          .ping = create_metrics(name_, "ping"_sv),
-          .heartbeat = create_metrics(name_, "heartbeat"_sv),
+          .ping = create_metrics(name_, "ping"sv),
+          .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
       security_(security), shared_(shared),
       download_({}, [this](auto state) { return download(state); }) {
@@ -90,7 +90,7 @@ void DropCopy::operator()(const Event<Timer> &event) {
     }
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
-    log::warn("Did not receive the welcome message, disconnecting now..."_sv);
+    log::warn("Did not receive the welcome message, disconnecting now..."sv);
     connection_.close();
   }
 }
@@ -148,7 +148,7 @@ void DropCopy::operator()(const core::web::Socket::Text &text) {
 }
 
 void DropCopy::operator()(const core::web::Socket::Binary &) {
-  log::fatal("Unexpected"_sv);
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(ConnectionStatus status) {
@@ -162,7 +162,7 @@ void DropCopy::operator()(ConnectionStatus status) {
         .type = StreamType::WEB_SOCKET,
         .priority = Priority::PRIMARY,
     };
-    log::info("stream_status={}"_sv, stream_status);
+    log::info("stream_status={}"sv, stream_status);
     server::create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
@@ -186,9 +186,9 @@ uint32_t DropCopy::download(DropCopyState state) {
 }
 
 void DropCopy::subscribe() {
-  subscribe("/contractAccount/wallet"_sv);
-  subscribe("/contractMarket/tradeOrders"_sv);
-  subscribe("/contract/position"_sv);  // XXX HANS maybe need symbol
+  subscribe("/contractAccount/wallet"sv);
+  subscribe("/contractMarket/tradeOrders"sv);
+  subscribe("/contract/position"sv);  // XXX HANS maybe need symbol
 }
 
 void DropCopy::subscribe(const std::string_view &topic) {
@@ -199,18 +199,18 @@ void DropCopy::subscribe(const std::string_view &topic) {
       R"("type":"subscribe",)"
       R"("topic":"{}",)"
       R"("response":true)"
-      R"(}})"_sv,
+      R"(}})"sv,
       now.count(),
       topic);
-  log::debug("message={}"_sv, message);
+  log::debug("message={}"sv, message);
   connection_.send_text(message);
 }
 
 void DropCopy::send_ping(std::chrono::nanoseconds now) {
   assert(ping_frequency_.count() > 0);
   next_ping_ = now + ping_frequency_ / 2;
-  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"_sv, now.count());
-  log::debug<1>(R"(message="{}")"_sv, message);
+  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"sv, now.count());
+  log::debug<1>(R"(message="{}")"sv, message);
   connection_.send_text(message);
 }
 
@@ -221,7 +221,7 @@ void DropCopy::parse(const std::string_view &message) {
       core::json::Buffer buffer(decode_buffer_);
       json::Parser::dispatch(*this, message, buffer, trace_info);
     } catch (...) {
-      log::warn(R"(message="{}")"_sv, message);
+      log::warn(R"(message="{}")"sv, message);
       core::tools::UnhandledException::terminate();
     }
   });
@@ -230,7 +230,7 @@ void DropCopy::parse(const std::string_view &message) {
 void DropCopy::operator()(server::Trace<json::Welcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
-    log::info<1>("event={{trace_info={}, welcome={}}}"_sv, trace_info, welcome);
+    log::info<1>("event={{trace_info={}, welcome={}}}"sv, trace_info, welcome);
     welcome_ = true;
     (*this)(ConnectionStatus::DOWNLOADING);
     download_.begin();
@@ -241,22 +241,22 @@ void DropCopy::operator()(server::Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
-    log::warn("error={}"_sv, error);
-    // log::fatal("event={{trace_info={}, error={}}}"_sv, trace_info, error);
+    log::warn("error={}"sv, error);
+    // log::fatal("event={{trace_info={}, error={}}}"sv, trace_info, error);
   });
 }
 
 void DropCopy::operator()(server::Trace<json::Pong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
-    log::info<4>("event={{trace_info={}, pong={}}}"_sv, trace_info, pong);
+    log::info<4>("event={{trace_info={}, pong={}}}"sv, trace_info, pong);
   });
 }
 
 void DropCopy::operator()(server::Trace<json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
-    log::info<2>("event={{trace_info={}, ack={}}}"_sv, trace_info, ack);
+    log::info<2>("event={{trace_info={}, ack={}}}"sv, trace_info, ack);
   });
 }
 

@@ -16,7 +16,7 @@
 
 #include "roq/kucoin_futures/json/utils.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
@@ -65,7 +65,7 @@ Gateway::Gateway(server::Dispatcher &dispatcher, const Config &config)
 }
 
 void Gateway::operator()(const Event<Start> &event) {
-  log::info("Starting the gateway..."_sv);
+  log::info("Starting the gateway..."sv);
   rest_(event);
   for (auto &[_, order_entry] : order_entry_)
     (*order_entry)(event);
@@ -77,7 +77,7 @@ void Gateway::operator()(const Event<Start> &event) {
 }
 
 void Gateway::operator()(const Event<Stop> &event) {
-  log::info("Stopping the gateway..."_sv);
+  log::info("Stopping the gateway..."sv);
   for (auto &iter : market_data_)
     (*iter)(event);
   for (auto &[_, drop_copy] : drop_copy_)
@@ -106,7 +106,7 @@ void Gateway::operator()(const Event<Connected> &) {
 void Gateway::operator()(const Event<Disconnected> &event) {
   const auto &[message_info, disconnected] = event;
   if (disconnected.order_cancel_policy) {
-    log::warn("** CANCEL-ON-DISCONNECT *NOT* SUPPORTED ***"_sv);
+    log::warn("** CANCEL-ON-DISCONNECT *NOT* SUPPORTED ***"sv);
   }
 }
 
@@ -155,7 +155,7 @@ void Gateway::operator()(const server::Trace<FundsUpdate> &event, bool is_last) 
 
 void Gateway::operator()(Rest::PublicToken const &public_token) {
   log::debug(
-      R"(uri="{}", query="{}", ping_frequency={})"_sv,
+      R"(uri="{}", query="{}", ping_frequency={})"sv,
       public_token.uri,
       public_token.query,
       public_token.ping_frequency);
@@ -175,7 +175,7 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
   for (;;) {
     if (symbols.empty())
       break;
-    log::info("Create market-data (public channel)"_sv);
+    log::info("Create market-data (public channel)"sv);
     assert(!std::empty(public_ws_uri_));
     assert(public_ws_ping_frequency_.count() > 0);
     auto market_data = std::make_unique<MarketData>(
@@ -196,7 +196,7 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
 
 void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
   log::debug(
-      R"(uri="{}", query="{}", ping_frequency={})"_sv,
+      R"(uri="{}", query="{}", ping_frequency={})"sv,
       private_token.uri,
       private_token.query,
       private_token.ping_frequency);
@@ -265,7 +265,7 @@ OrderEntry &Gateway::get_order_entry(const std::string_view &account) {
   auto iter = order_entry_.find(account);
   if (iter != order_entry_.end())
     return *(*iter).second;
-  throw RuntimeErrorException(R"(Unknown account="{}")"_sv, account);
+  throw RuntimeErrorException(R"(Unknown account="{}")"sv, account);
 }
 
 }  // namespace kucoin_futures

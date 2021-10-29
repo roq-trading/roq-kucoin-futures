@@ -13,6 +13,7 @@
 using namespace roq;
 using namespace roq::kucoin_futures;
 
+using namespace std::literals;
 using namespace std::chrono_literals;
 
 TEST(json_position_change, example_1) {
@@ -59,8 +60,8 @@ TEST(json_position_change, example_1) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::PositionChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "5c32d69203aa676ce4b543c7"_sv);
-  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"_sv);
+  EXPECT_EQ(obj.user_id, "5c32d69203aa676ce4b543c7"sv);
+  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"sv);
   EXPECT_EQ(obj.subject, json::Subject::POSITION_CHANGE);
   auto &data = obj.data;
   EXPECT_DOUBLE_EQ(data.realised_gross_pnl, 0.0);
@@ -95,7 +96,7 @@ TEST(json_position_change, example_1) {
   EXPECT_EQ(data.current_timestamp, 1558506060394ms);
   EXPECT_DOUBLE_EQ(data.unrealised_roe_pcnt, -0.0553);
   EXPECT_DOUBLE_EQ(data.unrealised_pnl_pcnt, -0.0553);
-  EXPECT_EQ(data.settle_currency, "XBT"_sv);
+  EXPECT_EQ(data.settle_currency, "XBT"sv);
 }
 
 TEST(json_position_change, example_2) {
@@ -119,8 +120,8 @@ TEST(json_position_change, example_2) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::PositionChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "5cd3f1a7b7ebc19ae9558591"_sv);
-  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"_sv);
+  EXPECT_EQ(obj.user_id, "5cd3f1a7b7ebc19ae9558591"sv);
+  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"sv);
   EXPECT_EQ(obj.subject, json::Subject::POSITION_CHANGE);
   auto &data = obj.data;
   EXPECT_DOUBLE_EQ(data.mark_price, 7947.83);
@@ -132,5 +133,5 @@ TEST(json_position_change, example_2) {
   EXPECT_DOUBLE_EQ(data.unrealised_pnl_pcnt, -0.0553);
   EXPECT_DOUBLE_EQ(data.delev_percentage, 0.52);
   EXPECT_EQ(data.current_timestamp, 1558087175068ms);
-  EXPECT_EQ(data.settle_currency, "XBT"_sv);
+  EXPECT_EQ(data.settle_currency, "XBT"sv);
 }

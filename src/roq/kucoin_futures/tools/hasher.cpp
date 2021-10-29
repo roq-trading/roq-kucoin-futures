@@ -6,13 +6,11 @@
 
 #include <array>
 
-#include "roq/literals.h"
-
 #include "roq/core/binascii/base64.h"
 
 #include "roq/core/crypto/sha.h"
 
-using namespace roq::literals;
+using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
@@ -46,7 +44,7 @@ std::string Hasher::create_headers_v1(
     const std::string_view &body,
     std::chrono::milliseconds timestamp) {
   assert(!path.empty());
-  auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
+  auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
   std::array<char, 32> buffer;
@@ -58,7 +56,7 @@ std::string Hasher::create_headers_v1(
       "KC-API-SIGN: {}\r\n"
       "KC-API-TIMESTAMP: {}\r\n"
       "KC-API-PASSPHRASE: {}\r\n"
-      "KC-API-KEY-VERSION: 1\r\n"_sv,
+      "KC-API-KEY-VERSION: 1\r\n"sv,
       key_,
       signature,
       timestamp.count(),
@@ -73,7 +71,7 @@ std::string Hasher::create_headers_v2(
     const std::string_view &body,
     std::chrono::milliseconds timestamp) {
   assert(!path.empty());
-  auto tmp = fmt::format("{}{}{}{}{}"_sv, timestamp.count(), method, path, query, body);
+  auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
   std::array<char, 32> buffer;
@@ -85,7 +83,7 @@ std::string Hasher::create_headers_v2(
       "KC-API-SIGN: {}\r\n"
       "KC-API-TIMESTAMP: {}\r\n"
       "KC-API-PASSPHRASE: {}\r\n"
-      "KC-API-KEY-VERSION: 2\r\n"_sv,
+      "KC-API-KEY-VERSION: 2\r\n"sv,
       key_,
       signature,
       timestamp.count(),
