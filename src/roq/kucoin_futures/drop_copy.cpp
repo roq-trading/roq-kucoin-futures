@@ -21,6 +21,9 @@ namespace kucoin_futures {
 namespace {
 static const auto NAME = "ex"sv;
 static const auto SUPPORTS = utils::Mask{
+    SupportType::ORDER_ACK,
+    SupportType::ORDER,
+    SupportType::TRADE,
     SupportType::FUNDS,
 };
 
@@ -237,6 +240,7 @@ void DropCopy::operator()(server::Trace<json::Welcome> const &event) {
   });
 }
 
+// error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
 void DropCopy::operator()(server::Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
