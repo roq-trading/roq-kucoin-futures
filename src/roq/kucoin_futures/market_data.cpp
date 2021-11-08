@@ -503,6 +503,8 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .update_type = UpdateType::INCREMENTAL,
                 .exchange_time_utc = {},
                 .exchange_sequence = last_sequence,
+                .price_decimals = {},
+                .quantity_decimals = {},
             };
             server::create_trace_and_dispatch(
                 handler_, trace_info, market_by_price_update, true, false);
@@ -518,6 +520,8 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .update_type = UpdateType::SNAPSHOT,
                 .exchange_time_utc = {},
                 .exchange_sequence = collector.last_sequence(),
+                .price_decimals = {},
+                .quantity_decimals = {},
             };
             server::Trace event(trace_info, market_by_price_update);
             shared_(event, true, [&](auto &market_by_price) {
