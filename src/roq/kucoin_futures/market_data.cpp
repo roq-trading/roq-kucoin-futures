@@ -159,13 +159,13 @@ void MarketData::update_subscriptions(std::vector<std::string> &symbols) {
     subscribe({&symbols_[offset], length});
 }
 
-void MarketData::operator()(const core::web::Socket::Connected &) {
+void MarketData::operator()(const core::web::ClientSocket::Connected &) {
   assert(logon_timeout_.count() == 0);
   auto now = core::get_system_clock();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
-void MarketData::operator()(const core::web::Socket::Disconnected &) {
+void MarketData::operator()(const core::web::ClientSocket::Disconnected &) {
   ++counter_.disconnect;
   ready_ = false;
   (*this)(ConnectionStatus::DISCONNECTED);
@@ -177,14 +177,14 @@ void MarketData::operator()(const core::web::Socket::Disconnected &) {
   shared_.mbp_collector.clear();  // XXX HANS this is SHARED !!!
 }
 
-void MarketData::operator()(const core::web::Socket::Ready &) {
+void MarketData::operator()(const core::web::ClientSocket::Ready &) {
   // note! wait for welcome
 }
 
-void MarketData::operator()(const core::web::Socket::Close &) {
+void MarketData::operator()(const core::web::ClientSocket::Close &) {
 }
 
-void MarketData::operator()(const core::web::Socket::Latency &latency) {
+void MarketData::operator()(const core::web::ClientSocket::Latency &latency) {
   auto trace_info = server::create_trace_info();
   ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -194,11 +194,11 @@ void MarketData::operator()(const core::web::Socket::Latency &latency) {
   latency_.ping.update(latency.sample);
 }
 
-void MarketData::operator()(const core::web::Socket::Text &text) {
+void MarketData::operator()(const core::web::ClientSocket::Text &text) {
   parse(text.payload);
 }
 
-void MarketData::operator()(const core::web::Socket::Binary &) {
+void MarketData::operator()(const core::web::ClientSocket::Binary &) {
   log::fatal("Unexpected"sv);
 }
 
