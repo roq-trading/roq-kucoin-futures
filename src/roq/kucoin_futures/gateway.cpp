@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2021, Hans Erik Thrane */
+/* Copyright (c) 2017-2022, Hans Erik Thrane */
 
 #include "roq/kucoin_futures/gateway.h"
 
@@ -72,7 +72,7 @@ void Gateway::operator()(const Event<Start> &event) {
   for (auto &[_, drop_copy] : drop_copy_)
     if (static_cast<bool>(drop_copy))
       (*drop_copy)(event);
-  assert(market_data_.empty());
+  assert(std::empty(market_data_));
   // order_entry_.download.begin();
 }
 
@@ -168,12 +168,12 @@ void Gateway::operator()(Rest::PublicToken const &public_token) {
 void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
   auto &symbols = symbols_update.symbols;
   for (auto &iter : market_data_) {
-    if (symbols.empty())
+    if (std::empty(symbols))
       break;
     (*iter).update_subscriptions(symbols);
   }
   for (;;) {
-    if (symbols.empty())
+    if (std::empty(symbols))
       break;
     log::info("Create market-data (public channel)"sv);
     assert(!std::empty(public_ws_uri_));
@@ -221,7 +221,7 @@ void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
 
 uint16_t Gateway::operator()(
     const Event<CreateOrder> &event, const oms::Order &order, const std::string_view &request_id) {
-  assert(!event.value.account.empty());
+  assert(!std::empty(event.value.account));
   return get_order_entry(event.value.account)(event, order, request_id);
 }
 
@@ -230,7 +230,7 @@ uint16_t Gateway::operator()(
     const oms::Order &order,
     const std::string_view &request_id,
     const std::string_view &previous_request_id) {
-  assert(!event.value.account.empty());
+  assert(!std::empty(event.value.account));
   assert(event.value.account == order.account);
   return get_order_entry(event.value.account)(event, order, request_id, previous_request_id);
 }
@@ -240,14 +240,14 @@ uint16_t Gateway::operator()(
     const oms::Order &order,
     const std::string_view &request_id,
     const std::string_view &previous_request_id) {
-  assert(!event.value.account.empty());
+  assert(!std::empty(event.value.account));
   assert(event.value.account == order.account);
   return get_order_entry(event.value.account)(event, order, request_id, previous_request_id);
 }
 
 uint16_t Gateway::operator()(
     const Event<CancelAllOrders> &event, const std::string_view &request_id) {
-  assert(!event.value.account.empty());
+  assert(!std::empty(event.value.account));
   return get_order_entry(event.value.account)(event, request_id);
 }
 
@@ -263,7 +263,7 @@ void Gateway::operator()(metrics::Writer &writer) {
 
 OrderEntry &Gateway::get_order_entry(const std::string_view &account) {
   auto iter = order_entry_.find(account);
-  if (iter != order_entry_.end())
+  if (iter != std::end(order_entry_))
     return *(*iter).second;
   throw RuntimeErrorException(R"(Unknown account="{}")"sv, account);
 }

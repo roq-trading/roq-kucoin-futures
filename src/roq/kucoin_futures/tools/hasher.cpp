@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2021, Hans Erik Thrane */
+/* Copyright (c) 2017-2022, Hans Erik Thrane */
 
 #include "roq/kucoin_futures/tools/hasher.h"
 
@@ -43,7 +43,7 @@ std::string Hasher::create_headers_v1(
     const std::string_view &query,
     const std::string_view &body,
     std::chrono::milliseconds timestamp) {
-  assert(!path.empty());
+  assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
@@ -70,7 +70,7 @@ std::string Hasher::create_headers_v2(
     const std::string_view &query,
     const std::string_view &body,
     std::chrono::milliseconds timestamp) {
-  assert(!path.empty());
+  assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);

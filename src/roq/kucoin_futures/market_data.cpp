@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2021, Hans Erik Thrane */
+/* Copyright (c) 2017-2022, Hans Erik Thrane */
 
 #include "roq/kucoin_futures/market_data.h"
 
@@ -142,19 +142,19 @@ void MarketData::operator()(metrics::Writer &writer) {
 void MarketData::update_subscriptions(std::vector<std::string> &symbols) {
   assert(&symbols != &symbols_);
   auto max_size = Flags::ws_max_subscriptions_per_stream();
-  auto offset = symbols_.size();
+  auto offset = std::size(symbols_);
   if (max_size <= offset)
     return;
-  if (symbols.empty())
+  if (std::empty(symbols))
     return;
   symbols_.reserve(max_size);
-  auto length = std::min(max_size - offset, symbols.size());
+  auto length = std::min(max_size - offset, std::size(symbols));
   assert(length > 0);
-  for (size_t i = {}; i < length; ++i) {
+  for (size_t i = 0; i < length; ++i) {
     symbols_.emplace_back(symbols.back());
     symbols.pop_back();
   }
-  assert(length == (symbols_.size() - offset));
+  assert(length == (std::size(symbols_) - offset));
   if (ready())
     subscribe({&symbols_[offset], length});
 }
@@ -265,7 +265,7 @@ void MarketData::subscribe(const std::string_view &topic) {
 }
 
 void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
-  assert(!symbols.empty());
+  assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
     auto now = core::get_system_clock();
     auto message = fmt::format(
@@ -632,7 +632,7 @@ void MarketData::operator()(server::Trace<json::PositionSettlement> const &) {
 }
 
 void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
-  while (!subscribe_queue_.empty()) {
+  while (!std::empty(subscribe_queue_)) {
     auto &tmp = subscribe_queue_.front();
     if (now < tmp.first)
       break;
