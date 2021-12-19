@@ -19,7 +19,6 @@
 #include "roq/download.h"
 #include "roq/server.h"
 
-#include "roq/kucoin_futures/market_data_state.h"
 #include "roq/kucoin_futures/shared.h"
 
 #include "roq/kucoin_futures/json/parser.h"
@@ -45,6 +44,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
       core::io::Context &,
       uint32_t stream_id,
       Shared &,
+      size_t index,
       const std::string_view &uri,
       const std::string_view &query,
       std::chrono::nanoseconds ping_frequency);
@@ -54,7 +54,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
 
   uint16_t stream_id() const { return stream_id_; }
 
-  bool ready() const { return ready_; }
+  bool ready() const { return status_ == ConnectionStatus::READY; }
 
   void operator()(const Event<Start> &);
   void operator()(const Event<Stop> &);
@@ -62,7 +62,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
 
   void operator()(metrics::Writer &);
 
-  void update_subscriptions(std::vector<std::string> &symbols);
+  void subscribe(size_t start_from = 0);
 
  protected:
   void operator()(const core::web::ClientSocket::Connected &) override;
@@ -76,12 +76,10 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
  private:
   void operator()(ConnectionStatus);
 
-  uint32_t download(MarketDataState);
-
-  void subscribe(const roq::span<std::string> &symbols);
+  void subscribe(const roq::span<std::string const> &symbols);
 
   void subscribe(const std::string_view &topic);
-  void subscribe(const std::string_view &topic, const roq::span<std::string> &symbols);
+  void subscribe(const std::string_view &topic, const roq::span<std::string const> &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
 
@@ -116,6 +114,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
   // config
   const uint16_t stream_id_;
   const std::string name_;
+  const size_t index_;
   const std::chrono::nanoseconds ping_frequency_;
   // web socket
   core::web::ClientSocket connection_;
@@ -139,9 +138,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
   std::vector<std::string> symbols_;
   // state
   bool welcome_ = false;
-  bool ready_ = false;
   ConnectionStatus status_ = {};
-  server::Download<MarketDataState> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   // queue

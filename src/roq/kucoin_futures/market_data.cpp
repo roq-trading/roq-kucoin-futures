@@ -47,19 +47,20 @@ MarketData::MarketData(
     core::io::Context &context,
     uint32_t stream_id,
     Shared &shared,
+    size_t index,
     const std::string_view &uri,
     const std::string_view &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
-      ping_frequency_(ping_frequency), connection_(
-                                           *this,
-                                           context,
-                                           core::URI{uri},
-                                           query,
-                                           Flags::ws_ping_freq(),
-                                           Flags::decode_buffer_size(),
-                                           Flags::encode_buffer_size(),
-                                           []() { return std::string(); }),
+      index_(index), ping_frequency_(ping_frequency), connection_(
+                                                          *this,
+                                                          context,
+                                                          core::URI{uri},
+                                                          query,
+                                                          Flags::ws_ping_freq(),
+                                                          Flags::decode_buffer_size(),
+                                                          Flags::encode_buffer_size(),
+                                                          []() { return std::string(); }),
       decode_buffer_(Flags::decode_buffer_size()),
       request_id_(static_cast<uint64_t>(stream_id_) * 1000000),  // scale (debugging)
       counter_{
@@ -85,7 +86,7 @@ MarketData::MarketData(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      shared_(shared), download_({}, [this](auto state) { return download(state); }) {
+      shared_(shared) {
   if (ping_frequency_.count() == 0)
     log::fatal("Unexpected"sv);
   log::info("ping_frequency={}"sv, ping_frequency_);
@@ -139,24 +140,9 @@ void MarketData::operator()(metrics::Writer &writer) {
       .write(latency_.heartbeat, metrics::LATENCY);
 }
 
-void MarketData::update_subscriptions(std::vector<std::string> &symbols) {
-  assert(&symbols != &symbols_);
-  auto max_size = Flags::ws_max_subscriptions_per_stream();
-  auto offset = std::size(symbols_);
-  if (max_size <= offset)
-    return;
-  if (std::empty(symbols))
-    return;
-  symbols_.reserve(max_size);
-  auto length = std::min(max_size - offset, std::size(symbols));
-  assert(length > 0);
-  for (size_t i = 0; i < length; ++i) {
-    symbols_.emplace_back(symbols.back());
-    symbols.pop_back();
-  }
-  assert(length == (std::size(symbols_) - offset));
+void MarketData::subscribe(size_t start_from) {
   if (ready())
-    subscribe({&symbols_[offset], length});
+    subscribe(shared_.symbols.get_slice(index_, start_from));
 }
 
 void MarketData::operator()(const core::web::ClientSocket::Connected &) {
@@ -167,9 +153,7 @@ void MarketData::operator()(const core::web::ClientSocket::Connected &) {
 
 void MarketData::operator()(const core::web::ClientSocket::Disconnected &) {
   ++counter_.disconnect;
-  ready_ = false;
   (*this)(ConnectionStatus::DISCONNECTED);
-  download_.reset();
   welcome_ = false;
   logon_timeout_ = {};
   next_ping_ = {};
@@ -218,25 +202,7 @@ void MarketData::operator()(ConnectionStatus status) {
   }
 }
 
-uint32_t MarketData::download(MarketDataState state) {
-  switch (state) {
-    case MarketDataState::UNDEFINED:
-      assert(false);
-      break;
-    case MarketDataState::SUBSCRIBE:
-      subscribe(symbols_);
-      return {};
-    case MarketDataState::DONE:
-      (*this)(ConnectionStatus::READY);
-      assert(!ready_);
-      ready_ = true;
-      return {};
-  }
-  assert(false);
-  return {};
-}
-
-void MarketData::subscribe(const roq::span<std::string> &symbols) {
+void MarketData::subscribe(const roq::span<std::string const> &symbols) {
   subscribe("/contract/announcement"sv);  // XXX HANS ???
   if (std::empty(symbols))
     return;
@@ -264,7 +230,8 @@ void MarketData::subscribe(const std::string_view &topic) {
   subscribe_queue_.emplace_back(now, message);
 }
 
-void MarketData::subscribe(const std::string_view &topic, const roq::span<std::string> &symbols) {
+void MarketData::subscribe(
+    const std::string_view &topic, const roq::span<std::string const> &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
     auto now = core::get_system_clock();
@@ -309,8 +276,8 @@ void MarketData::operator()(server::Trace<json::Welcome> const &event) {
     auto &[trace_info, welcome] = event;
     log::info<1>("event={{trace_info={}, welcome={}}}"sv, trace_info, welcome);
     welcome_ = true;
-    (*this)(ConnectionStatus::DOWNLOADING);
-    download_.begin();
+    (*this)(ConnectionStatus::READY);
+    subscribe();
   });
 }
 

@@ -166,28 +166,27 @@ void Gateway::operator()(Rest::PublicToken const &public_token) {
 }
 
 void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
-  auto &symbols = symbols_update.symbols;
-  for (auto &iter : market_data_) {
-    if (std::empty(symbols))
-      break;
-    (*iter).update_subscriptions(symbols);
-  }
-  for (;;) {
-    if (std::empty(symbols))
-      break;
-    log::info("Create market-data (public channel)"sv);
-    assert(!std::empty(public_ws_uri_));
-    assert(public_ws_ping_frequency_.count() > 0);
+  auto [size, start_from] = shared_.symbols(symbols_update.symbols);
+  ensure_symbol_slices(size);
+  for (auto &iter : market_data_)
+    (*iter).subscribe(start_from);
+}
+
+void Gateway::ensure_symbol_slices(size_t size) {
+  while (std::size(market_data_) < size) {
+    auto stream_id = ++stream_id_;
+    auto index = std::size(market_data_);
+    log::debug("Create MarketData (stream_id={}, index={})"sv, stream_id, index);
     auto market_data = std::make_unique<MarketData>(
         *this,
         context_,
-        ++stream_id_,
+        stream_id,
         shared_,
+        index,
         public_ws_uri_,
         public_ws_query_,
         public_ws_ping_frequency_);
-    (*market_data).update_subscriptions(symbols);
-    MessageInfo message_info;  // XXX something sensible
+    MessageInfo message_info;
     Start start;
     create_event_and_dispatch(*market_data, message_info, start);
     market_data_.emplace_back(std::move(market_data));
@@ -212,7 +211,7 @@ void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
         private_token.uri,
         private_token.query,
         private_token.ping_frequency);
-    MessageInfo message_info;  // XXX something sensible
+    MessageInfo message_info;
     Start start;
     create_event_and_dispatch(*tmp, message_info, start);
     drop_copy = std::move(tmp);

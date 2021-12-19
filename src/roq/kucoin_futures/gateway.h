@@ -71,6 +71,8 @@ class Gateway final : public server::Handler,
   void operator()(Rest::PublicToken const &) override;
   void operator()(Rest::SymbolsUpdate &) override;
 
+  void ensure_symbol_slices(size_t size);
+
   void operator()(OrderEntry::PrivateToken const &) override;
 
   // utilities
