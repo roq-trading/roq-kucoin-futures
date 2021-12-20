@@ -227,7 +227,7 @@ void MarketData::subscribe(const std::string_view &topic) {
       now.count(),
       topic);
   log::debug("message={}"sv, message);
-  subscribe_queue_.emplace_back(now, message);
+  subscribe_queue_.emplace_back(message);
 }
 
 void MarketData::subscribe(
@@ -246,7 +246,7 @@ void MarketData::subscribe(
         topic,
         symbol);
     log::debug("message={}"sv, message);
-    subscribe_queue_.emplace_back(now, message);
+    subscribe_queue_.emplace_back(message);
   }
 }
 
@@ -499,18 +499,19 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
           },
           [&](auto retries) {  // request
             log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
-            if (retries > Flags::ws_mbp_request_max_retries()) {
-              log::fatal("Unexpected"sv);
+            if (Flags::ws_mbp_request_max_retries() &&
+                Flags::ws_mbp_request_max_retries() < retries) {
+              log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
             }
             auto now = trace_info.source_receive_time;
-            shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+            shared_.depth_request_queue.emplace_back(symbol);
           });
     } catch (BadState &) {
       log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
       // XXX HANS publish stale
       collector.clear();
       auto now = trace_info.source_receive_time;
-      shared_.request_queue.emplace_back(now + Flags::ws_mbp_request_delay(), symbol);
+      shared_.depth_request_queue.emplace_back(symbol);
     }
   });
 }
@@ -599,20 +600,13 @@ void MarketData::operator()(server::Trace<json::PositionSettlement> const &) {
 }
 
 void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
-  while (!std::empty(subscribe_queue_)) {
-    auto &tmp = subscribe_queue_.front();
-    if (now < tmp.first)
-      break;
-    if (shared_.can_request(now, [&]() {
-          auto &message = tmp.second;
-          log::debug(R"(Subscribe: "{}")"sv, message);
-          connection_.send_text(message);
-          subscribe_queue_.pop_front();
-        })) {
-    } else {
-      return;
-    }
-  }
+  subscribe_queue_.dispatch(
+      [&](auto now) { return shared_.rate_limiter.can_request(now); },
+      [&](auto &message) {
+        log::debug(R"(Subscribe: "{}")"sv, message);
+        connection_.send_text(message);
+      },
+      now);
 }
 
 }  // namespace kucoin_futures

@@ -5,7 +5,6 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <chrono>
-#include <deque>
 #include <string>
 #include <utility>
 
@@ -14,6 +13,7 @@
 
 #include "roq/core/memory.h"
 #include "roq/core/symbols.h"
+#include "roq/core/timer_queue.h"
 
 #include "roq/core/limit/rate_limiter.h"
 
@@ -42,28 +42,18 @@ struct Shared final {
     return dispatcher_(std::forward<Args>(args)...);
   }
 
-  template <typename F>
-  bool can_request(std::chrono::nanoseconds now, F callback) {
-    return rate_limiter_.can_request(now, callback);
-  }
-
- protected:
-  bool can_request_helper(std::chrono::nanoseconds now);
-
  public:
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
   absl::flat_hash_map<std::string, core::market::MBP_Sequencer> mbp_collector;
 
-  std::deque<std::pair<std::chrono::nanoseconds, std::string> > request_queue;
-
  private:
   server::Dispatcher &dispatcher_;
 
-  core::limit::RateLimiter rate_limiter_;
-
  public:
+  core::limit::RateLimiter rate_limiter;
   core::Symbols symbols;
+  core::TimerQueue depth_request_queue;
 };
 
 }  // namespace kucoin_futures

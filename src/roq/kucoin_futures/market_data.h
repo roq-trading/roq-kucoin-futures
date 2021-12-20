@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include <deque>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
+
+#include "roq/core/timer_queue.h"
 
 #include "roq/core/metrics/counter.h"
 #include "roq/core/metrics/latency.h"
@@ -142,7 +143,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   // queue
-  std::deque<std::pair<std::chrono::nanoseconds, std::string> > subscribe_queue_;
+  core::TimerQueue subscribe_queue_;
 };
 
 }  // namespace kucoin_futures
