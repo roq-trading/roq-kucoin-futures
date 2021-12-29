@@ -321,6 +321,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
         .security_type = {},
         .base_currency = item.base_currency,
         .quote_currency = item.quote_currency,
+        .margin_currency = item.settle_currency,  // correct? is_inverse
         .commission_currency = {},
         .tick_size = item.tick_size,
         .multiplier = item.multiplier,
