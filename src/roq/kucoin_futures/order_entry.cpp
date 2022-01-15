@@ -132,7 +132,7 @@ uint16_t OrderEntry::operator()(
     const oms::Order &,
     [[maybe_unused]] const std::string_view &request_id,
     [[maybe_unused]] const std::string_view &previous_request_id) {
-  throw oms::NotSupportedException();
+  throw oms::NotSupported("not supported"sv);
 }
 
 uint16_t OrderEntry::operator()(
@@ -560,7 +560,7 @@ void OrderEntry::create_order(
     const Event<CreateOrder> &event, const oms::Order &, const std::string_view &request_id) {
   profile_.create_order([&]() {
     if (!ready())
-      throw oms::NotReadyException();
+      throw oms::NotReady("not ready"sv);
     auto &[message_info, create_order] = event;
     auto method = core::http::Method::POST;
     auto path = "/api/v1/orders"sv;
@@ -698,7 +698,7 @@ void OrderEntry::cancel_order(
     [[maybe_unused]] const std::string_view &previous_request_id) {
   profile_.cancel_order([&]() {
     if (!ready())
-      throw oms::NotReadyException();
+      throw oms::NotReady("not ready"sv);
     auto &[message_info, cancel_order] = event;
     auto method = core::http::Method::DELETE;
     auto path = fmt::format("/api/v1/orders/{}"sv, order.external_order_id);
