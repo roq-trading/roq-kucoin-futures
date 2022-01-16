@@ -346,7 +346,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
     };
     handler_(symbols_update);
   }
-  if (ROQ_UNLIKELY(counter > 0))
+  if (counter > 0) [[unlikely]]
     log::info("Contracts {} / {}"sv, counter, std::size(contracts.data));
   // market status
   for (auto &item : contracts.data) {
