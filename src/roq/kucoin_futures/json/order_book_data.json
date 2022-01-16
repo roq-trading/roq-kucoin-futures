@@ -4,8 +4,8 @@
 "values": [
 	{ "name": "symbol", "type": "std::string_view" },
 	{ "name": "sequence", "type": "int64_t" },
-	{ "name": "asks", "type": "roq::span<OrderBookDataItem>" },
-	{ "name": "bids", "type": "roq::span<OrderBookDataItem>" },
+	{ "name": "asks", "type": "std::span<OrderBookDataItem>" },
+	{ "name": "bids", "type": "std::span<OrderBookDataItem>" },
 	{ "name": "ts", "type": "std::chrono::nanoseconds" }
 ]
 }

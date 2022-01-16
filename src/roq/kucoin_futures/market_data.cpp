@@ -202,7 +202,7 @@ void MarketData::operator()(ConnectionStatus status) {
   }
 }
 
-void MarketData::subscribe(const roq::span<std::string const> &symbols) {
+void MarketData::subscribe(const std::span<std::string const> &symbols) {
   subscribe("/contract/announcement"sv);  // XXX HANS ???
   if (std::empty(symbols))
     return;
@@ -231,7 +231,7 @@ void MarketData::subscribe(const std::string_view &topic) {
 }
 
 void MarketData::subscribe(
-    const std::string_view &topic, const roq::span<std::string const> &symbols) {
+    const std::string_view &topic, const std::span<std::string const> &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
     auto now = core::get_system_clock();
@@ -449,7 +449,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
         .price_level = {},
         .number_of_orders = {},
     };
-    roq::span<MBPUpdate> bids_or_asks{&mbp_update, 1}, empty;
+    std::span<MBPUpdate> bids_or_asks{&mbp_update, 1}, empty;
     auto bids = side == Side::BUY ? bids_or_asks : empty;
     auto asks = side == Side::SELL ? bids_or_asks : empty;
     try {

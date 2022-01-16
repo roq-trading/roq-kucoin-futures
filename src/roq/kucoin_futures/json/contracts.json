@@ -4,6 +4,6 @@
 "values": [
 	{ "name": "code", "type": "std::string_view" },
 	{ "name": "msg", "type": "std::string_view", "optional": true },
-	{ "name": "data", "type": "roq::span<Contract>" }
+	{ "name": "data", "type": "std::span<Contract>" }
 ]
 }

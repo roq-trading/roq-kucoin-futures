@@ -77,10 +77,10 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
  private:
   void operator()(ConnectionStatus);
 
-  void subscribe(const roq::span<std::string const> &symbols);
+  void subscribe(const std::span<std::string const> &symbols);
 
   void subscribe(const std::string_view &topic);
-  void subscribe(const std::string_view &topic, const roq::span<std::string const> &symbols);
+  void subscribe(const std::string_view &topic, const std::span<std::string const> &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
 
