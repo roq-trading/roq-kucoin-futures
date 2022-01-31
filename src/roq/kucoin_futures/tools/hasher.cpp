@@ -17,10 +17,10 @@ namespace kucoin_futures {
 namespace tools {
 
 namespace {
-static auto create_hmac(const std::string_view &secret) {
+auto create_hmac(const std::string_view &secret) {
   return core::crypto::HMAC_SHA256(secret);
 }
-static auto create_signed_passphrase(
+auto create_signed_passphrase(
     core::crypto::HMAC_SHA256 &hmac, const std::string_view &passphrase) {
   hmac.clear();
   hmac.update(passphrase);
