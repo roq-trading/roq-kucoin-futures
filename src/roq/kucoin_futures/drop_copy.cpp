@@ -31,6 +31,19 @@ struct create_metrics final : public core::metrics::Factory {
   explicit create_metrics(const std::string_view &group, const std::string_view &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
+
+auto create_connection(auto &handler, auto &context, const auto &uri, const auto &query) {
+  core::URI uri_{uri};
+  core::web::ClientSocket::Config config{
+      .validate_certificate = server::Flags::tls_validate_certificate(),
+      .uri = uri_,
+      .query = query,
+      .ping_frequency = Flags::ws_ping_freq(),
+      .read_buffer_size = Flags::decode_buffer_size(),
+      .encode_buffer_size = Flags::encode_buffer_size(),
+  };
+  return core::web::ClientSocket{handler, context, config, []() { return std::string(); }};
+}
 }  // namespace
 
 DropCopy::DropCopy(
@@ -43,16 +56,8 @@ DropCopy::DropCopy(
     const std::string_view &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
-      connection_(
-          *this,
-          context,
-          core::URI{uri},
-          query,
-          Flags::ws_ping_freq(),
-          Flags::decode_buffer_size(),
-          Flags::encode_buffer_size(),
-          []() { return std::string(); }),
-      ping_frequency_(ping_frequency), decode_buffer_(Flags::decode_buffer_size()),
+      connection_(create_connection(*this, context, uri, query)), ping_frequency_(ping_frequency),
+      decode_buffer_(Flags::decode_buffer_size()),
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
       },
