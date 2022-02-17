@@ -20,8 +20,7 @@ namespace {
 auto create_hmac(const std::string_view &secret) {
   return core::crypto::HMAC_SHA256(secret);
 }
-auto create_signed_passphrase(
-    core::crypto::HMAC_SHA256 &hmac, const std::string_view &passphrase) {
+auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, const std::string_view &passphrase) {
   hmac.clear();
   hmac.update(passphrase);
   std::array<char, 32> buffer;
