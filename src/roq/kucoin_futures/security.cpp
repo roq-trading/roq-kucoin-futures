@@ -21,7 +21,7 @@ std::string Security::create_signature_api_v1(
     const std::string_view &path,
     const std::string_view &query,
     const std::string_view &body) {
-  auto now = core::get_realtime_clock();
+  auto now = core::clock::GetRealTime();
   return hasher_.create_headers_v1(method, path, query, body, utils::safe_cast(now));
 }
 
@@ -30,7 +30,7 @@ std::string Security::create_signature_api_v2(
     const std::string_view &path,
     const std::string_view &query,
     const std::string_view &body) {
-  auto now = core::get_realtime_clock();
+  auto now = core::clock::GetRealTime();
   return hasher_.create_headers_v2(method, path, query, body, utils::safe_cast(now));
 }
 

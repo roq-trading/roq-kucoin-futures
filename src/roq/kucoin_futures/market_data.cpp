@@ -153,7 +153,7 @@ void MarketData::subscribe(size_t start_from) {
 
 void MarketData::operator()(const core::web::ClientSocket::Connected &) {
   assert(logon_timeout_.count() == 0);
-  auto now = core::get_system_clock();
+  auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
@@ -223,7 +223,7 @@ void MarketData::subscribe(const std::span<std::string const> &symbols) {
 }
 
 void MarketData::subscribe(const std::string_view &topic) {
-  auto now = core::get_system_clock();
+  auto now = core::clock::GetSystem();
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
@@ -241,7 +241,7 @@ void MarketData::subscribe(
     const std::string_view &topic, const std::span<std::string const> &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
-    auto now = core::get_system_clock();
+    auto now = core::clock::GetSystem();
     auto message = fmt::format(
         R"({{)"
         R"("id":"{}",)"

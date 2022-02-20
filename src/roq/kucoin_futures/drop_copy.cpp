@@ -120,7 +120,7 @@ void DropCopy::operator()(metrics::Writer &writer) {
 
 void DropCopy::operator()(const core::web::ClientSocket::Connected &) {
   assert(logon_timeout_.count() == 0);
-  auto now = core::get_system_clock();
+  auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
@@ -201,7 +201,7 @@ void DropCopy::subscribe() {
 }
 
 void DropCopy::subscribe(const std::string_view &topic) {
-  auto now = core::get_system_clock();
+  auto now = core::clock::GetSystem();
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
