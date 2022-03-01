@@ -36,7 +36,7 @@ auto create_connection(auto &handler, auto &context, const auto &uri, const auto
   core::URI uri_{uri};
   core::web::ClientSocket::Config config{
       .validate_certificate = server::Flags::tls_validate_certificate(),
-      .uri = uri_,
+      .uris = {&uri_, 1},
       .query = query,
       .ping_frequency = Flags::ws_ping_freq(),
       .read_buffer_size = Flags::decode_buffer_size(),
