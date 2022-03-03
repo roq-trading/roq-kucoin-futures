@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <catch2/catch.hpp>
 
 #include "roq/core/datetime.h"
 
@@ -16,7 +16,9 @@ using namespace roq::kucoin_futures;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
-TEST(json_withdraw_hold_change, example) {
+using namespace Catch::literals;
+
+TEST_CASE("json_withdraw_hold_change_example", "json_withdraw_hold_change") {
   const auto message = R"({)"
                        R"("userId": "xbc453tg732eba53a88ggyt8c",)"
                        R"("topic": "/contractAccount/wallet",)"
@@ -30,11 +32,11 @@ TEST(json_withdraw_hold_change, example) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::WithdrawHoldChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "xbc453tg732eba53a88ggyt8c"sv);
-  EXPECT_EQ(obj.topic, "/contractAccount/wallet"sv);
-  EXPECT_EQ(obj.subject, json::Subject::WITHDRAW_HOLD_CHANGE);
+  CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
+  CHECK(obj.topic == "/contractAccount/wallet"sv);
+  CHECK(obj.subject == json::Subject::WITHDRAW_HOLD_CHANGE);
   auto &data = obj.data;
-  EXPECT_EQ(data.withdraw_hold, 5923.0);
-  EXPECT_EQ(data.currency, "USDT"sv);
-  EXPECT_EQ(data.timestamp, 1553842862614ms);
+  CHECK(data.withdraw_hold == 5923.0);
+  CHECK(data.currency == "USDT"sv);
+  CHECK(data.timestamp == 1553842862614ms);
 }

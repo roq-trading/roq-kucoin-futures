@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <catch2/catch.hpp>
 
 #include "roq/core/datetime.h"
 
@@ -16,7 +16,9 @@ using namespace roq::kucoin_futures;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
-TEST(json_position_change, example_1) {
+using namespace Catch::literals;
+
+TEST_CASE("json_position_change_example_1", "json_position_change") {
   const auto message = R"({ )"
                        R"("userId": "5c32d69203aa676ce4b543c7",)"
                        R"("topic": "/contract/position:XBTUSDM",  )"
@@ -60,46 +62,46 @@ TEST(json_position_change, example_1) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::PositionChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "5c32d69203aa676ce4b543c7"sv);
-  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"sv);
-  EXPECT_EQ(obj.subject, json::Subject::POSITION_CHANGE);
+  CHECK(obj.user_id == "5c32d69203aa676ce4b543c7"sv);
+  CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
+  CHECK(obj.subject == json::Subject::POSITION_CHANGE);
   auto &data = obj.data;
-  EXPECT_DOUBLE_EQ(data.realised_gross_pnl, 0.0);
-  EXPECT_EQ(data.cross_mode, false);
-  EXPECT_DOUBLE_EQ(data.liquidation_price, 1000000.0);
-  EXPECT_DOUBLE_EQ(data.pos_loss, 0.0);
-  EXPECT_DOUBLE_EQ(data.avg_entry_price, 7508.22);
-  EXPECT_DOUBLE_EQ(data.unrealised_pnl, -0.00014735);
-  EXPECT_DOUBLE_EQ(data.mark_price, 7947.83);
-  EXPECT_DOUBLE_EQ(data.pos_margin, 0.00266779);
-  EXPECT_DOUBLE_EQ(data.risk_limit, 200.0);
-  EXPECT_DOUBLE_EQ(data.unrealised_cost, 0.00266375);
-  EXPECT_DOUBLE_EQ(data.pos_comm, 0.00000392);
-  EXPECT_DOUBLE_EQ(data.pos_maint, 0.00001724);
-  EXPECT_DOUBLE_EQ(data.pos_cost, 0.00266375);
-  EXPECT_DOUBLE_EQ(data.maint_margin_req, 0.005);
-  EXPECT_DOUBLE_EQ(data.bankrupt_price, 1000000.0);
-  EXPECT_DOUBLE_EQ(data.realised_cost, 0.00000271);
-  EXPECT_DOUBLE_EQ(data.mark_value, 0.0025164);
-  EXPECT_DOUBLE_EQ(data.pos_init, 0.00266375);
-  EXPECT_DOUBLE_EQ(data.realised_pnl, -0.00000253);
-  EXPECT_DOUBLE_EQ(data.maint_margin, 0.00252044);
-  EXPECT_DOUBLE_EQ(data.real_leverage, 1.06);
-  EXPECT_DOUBLE_EQ(data.current_cost, 0.00266375);
-  EXPECT_EQ(data.opening_timestamp, 1558433191000ms);
-  EXPECT_DOUBLE_EQ(data.current_qty, -20.0);
-  EXPECT_DOUBLE_EQ(data.delev_percentage, 0.52);
-  EXPECT_DOUBLE_EQ(data.current_comm, 0.00000271);
-  EXPECT_DOUBLE_EQ(data.realised_gross_cost, 0.0);
-  EXPECT_EQ(data.is_open, true);
-  EXPECT_DOUBLE_EQ(data.pos_cross, 1.2e-7);
-  EXPECT_EQ(data.current_timestamp, 1558506060394ms);
-  EXPECT_DOUBLE_EQ(data.unrealised_roe_pcnt, -0.0553);
-  EXPECT_DOUBLE_EQ(data.unrealised_pnl_pcnt, -0.0553);
-  EXPECT_EQ(data.settle_currency, "XBT"sv);
+  CHECK(data.realised_gross_pnl == 0.0_a);
+  CHECK(data.cross_mode == false);
+  CHECK(data.liquidation_price == 1000000.0_a);
+  CHECK(data.pos_loss == 0.0_a);
+  CHECK(data.avg_entry_price == 7508.22_a);
+  CHECK(data.unrealised_pnl == -0.00014735_a);
+  CHECK(data.mark_price == 7947.83_a);
+  CHECK(data.pos_margin == 0.00266779_a);
+  CHECK(data.risk_limit == 200.0_a);
+  CHECK(data.unrealised_cost == 0.00266375_a);
+  CHECK(data.pos_comm == 0.00000392_a);
+  CHECK(data.pos_maint == 0.00001724_a);
+  CHECK(data.pos_cost == 0.00266375_a);
+  CHECK(data.maint_margin_req == 0.005_a);
+  CHECK(data.bankrupt_price == 1000000.0_a);
+  CHECK(data.realised_cost == 0.00000271_a);
+  CHECK(data.mark_value == 0.0025164_a);
+  CHECK(data.pos_init == 0.00266375_a);
+  CHECK(data.realised_pnl == -0.00000253_a);
+  CHECK(data.maint_margin == 0.00252044_a);
+  CHECK(data.real_leverage == 1.06_a);
+  CHECK(data.current_cost == 0.00266375_a);
+  CHECK(data.opening_timestamp == 1558433191000ms);
+  CHECK(data.current_qty == -20.0_a);
+  CHECK(data.delev_percentage == 0.52_a);
+  CHECK(data.current_comm == 0.00000271_a);
+  CHECK(data.realised_gross_cost == 0.0_a);
+  CHECK(data.is_open == true);
+  CHECK(data.pos_cross == 1.2e-7_a);
+  CHECK(data.current_timestamp == 1558506060394ms);
+  CHECK(data.unrealised_roe_pcnt == -0.0553_a);
+  CHECK(data.unrealised_pnl_pcnt == -0.0553_a);
+  CHECK(data.settle_currency == "XBT"sv);
 }
 
-TEST(json_position_change, example_2) {
+TEST_CASE("json_position_change_example_2", "json_position_change") {
   const auto message = R"({ )"
                        R"("userId": "5cd3f1a7b7ebc19ae9558591",)"
                        R"("topic": "/contract/position:XBTUSDM",  )"
@@ -120,18 +122,18 @@ TEST(json_position_change, example_2) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::PositionChange>(message, buffer_);
-  EXPECT_EQ(obj.user_id, "5cd3f1a7b7ebc19ae9558591"sv);
-  EXPECT_EQ(obj.topic, "/contract/position:XBTUSDM"sv);
-  EXPECT_EQ(obj.subject, json::Subject::POSITION_CHANGE);
+  CHECK(obj.user_id == "5cd3f1a7b7ebc19ae9558591"sv);
+  CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
+  CHECK(obj.subject == json::Subject::POSITION_CHANGE);
   auto &data = obj.data;
-  EXPECT_DOUBLE_EQ(data.mark_price, 7947.83);
-  EXPECT_DOUBLE_EQ(data.mark_value, 0.0025164);
-  EXPECT_DOUBLE_EQ(data.maint_margin, 0.00252044);
-  EXPECT_DOUBLE_EQ(data.real_leverage, 10.06);
-  EXPECT_DOUBLE_EQ(data.unrealised_pnl, -0.00014735);
-  EXPECT_DOUBLE_EQ(data.unrealised_roe_pcnt, -0.0553);
-  EXPECT_DOUBLE_EQ(data.unrealised_pnl_pcnt, -0.0553);
-  EXPECT_DOUBLE_EQ(data.delev_percentage, 0.52);
-  EXPECT_EQ(data.current_timestamp, 1558087175068ms);
-  EXPECT_EQ(data.settle_currency, "XBT"sv);
+  CHECK(data.mark_price == 7947.83_a);
+  CHECK(data.mark_value == 0.0025164_a);
+  CHECK(data.maint_margin == 0.00252044_a);
+  CHECK(data.real_leverage == 10.06_a);
+  CHECK(data.unrealised_pnl == -0.00014735_a);
+  CHECK(data.unrealised_roe_pcnt == -0.0553_a);
+  CHECK(data.unrealised_pnl_pcnt == -0.0553_a);
+  CHECK(data.delev_percentage == 0.52_a);
+  CHECK(data.current_timestamp == 1558087175068ms);
+  CHECK(data.settle_currency == "XBT"sv);
 }

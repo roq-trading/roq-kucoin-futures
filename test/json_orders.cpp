@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <catch2/catch.hpp>
 
 #include "roq/core/datetime.h"
 
@@ -15,7 +15,9 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-TEST(json_orders, simple) {
+using namespace Catch::literals;
+
+TEST_CASE("json_orders_simple", "json_orders") {
   const auto message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
@@ -29,12 +31,12 @@ TEST(json_orders, simple) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::Orders>(message, buffer_);
-  EXPECT_EQ(obj.code, 200000);
+  CHECK(obj.code == 200000);
   auto &data = obj.data;
-  EXPECT_EQ(data.current_page, 1);
-  EXPECT_EQ(data.page_size, 50);
-  EXPECT_EQ(data.total_num, 0);
-  EXPECT_EQ(data.total_page, 0);
+  CHECK(data.current_page == 1);
+  CHECK(data.page_size == 50);
+  CHECK(data.total_num == 0);
+  CHECK(data.total_page == 0);
   auto &items = data.items;
-  EXPECT_EQ(std::size(items), 0);
+  CHECK(std::size(items) == 0);
 }

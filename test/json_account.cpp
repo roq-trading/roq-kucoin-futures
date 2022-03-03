@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <catch2/catch.hpp>
 
 #include "roq/core/datetime.h"
 
@@ -15,7 +15,9 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-TEST(json_account, simple) {
+using namespace Catch::literals;
+
+TEST_CASE("json_account_simple", "json_account") {
   const auto message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
@@ -32,14 +34,14 @@ TEST(json_account, simple) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::Account>(message, buffer_);
-  EXPECT_EQ(obj.code, 200000);
+  CHECK(obj.code == 200000);
   auto &data = obj.data;
-  EXPECT_DOUBLE_EQ(data.account_equity, 0.0);
-  EXPECT_DOUBLE_EQ(data.unrealised_pnl, 0.0);
-  EXPECT_DOUBLE_EQ(data.margin_balance, 0.0);
-  EXPECT_DOUBLE_EQ(data.position_margin, 0.0);
-  EXPECT_DOUBLE_EQ(data.order_margin, 0.0);
-  EXPECT_DOUBLE_EQ(data.frozen_funds, 0.0);
-  EXPECT_DOUBLE_EQ(data.available_balance, 0.0);
-  EXPECT_EQ(data.currency, "XBT"sv);
+  CHECK(data.account_equity == 0.0_a);
+  CHECK(data.unrealised_pnl == 0.0_a);
+  CHECK(data.margin_balance == 0.0_a);
+  CHECK(data.position_margin == 0.0_a);
+  CHECK(data.order_margin == 0.0_a);
+  CHECK(data.frozen_funds == 0.0_a);
+  CHECK(data.available_balance == 0.0_a);
+  CHECK(data.currency == "XBT"sv);
 }

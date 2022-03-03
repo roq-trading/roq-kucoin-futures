@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <catch2/catch.hpp>
 
 #include "roq/core/datetime.h"
 
@@ -16,7 +16,9 @@ using namespace roq::kucoin_futures;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
-TEST(json_order_change, example) {
+using namespace Catch::literals;
+
+TEST_CASE("json_order_change_example", "json_order_change") {
   const auto message = R"({)"
                        R"("type": "message",)"
                        R"("topic": "/contractMarket/tradeOrders",)"
@@ -47,28 +49,28 @@ TEST(json_order_change, example) {
   core::Buffer buffer(8192);
   core::json::Buffer buffer_(buffer);
   auto obj = core::json::Parser::create<json::OrderChange>(message, buffer_);
-  EXPECT_EQ(obj.type, json::Type::MESSAGE);
-  EXPECT_EQ(obj.topic, "/contractMarket/tradeOrders"sv);
-  EXPECT_EQ(obj.subject, json::Subject::ORDER_CHANGE);
-  EXPECT_EQ(obj.channel_type, "private"sv);
+  CHECK(obj.type == json::Type::MESSAGE);
+  CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
+  CHECK(obj.subject == json::Subject::ORDER_CHANGE);
+  CHECK(obj.channel_type == "private"sv);
   auto &data = obj.data;
-  EXPECT_EQ(data.order_id, "5cdfc138b21023a909e5ad55"sv);
-  EXPECT_EQ(data.symbol, "XBTUSDM"sv);
-  EXPECT_EQ(data.type, "match"sv);
-  EXPECT_EQ(data.status, "open"sv);
-  EXPECT_EQ(std::isnan(data.match_size), true);
-  EXPECT_EQ(std::isnan(data.match_price), true);
-  EXPECT_EQ(data.order_type, "limit"sv);
-  EXPECT_EQ(data.side, "buy"sv);
-  EXPECT_DOUBLE_EQ(data.price, 3600.0);
-  EXPECT_DOUBLE_EQ(data.size, 20000.0);
-  EXPECT_DOUBLE_EQ(data.remain_size, 20001.0);
-  EXPECT_DOUBLE_EQ(data.filled_size, 20000.0);
-  EXPECT_DOUBLE_EQ(data.canceled_size, 0.0);
-  EXPECT_EQ(data.trade_id, "5ce24c16b210233c36eexxxx"sv);
-  EXPECT_EQ(data.client_oid, "5ce24c16b210233c36ee321d"sv);
-  EXPECT_EQ(data.order_time, 1545914149935808589ns);
-  EXPECT_DOUBLE_EQ(data.old_size, 15000.0);
-  EXPECT_EQ(data.liquidity, "maker"sv);
-  EXPECT_EQ(data.ts, 1545914149935808589ns);
+  CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
+  CHECK(data.symbol == "XBTUSDM"sv);
+  CHECK(data.type == "match"sv);
+  CHECK(data.status == "open"sv);
+  CHECK(std::isnan(data.match_size) == true);
+  CHECK(std::isnan(data.match_price) == true);
+  CHECK(data.order_type == "limit"sv);
+  CHECK(data.side == "buy"sv);
+  CHECK(data.price == 3600.0_a);
+  CHECK(data.size == 20000.0_a);
+  CHECK(data.remain_size == 20001.0_a);
+  CHECK(data.filled_size == 20000.0_a);
+  CHECK(data.canceled_size == 0.0_a);
+  CHECK(data.trade_id == "5ce24c16b210233c36eexxxx"sv);
+  CHECK(data.client_oid == "5ce24c16b210233c36ee321d"sv);
+  CHECK(data.order_time == 1545914149935808589ns);
+  CHECK(data.old_size == 15000.0_a);
+  CHECK(data.liquidity == "maker"sv);
+  CHECK(data.ts == 1545914149935808589ns);
 }
