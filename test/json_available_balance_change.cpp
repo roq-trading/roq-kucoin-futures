@@ -18,7 +18,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("json_available_balance_change_example", "json_available_balance_change") {
+TEST_CASE("json_available_balance_change_example", "[json_available_balance_change]") {
   const auto message = R"({)"
                        R"("userId": "xbc453tg732eba53a88ggyt8c",)"
                        R"("topic": "/contractAccount/wallet",)"

@@ -18,7 +18,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("json_token_simple", "json_token") {
+TEST_CASE("json_token_simple", "[json_token]") {
   const auto message =
       R"({)"
       R"("code":"200000",)"
