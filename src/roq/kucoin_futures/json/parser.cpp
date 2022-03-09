@@ -1,10 +1,10 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/json/parser.h"
+#include "roq/kucoin_futures/json/parser.hpp"
 
-#include "roq/logging.h"
+#include "roq/logging.hpp"
 
-#include "roq/kucoin_futures/json/message.h"
+#include "roq/kucoin_futures/json/message.hpp"
 
 using namespace std::literals;
 

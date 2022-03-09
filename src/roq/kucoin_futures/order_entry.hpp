@@ -8,28 +8,28 @@
 #include <string_view>
 #include <vector>
 
-#include "roq/core/buffer.h"
-#include "roq/core/download.h"
+#include "roq/core/buffer.hpp"
+#include "roq/core/download.hpp"
 
-#include "roq/core/metrics/counter.h"
-#include "roq/core/metrics/latency.h"
-#include "roq/core/metrics/profile.h"
+#include "roq/core/metrics/counter.hpp"
+#include "roq/core/metrics/latency.hpp"
+#include "roq/core/metrics/profile.hpp"
 
-#include "roq/core/io/context.h"
+#include "roq/core/io/context.hpp"
 
-#include "roq/core/web/client.h"
+#include "roq/core/web/client.hpp"
 
-#include "roq/server.h"
+#include "roq/server.hpp"
 
-#include "roq/kucoin_futures/order_entry_state.h"
-#include "roq/kucoin_futures/security.h"
-#include "roq/kucoin_futures/shared.h"
+#include "roq/kucoin_futures/order_entry_state.hpp"
+#include "roq/kucoin_futures/security.hpp"
+#include "roq/kucoin_futures/shared.hpp"
 
-#include "roq/kucoin_futures/json/account.h"
-#include "roq/kucoin_futures/json/fills.h"
-#include "roq/kucoin_futures/json/orders.h"
-#include "roq/kucoin_futures/json/positions.h"
-#include "roq/kucoin_futures/json/token.h"
+#include "roq/kucoin_futures/json/account.hpp"
+#include "roq/kucoin_futures/json/fills.hpp"
+#include "roq/kucoin_futures/json/orders.hpp"
+#include "roq/kucoin_futures/json/positions.hpp"
+#include "roq/kucoin_futures/json/token.hpp"
 
 namespace roq {
 namespace kucoin_futures {

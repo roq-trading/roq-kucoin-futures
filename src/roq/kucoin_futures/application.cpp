@@ -1,10 +1,10 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/application.h"
+#include "roq/kucoin_futures/application.hpp"
 
-#include "roq/kucoin_futures/config.h"
-#include "roq/kucoin_futures/flags.h"
-#include "roq/kucoin_futures/gateway.h"
+#include "roq/kucoin_futures/config.hpp"
+#include "roq/kucoin_futures/flags.hpp"
+#include "roq/kucoin_futures/gateway.hpp"
 
 using namespace std::literals;
 

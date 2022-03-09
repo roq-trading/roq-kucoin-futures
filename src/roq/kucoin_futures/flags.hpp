@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "roq/kucoin_futures/flags/flags.h"
+#include "roq/kucoin_futures/flags/flags.hpp"
 
 namespace roq {
 namespace kucoin_futures {

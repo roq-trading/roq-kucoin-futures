@@ -1,12 +1,12 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/shared.h"
+#include "roq/kucoin_futures/shared.hpp"
 
-#include "roq/logging.h"
+#include "roq/logging.hpp"
 
-#include "roq/utils/update.h"
+#include "roq/utils/update.hpp"
 
-#include "roq/kucoin_futures/flags.h"
+#include "roq/kucoin_futures/flags.hpp"
 
 namespace roq {
 namespace kucoin_futures {

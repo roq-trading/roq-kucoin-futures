@@ -4,11 +4,11 @@
 
 #include <catch2/catch.hpp>
 
-#include "roq/core/datetime.h"
+#include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.h"
+#include "roq/core/json/parser.hpp"
 
-#include "roq/kucoin_futures/json/position_settlement.h"
+#include "roq/kucoin_futures/json/position_settlement.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;

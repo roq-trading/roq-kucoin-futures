@@ -5,11 +5,11 @@
 #include <string>
 #include <string_view>
 
-#include "roq/core/http/method.h"
+#include "roq/core/http/method.hpp"
 
-#include "roq/kucoin_futures/config.h"
+#include "roq/kucoin_futures/config.hpp"
 
-#include "roq/kucoin_futures/tools/hasher.h"
+#include "roq/kucoin_futures/tools/hasher.hpp"
 
 namespace roq {
 namespace kucoin_futures {

@@ -1,17 +1,17 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/order_entry.h"
+#include "roq/kucoin_futures/order_entry.hpp"
 
 #include <utility>
 
-#include "roq/utils/mask.h"
-#include "roq/utils/update.h"
+#include "roq/utils/mask.hpp"
+#include "roq/utils/update.hpp"
 
-#include "roq/core/metrics/factory.h"
+#include "roq/core/metrics/factory.hpp"
 
-#include "roq/kucoin_futures/flags.h"
+#include "roq/kucoin_futures/flags.hpp"
 
-#include "roq/kucoin_futures/json/utils.h"
+#include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;
 

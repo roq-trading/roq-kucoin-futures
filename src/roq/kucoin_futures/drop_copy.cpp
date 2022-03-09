@@ -1,17 +1,17 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/drop_copy.h"
+#include "roq/kucoin_futures/drop_copy.hpp"
 
-#include "roq/utils/mask.h"
-#include "roq/utils/update.h"
+#include "roq/utils/mask.hpp"
+#include "roq/utils/update.hpp"
 
-#include "roq/core/metrics/factory.h"
+#include "roq/core/metrics/factory.hpp"
 
-#include "roq/core/json/buffer.h"
+#include "roq/core/json/buffer.hpp"
 
-#include "roq/kucoin_futures/flags.h"
+#include "roq/kucoin_futures/flags.hpp"
 
-#include "roq/kucoin_futures/json/utils.h"
+#include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;
 

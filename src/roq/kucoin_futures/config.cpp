@@ -1,12 +1,12 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/config.h"
+#include "roq/kucoin_futures/config.hpp"
 
 #include <utility>
 
-#include "roq/logging.h"
+#include "roq/logging.hpp"
 
-#include "roq/kucoin_futures/flags.h"
+#include "roq/kucoin_futures/flags.hpp"
 
 using namespace std::literals;
 

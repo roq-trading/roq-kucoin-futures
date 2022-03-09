@@ -1,25 +1,25 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/market_data.h"
+#include "roq/kucoin_futures/market_data.hpp"
 
 #include <algorithm>
 
-#include "roq/utils/mask.h"
-#include "roq/utils/safe_cast.h"
-#include "roq/utils/update.h"
+#include "roq/utils/mask.hpp"
+#include "roq/utils/safe_cast.hpp"
+#include "roq/utils/update.hpp"
 
-#include "roq/core/back_emplacer.h"
-#include "roq/core/charconv.h"
+#include "roq/core/back_emplacer.hpp"
+#include "roq/core/charconv.hpp"
 
-#include "roq/core/tools/exception.h"
+#include "roq/core/tools/exception.hpp"
 
-#include "roq/core/metrics/factory.h"
+#include "roq/core/metrics/factory.hpp"
 
-#include "roq/kucoin_futures/flags.h"
+#include "roq/kucoin_futures/flags.hpp"
 
-#include "roq/kucoin_futures/json/utils.h"
+#include "roq/kucoin_futures/json/utils.hpp"
 
-#include "roq/kucoin_futures/tools/splitter.h"
+#include "roq/kucoin_futures/tools/splitter.hpp"
 
 using namespace std::literals;
 

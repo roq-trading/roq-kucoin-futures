@@ -9,17 +9,17 @@
 #include <utility>
 #include <vector>
 
-#include "roq/server.h"
+#include "roq/server.hpp"
 
-#include "roq/core/io/context.h"
+#include "roq/core/io/context.hpp"
 
-#include "roq/kucoin_futures/config.h"
-#include "roq/kucoin_futures/drop_copy.h"
-#include "roq/kucoin_futures/market_data.h"
-#include "roq/kucoin_futures/order_entry.h"
-#include "roq/kucoin_futures/rest.h"
-#include "roq/kucoin_futures/security.h"
-#include "roq/kucoin_futures/shared.h"
+#include "roq/kucoin_futures/config.hpp"
+#include "roq/kucoin_futures/drop_copy.hpp"
+#include "roq/kucoin_futures/market_data.hpp"
+#include "roq/kucoin_futures/order_entry.hpp"
+#include "roq/kucoin_futures/rest.hpp"
+#include "roq/kucoin_futures/security.hpp"
+#include "roq/kucoin_futures/shared.hpp"
 
 namespace roq {
 namespace kucoin_futures {

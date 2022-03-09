@@ -1,14 +1,14 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/tools/hasher.h"
+#include "roq/kucoin_futures/tools/hasher.hpp"
 
 #include <fmt/format.h>
 
 #include <array>
 
-#include "roq/core/binascii/base64.h"
+#include "roq/core/binascii/base64.hpp"
 
-#include "roq/core/crypto/sha.h"
+#include "roq/core/crypto/sha.hpp"
 
 using namespace std::literals;
 

@@ -1,8 +1,8 @@
 /* Copyright (c) 2017-2022, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/tools/splitter.h"
+#include "roq/kucoin_futures/tools/splitter.hpp"
 
-#include "roq/core/charconv.h"
+#include "roq/core/charconv.hpp"
 
 using namespace std::literals;
 
