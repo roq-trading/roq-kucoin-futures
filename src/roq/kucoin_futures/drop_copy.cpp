@@ -2,7 +2,7 @@
 
 #include "roq/kucoin_futures/drop_copy.hpp"
 
-#include "roq/utils/mask.hpp"
+#include "roq/mask.hpp"
 #include "roq/utils/update.hpp"
 
 #include "roq/core/metrics/factory.hpp"
@@ -20,7 +20,7 @@ namespace kucoin_futures {
 
 namespace {
 const auto NAME = "ex"sv;
-const auto SUPPORTS = utils::Mask{
+const auto SUPPORTS = Mask{
     SupportType::ORDER_ACK,
     SupportType::ORDER,
     SupportType::TRADE,
