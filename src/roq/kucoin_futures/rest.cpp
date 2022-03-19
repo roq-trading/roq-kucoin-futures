@@ -308,7 +308,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
   auto &[trace_info, contracts] = event;
   log::info<4>("contracts={}"sv, contracts);
   // reference data
-  std::vector<std::string> symbols;
+  std::vector<Symbol> symbols;
   // symbols.reserve(std::size(symbols.data));
   size_t counter = 0;
   for (size_t i = 0; i < std::size(contracts.data); ++i) {

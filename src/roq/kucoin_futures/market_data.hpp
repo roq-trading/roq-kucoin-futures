@@ -77,10 +77,10 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
  private:
   void operator()(ConnectionStatus);
 
-  void subscribe(const std::span<std::string const> &symbols);
+  void subscribe(const std::span<Symbol const> &symbols);
 
   void subscribe(const std::string_view &topic);
-  void subscribe(const std::string_view &topic, const std::span<std::string const> &symbols);
+  void subscribe(const std::string_view &topic, const std::span<Symbol const> &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
 
@@ -136,7 +136,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
   } latency_;
   // cache
   Shared &shared_;
-  std::vector<std::string> symbols_;
+  std::vector<Symbol> symbols_;
   // state
   bool welcome_ = false;
   ConnectionStatus status_ = {};

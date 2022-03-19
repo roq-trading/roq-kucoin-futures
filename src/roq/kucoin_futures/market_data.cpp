@@ -209,7 +209,7 @@ void MarketData::operator()(ConnectionStatus status) {
   }
 }
 
-void MarketData::subscribe(const std::span<std::string const> &symbols) {
+void MarketData::subscribe(const std::span<Symbol const> &symbols) {
   subscribe("/contract/announcement"sv);  // XXX HANS ???
   if (std::empty(symbols))
     return;
@@ -237,8 +237,7 @@ void MarketData::subscribe(const std::string_view &topic) {
   subscribe_queue_.emplace_back(message);
 }
 
-void MarketData::subscribe(
-    const std::string_view &topic, const std::span<std::string const> &symbols) {
+void MarketData::subscribe(const std::string_view &topic, const std::span<Symbol const> &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
     auto now = core::clock::GetSystem();
