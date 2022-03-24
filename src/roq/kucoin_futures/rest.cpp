@@ -210,8 +210,7 @@ void Rest::get_public_token() {
   });
 }
 
-void Rest::get_public_token_ack(
-    const Trace<core::web::Response> &event, uint32_t sequence) {
+void Rest::get_public_token_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = RestState::PUBLIC_TOKEN;
@@ -401,8 +400,7 @@ void Rest::get_order_book(const std::string_view &symbol) {
 }
 
 void Rest::get_order_book_ack(
-    const Trace<core::web::Response> &event,
-    [[maybe_unused]] const std::string_view &symbol) {
+    const Trace<core::web::Response> &event, [[maybe_unused]] const std::string_view &symbol) {
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
     try {

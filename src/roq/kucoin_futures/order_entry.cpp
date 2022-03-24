@@ -256,8 +256,7 @@ void OrderEntry::get_private_token() {
   });
 }
 
-void OrderEntry::get_private_token_ack(
-    const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_private_token_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::PRIVATE_TOKEN;
@@ -331,8 +330,7 @@ void OrderEntry::get_account() {
   });
 }
 
-void OrderEntry::get_account_ack(
-    const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_account_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ACCOUNT;
@@ -402,8 +400,7 @@ void OrderEntry::get_positions() {
   });
 }
 
-void OrderEntry::get_positions_ack(
-    const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_positions_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::POSITIONS;
@@ -465,8 +462,7 @@ void OrderEntry::get_orders() {
   });
 }
 
-void OrderEntry::get_orders_ack(
-    const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_orders_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ORDERS;
@@ -625,10 +621,7 @@ void OrderEntry::create_order(
 }
 
 void OrderEntry::create_order_ack(
-    const Trace<core::web::Response> &event,
-    uint8_t user_id,
-    uint32_t order_id,
-    uint32_t version) {
+    const Trace<core::web::Response> &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -734,10 +727,7 @@ void OrderEntry::cancel_order(
 }
 
 void OrderEntry::cancel_order_ack(
-    const Trace<core::web::Response> &event,
-    uint8_t user_id,
-    uint32_t order_id,
-    uint32_t version) {
+    const Trace<core::web::Response> &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
