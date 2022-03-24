@@ -30,14 +30,14 @@ namespace kucoin_futures {
 class MarketData final : public core::web::ClientSocket::Handler, public json::Parser::Handler {
  public:
   struct Handler {
-    virtual void operator()(const server::Trace<StreamStatus> &) = 0;
-    virtual void operator()(const server::Trace<ExternalLatency> &) = 0;
-    virtual void operator()(const server::Trace<MarketStatus> &, bool is_last) = 0;
-    virtual void operator()(const server::Trace<TopOfBook> &, bool is_last) = 0;
+    virtual void operator()(const Trace<StreamStatus> &) = 0;
+    virtual void operator()(const Trace<ExternalLatency> &) = 0;
+    virtual void operator()(const Trace<MarketStatus> &, bool is_last) = 0;
+    virtual void operator()(const Trace<TopOfBook> &, bool is_last) = 0;
     virtual void operator()(
-        const server::Trace<MarketByPriceUpdate> &, bool is_last, bool refresh) = 0;
-    virtual void operator()(const server::Trace<TradeSummary> &, bool is_last) = 0;
-    virtual void operator()(const server::Trace<StatisticsUpdate> &, bool is_last) = 0;
+        const Trace<MarketByPriceUpdate> &, bool is_last, bool refresh) = 0;
+    virtual void operator()(const Trace<TradeSummary> &, bool is_last) = 0;
+    virtual void operator()(const Trace<StatisticsUpdate> &, bool is_last) = 0;
   };
 
   MarketData(
@@ -86,27 +86,27 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
 
   void parse(const std::string_view &message);
 
-  void operator()(server::Trace<json::Welcome> const &) override;
-  void operator()(server::Trace<json::Error> const &) override;
-  void operator()(server::Trace<json::Pong> const &) override;
-  void operator()(server::Trace<json::Ack> const &) override;
+  void operator()(Trace<json::Welcome> const &) override;
+  void operator()(Trace<json::Error> const &) override;
+  void operator()(Trace<json::Pong> const &) override;
+  void operator()(Trace<json::Ack> const &) override;
 
-  void operator()(server::Trace<json::Ticker> const &) override;
-  void operator()(server::Trace<json::TickerV2> const &) override;
-  void operator()(server::Trace<json::Match> const &) override;
-  void operator()(server::Trace<json::MarkIndexPrice> const &) override;
-  void operator()(server::Trace<json::FundingRate> const &) override;
-  void operator()(server::Trace<json::Level2> const &) override;
-  void operator()(server::Trace<json::FundingBegin> const &) override;
-  void operator()(server::Trace<json::FundingEnd> const &) override;
-  void operator()(server::Trace<json::Snapshot24h> const &) override;
+  void operator()(Trace<json::Ticker> const &) override;
+  void operator()(Trace<json::TickerV2> const &) override;
+  void operator()(Trace<json::Match> const &) override;
+  void operator()(Trace<json::MarkIndexPrice> const &) override;
+  void operator()(Trace<json::FundingRate> const &) override;
+  void operator()(Trace<json::Level2> const &) override;
+  void operator()(Trace<json::FundingBegin> const &) override;
+  void operator()(Trace<json::FundingEnd> const &) override;
+  void operator()(Trace<json::Snapshot24h> const &) override;
 
-  void operator()(server::Trace<json::OrderChange> const &) override;
-  void operator()(server::Trace<json::OrderMarginChange> const &) override;
-  void operator()(server::Trace<json::AvailableBalanceChange> const &) override;
-  void operator()(server::Trace<json::WithdrawHoldChange> const &) override;
-  void operator()(server::Trace<json::PositionChange> const &) override;
-  void operator()(server::Trace<json::PositionSettlement> const &) override;
+  void operator()(Trace<json::OrderChange> const &) override;
+  void operator()(Trace<json::OrderMarginChange> const &) override;
+  void operator()(Trace<json::AvailableBalanceChange> const &) override;
+  void operator()(Trace<json::WithdrawHoldChange> const &) override;
+  void operator()(Trace<json::PositionChange> const &) override;
+  void operator()(Trace<json::PositionSettlement> const &) override;
 
   void check_subscribe_queue(std::chrono::nanoseconds now);
 

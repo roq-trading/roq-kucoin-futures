@@ -132,7 +132,7 @@ void Rest::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"sv, stream_status);
-    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
+    create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -159,7 +159,7 @@ void Rest::operator()(const core::web::Client::Latency &latency) {
       .account = {},
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -204,14 +204,14 @@ void Rest::get_public_token() {
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_public_token_ack(event, sequence);
         });
   });
 }
 
 void Rest::get_public_token_ack(
-    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+    const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = RestState::PUBLIC_TOKEN;
@@ -225,7 +225,7 @@ void Rest::get_public_token_ack(
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
       auto token = core::json::Parser::create<json::Token>(body, buffer);
-      server::Trace event(trace_info, token);
+      Trace event(trace_info, token);
       (*this)(event);
       download_.check(state);
     } catch (core::NetworkError &e) {
@@ -235,7 +235,7 @@ void Rest::get_public_token_ack(
   });
 }
 
-void Rest::operator()(const server::Trace<json::Token> &event) {
+void Rest::operator()(const Trace<json::Token> &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -274,13 +274,13 @@ void Rest::get_contracts() {
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_contracts_ack(event, sequence);
         });
   });
 }
 
-void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, uint32_t sequence) {
+void Rest::get_contracts_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   auto state = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
     auto &[trace_info, response] = event;
@@ -294,7 +294,7 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
       auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-      server::Trace event(trace_info, contracts);
+      Trace event(trace_info, contracts);
       (*this)(event);
       download_.check(state);
     } catch (core::NetworkError &e) {
@@ -304,7 +304,7 @@ void Rest::get_contracts_ack(const server::Trace<core::web::Response> &event, ui
   });
 }
 
-void Rest::operator()(const server::Trace<json::Contracts> &event) {
+void Rest::operator()(const Trace<json::Contracts> &event) {
   auto &[trace_info, contracts] = event;
   log::info<4>("contracts={}"sv, contracts);
   // reference data
@@ -345,7 +345,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
         .expiry_datetime = utils::safe_cast(item.expire_date),
         .expiry_datetime_utc = utils::safe_cast(item.expire_date),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, reference_data, true);
+    create_trace_and_dispatch(handler_, trace_info, reference_data, true);
   }
   if (!std::empty(symbols)) {
     SymbolsUpdate symbols_update{
@@ -368,7 +368,7 @@ void Rest::operator()(const server::Trace<json::Contracts> &event) {
         .symbol = symbol,
         .trading_status = trading_status,
     };
-    server::create_trace_and_dispatch(handler_, trace_info, market_status, true);
+    create_trace_and_dispatch(handler_, trace_info, market_status, true);
   }
 }
 
@@ -394,14 +394,14 @@ void Rest::get_order_book(const std::string_view &symbol) {
         request,
         [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_order_book_ack(event, symbol);
         });
   });
 }
 
 void Rest::get_order_book_ack(
-    const server::Trace<core::web::Response> &event,
+    const Trace<core::web::Response> &event,
     [[maybe_unused]] const std::string_view &symbol) {
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
@@ -411,7 +411,7 @@ void Rest::get_order_book_ack(
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-      server::Trace event(trace_info, order_book);
+      Trace event(trace_info, order_book);
       (*this)(event);
     } catch (core::NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
@@ -420,7 +420,7 @@ void Rest::get_order_book_ack(
   });
 }
 
-void Rest::operator()(server::Trace<json::OrderBook> const &event) {
+void Rest::operator()(Trace<json::OrderBook> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
@@ -454,7 +454,7 @@ void Rest::operator()(server::Trace<json::OrderBook> const &event) {
               .quantity_decimals = {},
               .checksum = {},
           };
-          server::Trace event(trace_info, market_by_price_update);
+          Trace event(trace_info, market_by_price_update);
           shared_(event, true, [&](auto &market_by_price) {
             collector.apply(market_by_price, sequence, false);
           });

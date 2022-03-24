@@ -44,12 +44,12 @@ class Rest final : public core::web::Client::Handler {
   };
 
   struct Handler {
-    virtual void operator()(server::Trace<StreamStatus> const &) = 0;
-    virtual void operator()(server::Trace<ExternalLatency> const &) = 0;
-    virtual void operator()(server::Trace<ReferenceData> const &, bool is_last) = 0;
-    virtual void operator()(server::Trace<MarketStatus> const &, bool is_last) = 0;
+    virtual void operator()(Trace<StreamStatus> const &) = 0;
+    virtual void operator()(Trace<ExternalLatency> const &) = 0;
+    virtual void operator()(Trace<ReferenceData> const &, bool is_last) = 0;
+    virtual void operator()(Trace<MarketStatus> const &, bool is_last) = 0;
     virtual void operator()(
-        server::Trace<MarketByPriceUpdate> const &, bool is_last, bool refresh) = 0;
+        Trace<MarketByPriceUpdate> const &, bool is_last, bool refresh) = 0;
     // cross-communication
     virtual void operator()(PublicToken const &) = 0;
     virtual void operator()(SymbolsUpdate &) = 0;
@@ -78,17 +78,17 @@ class Rest final : public core::web::Client::Handler {
   uint32_t download(RestState);
 
   void get_public_token();
-  void get_public_token_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(server::Trace<json::Token> const &);
+  void get_public_token_ack(const Trace<core::web::Response> &, uint32_t sequence);
+  void operator()(Trace<json::Token> const &);
 
   void get_contracts();
-  void get_contracts_ack(const server::Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(server::Trace<json::Contracts> const &);
+  void get_contracts_ack(const Trace<core::web::Response> &, uint32_t sequence);
+  void operator()(Trace<json::Contracts> const &);
 
   void get_order_book(const std::string_view &symbol);
   void get_order_book_ack(
-      const server::Trace<core::web::Response> &, const std::string_view &symbol);
-  void operator()(server::Trace<json::OrderBook> const &);
+      const Trace<core::web::Response> &, const std::string_view &symbol);
+  void operator()(Trace<json::OrderBook> const &);
 
   void check_request_queue(std::chrono::nanoseconds now);
 

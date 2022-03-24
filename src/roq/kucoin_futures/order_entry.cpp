@@ -179,7 +179,7 @@ void OrderEntry::operator()(const core::web::Client::Latency &latency) {
       .account = security_.get_account(),
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -195,7 +195,7 @@ void OrderEntry::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"sv, stream_status);
-    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
+    create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -250,14 +250,14 @@ void OrderEntry::get_private_token() {
         request,
         [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_private_token_ack(event, sequence);
         });
   });
 }
 
 void OrderEntry::get_private_token_ack(
-    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+    const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::PRIVATE_TOKEN;
@@ -272,7 +272,7 @@ void OrderEntry::get_private_token_ack(
       core::json::Buffer buffer(decode_buffer_);
       auto token = core::json::Parser::create<json::Token>(body, buffer);
       if (token.code == 200000) {
-        server::Trace event(trace_info, token);
+        Trace event(trace_info, token);
         (*this)(event);
       } else {
         log::warn("token={}"sv, token);
@@ -286,7 +286,7 @@ void OrderEntry::get_private_token_ack(
   });
 }
 
-void OrderEntry::operator()(const server::Trace<json::Token> &event) {
+void OrderEntry::operator()(const Trace<json::Token> &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -325,14 +325,14 @@ void OrderEntry::get_account() {
     connection_(
         "account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_account_ack(event, sequence);
         });
   });
 }
 
 void OrderEntry::get_account_ack(
-    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+    const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ACCOUNT;
@@ -356,7 +356,7 @@ void OrderEntry::get_account_ack(
       core::json::Buffer buffer(decode_buffer_);
       auto account = core::json::Parser::create<json::Account>(body, buffer);
       if (account.code == 200000) {
-        server::Trace event(trace_info, account);
+        Trace event(trace_info, account);
         (*this)(event);
       } else {
         log::warn("account={}"sv, account);
@@ -370,7 +370,7 @@ void OrderEntry::get_account_ack(
   });
 }
 
-void OrderEntry::operator()(const server::Trace<json::Account> &event) {
+void OrderEntry::operator()(const Trace<json::Account> &event) {
   auto &[trace_info, account] = event;
   log::info<2>("account={}"sv, account);
 }
@@ -396,14 +396,14 @@ void OrderEntry::get_positions() {
     connection_(
         "positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_positions_ack(event, sequence);
         });
   });
 }
 
 void OrderEntry::get_positions_ack(
-    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+    const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::POSITIONS;
@@ -418,7 +418,7 @@ void OrderEntry::get_positions_ack(
       core::json::Buffer buffer(decode_buffer_);
       auto positions = core::json::Parser::create<json::Positions>(body, buffer);
       if (positions.code == 200000) {
-        server::Trace event(trace_info, positions);
+        Trace event(trace_info, positions);
         (*this)(event);
       } else {
         log::warn("positions={}"sv, positions);
@@ -432,7 +432,7 @@ void OrderEntry::get_positions_ack(
   });
 }
 
-void OrderEntry::operator()(const server::Trace<json::Positions> &event) {
+void OrderEntry::operator()(const Trace<json::Positions> &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
 }
@@ -459,14 +459,14 @@ void OrderEntry::get_orders() {
     connection_(
         "orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_orders_ack(event, sequence);
         });
   });
 }
 
 void OrderEntry::get_orders_ack(
-    const server::Trace<core::web::Response> &event, uint32_t sequence) {
+    const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ORDERS;
@@ -481,7 +481,7 @@ void OrderEntry::get_orders_ack(
       core::json::Buffer buffer(decode_buffer_);
       auto orders = core::json::Parser::create<json::Orders>(body, buffer);
       if (orders.code == 200000) {
-        server::Trace event(trace_info, orders);
+        Trace event(trace_info, orders);
         (*this)(event);
       } else {
         log::warn("orders={}"sv, orders);
@@ -495,7 +495,7 @@ void OrderEntry::get_orders_ack(
   });
 }
 
-void OrderEntry::operator()(const server::Trace<json::Orders> &event) {
+void OrderEntry::operator()(const Trace<json::Orders> &event) {
   auto &[trace_info, orders] = event;
   log::info<2>("orders={}"sv, orders);
 }
@@ -521,13 +521,13 @@ void OrderEntry::get_fills() {
     connection_(
         "fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           get_fills_ack(event, sequence);
         });
   });
 }
 
-void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_fills_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
   profile_.fills_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::FILLS;
@@ -542,7 +542,7 @@ void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event, 
       core::json::Buffer buffer(decode_buffer_);
       auto fills = core::json::Parser::create<json::Fills>(body, buffer);
       if (fills.code == 200000) {
-        server::Trace event(trace_info, fills);
+        Trace event(trace_info, fills);
         (*this)(event);
       } else {
         log::warn("fills={}"sv, fills);
@@ -556,7 +556,7 @@ void OrderEntry::get_fills_ack(const server::Trace<core::web::Response> &event, 
   });
 }
 
-void OrderEntry::operator()(const server::Trace<json::Fills> &event) {
+void OrderEntry::operator()(const Trace<json::Fills> &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
 }
@@ -618,14 +618,14 @@ void OrderEntry::create_order(
             [[maybe_unused]] auto &request_id, auto &response) {
           uint32_t version = 1;
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           create_order_ack(event, user_id, order_id, version);
         });
   });
 }
 
 void OrderEntry::create_order_ack(
-    const server::Trace<core::web::Response> &event,
+    const Trace<core::web::Response> &event,
     uint8_t user_id,
     uint32_t order_id,
     uint32_t version) {
@@ -727,14 +727,14 @@ void OrderEntry::cancel_order(
          order_id = cancel_order.order_id,
          version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          server::Trace event(trace_info, response);
+          Trace event(trace_info, response);
           cancel_order_ack(event, user_id, order_id, version);
         });
   });
 }
 
 void OrderEntry::cancel_order_ack(
-    const server::Trace<core::web::Response> &event,
+    const Trace<core::web::Response> &event,
     uint8_t user_id,
     uint32_t order_id,
     uint32_t version) {
@@ -834,7 +834,7 @@ void OrderEntry::cancel_all_orders(
       };
       connection_(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
         auto trace_info = server::create_trace_info();
-        server::Trace event(trace_info, response);
+        Trace event(trace_info, response);
         cancel_all_orders_ack(event);
       });
     } else {
@@ -846,7 +846,7 @@ void OrderEntry::cancel_all_orders(
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(const server::Trace<core::web::Response> &event) {
+void OrderEntry::cancel_all_orders_ack(const Trace<core::web::Response> &event) {
   profile_.cancel_all_orders_ack([&]() {
     auto &[trace_info, response] = event;
     try {

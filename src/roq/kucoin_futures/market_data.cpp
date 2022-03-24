@@ -181,7 +181,7 @@ void MarketData::operator()(const core::web::ClientSocket::Latency &latency) {
       .account = {},
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -205,7 +205,7 @@ void MarketData::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"sv, stream_status);
-    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
+    create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -277,7 +277,7 @@ void MarketData::parse(const std::string_view &message) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Welcome> const &event) {
+void MarketData::operator()(Trace<json::Welcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("event={{trace_info={}, welcome={}}}"sv, trace_info, welcome);
@@ -287,7 +287,7 @@ void MarketData::operator()(server::Trace<json::Welcome> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Error> const &event) {
+void MarketData::operator()(Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
@@ -296,21 +296,21 @@ void MarketData::operator()(server::Trace<json::Error> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Pong> const &event) {
+void MarketData::operator()(Trace<json::Pong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
     log::info<4>("event={{trace_info={}, pong={}}}"sv, trace_info, pong);
   });
 }
 
-void MarketData::operator()(server::Trace<json::Ack> const &event) {
+void MarketData::operator()(Trace<json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
     log::info<2>("event={{trace_info={}, ack={}}}"sv, trace_info, ack);
   });
 }
 
-void MarketData::operator()(server::Trace<json::Ticker> const &event) {
+void MarketData::operator()(Trace<json::Ticker> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker] = event;
     log::info<4>("event={{trace_info={}, ticker={}}}"sv, trace_info, ticker);
@@ -328,11 +328,11 @@ void MarketData::operator()(server::Trace<json::Ticker> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
+    create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::TickerV2> const &event) {
+void MarketData::operator()(Trace<json::TickerV2> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker_v2] = event;
     log::info<4>("event={{trace_info={}, ticker_v2={}}}"sv, trace_info, ticker_v2);
@@ -351,11 +351,11 @@ void MarketData::operator()(server::Trace<json::TickerV2> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
+    create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::Match> const &event) {
+void MarketData::operator()(Trace<json::Match> const &event) {
   profile_.match([&]() {
     auto &[trace_info, match] = event;
     log::info<4>("event={{trace_info={}, match={}}}"sv, trace_info, match);
@@ -373,11 +373,11 @@ void MarketData::operator()(server::Trace<json::Match> const &event) {
         .trades = {&trade, 1},
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
+    create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::MarkIndexPrice> const &event) {
+void MarketData::operator()(Trace<json::MarkIndexPrice> const &event) {
   profile_.mark_index_price([&]() {
     auto &[trace_info, mark_index_price] = event;
     log::info<4>("event={{trace_info={}, mark_index_price={}}}"sv, trace_info, mark_index_price);
@@ -405,11 +405,11 @@ void MarketData::operator()(server::Trace<json::MarkIndexPrice> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
+    create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
+void MarketData::operator()(Trace<json::FundingRate> const &event) {
   profile_.funding_rate([&]() {
     auto &[trace_info, funding_rate] = event;
     log::info<4>("event={{trace_info={}, funding_rate={}}}"sv, trace_info, funding_rate);
@@ -431,11 +431,11 @@ void MarketData::operator()(server::Trace<json::FundingRate> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
+    create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::Level2> const &event) {
+void MarketData::operator()(Trace<json::Level2> const &event) {
   profile_.level2([&]() {
     // auto &[trace_info, level2] = event;
     auto &trace_info = event.trace_info;
@@ -480,7 +480,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .quantity_decimals = {},
                 .checksum = {},
             };
-            server::create_trace_and_dispatch(
+            create_trace_and_dispatch(
                 handler_, trace_info, market_by_price_update, true, false);
           },
           [&](auto &bids, auto &asks, auto sequence) {  // snapshot
@@ -498,7 +498,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
                 .quantity_decimals = {},
                 .checksum = {},
             };
-            server::Trace event(trace_info, market_by_price_update);
+            Trace event(trace_info, market_by_price_update);
             shared_(event, true, [&](auto &market_by_price) {
               collector.apply(market_by_price, sequence, false);
             });
@@ -522,7 +522,7 @@ void MarketData::operator()(server::Trace<json::Level2> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::FundingBegin> const &event) {
+void MarketData::operator()(Trace<json::FundingBegin> const &event) {
   profile_.funding_begin([&]() {
     auto &[trace_info, funding_begin] = event;
     log::info<4>("event={{trace_info={}, funding_begin={}}}"sv, trace_info, funding_begin);
@@ -543,11 +543,11 @@ void MarketData::operator()(server::Trace<json::FundingBegin> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.timestamp),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
+    create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::FundingEnd> const &event) {
+void MarketData::operator()(Trace<json::FundingEnd> const &event) {
   profile_.funding_end([&]() {
     auto &[trace_info, funding_end] = event;
     log::info<4>("event={{trace_info={}, funding_end={}}}"sv, trace_info, funding_end);
@@ -555,7 +555,7 @@ void MarketData::operator()(server::Trace<json::FundingEnd> const &event) {
   });
 }
 
-void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
+void MarketData::operator()(Trace<json::Snapshot24h> const &event) {
   profile_.snapshot_24h([&]() {
     auto &[trace_info, snapshot_24h] = event;
     log::info<4>("event={{trace_info={}, snapshot_24h={}}}"sv, trace_info, snapshot_24h);
@@ -577,31 +577,31 @@ void MarketData::operator()(server::Trace<json::Snapshot24h> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = utils::safe_cast(data.ts),
     };
-    server::create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
+    create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
 }
 
-void MarketData::operator()(server::Trace<json::OrderChange> const &) {
+void MarketData::operator()(Trace<json::OrderChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(server::Trace<json::OrderMarginChange> const &) {
+void MarketData::operator()(Trace<json::OrderMarginChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(server::Trace<json::AvailableBalanceChange> const &) {
+void MarketData::operator()(Trace<json::AvailableBalanceChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(server::Trace<json::WithdrawHoldChange> const &) {
+void MarketData::operator()(Trace<json::WithdrawHoldChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(server::Trace<json::PositionChange> const &) {
+void MarketData::operator()(Trace<json::PositionChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(server::Trace<json::PositionSettlement> const &) {
+void MarketData::operator()(Trace<json::PositionSettlement> const &) {
   log::fatal("Unexpected"sv);
 }
 

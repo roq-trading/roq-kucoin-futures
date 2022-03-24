@@ -148,7 +148,7 @@ void DropCopy::operator()(const core::web::ClientSocket::Latency &latency) {
       .account = security_.get_account(),
       .latency = latency.sample,
   };
-  server::create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(handler_, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -172,7 +172,7 @@ void DropCopy::operator()(ConnectionStatus status) {
         .priority = Priority::PRIMARY,
     };
     log::info("stream_status={}"sv, stream_status);
-    server::create_trace_and_dispatch(handler_, trace_info, stream_status);
+    create_trace_and_dispatch(handler_, trace_info, stream_status);
   }
 }
 
@@ -236,7 +236,7 @@ void DropCopy::parse(const std::string_view &message) {
   });
 }
 
-void DropCopy::operator()(server::Trace<json::Welcome> const &event) {
+void DropCopy::operator()(Trace<json::Welcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("event={{trace_info={}, welcome={}}}"sv, trace_info, welcome);
@@ -247,7 +247,7 @@ void DropCopy::operator()(server::Trace<json::Welcome> const &event) {
 }
 
 // error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
-void DropCopy::operator()(server::Trace<json::Error> const &event) {
+void DropCopy::operator()(Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
@@ -256,63 +256,63 @@ void DropCopy::operator()(server::Trace<json::Error> const &event) {
   });
 }
 
-void DropCopy::operator()(server::Trace<json::Pong> const &event) {
+void DropCopy::operator()(Trace<json::Pong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
     log::info<4>("event={{trace_info={}, pong={}}}"sv, trace_info, pong);
   });
 }
 
-void DropCopy::operator()(server::Trace<json::Ack> const &event) {
+void DropCopy::operator()(Trace<json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
     log::info<2>("event={{trace_info={}, ack={}}}"sv, trace_info, ack);
   });
 }
 
-void DropCopy::operator()(server::Trace<json::Ticker> const &) {
+void DropCopy::operator()(Trace<json::Ticker> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::TickerV2> const &) {
+void DropCopy::operator()(Trace<json::TickerV2> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::Match> const &) {
+void DropCopy::operator()(Trace<json::Match> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::MarkIndexPrice> const &) {
+void DropCopy::operator()(Trace<json::MarkIndexPrice> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::FundingRate> const &) {
+void DropCopy::operator()(Trace<json::FundingRate> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::Level2> const &) {
+void DropCopy::operator()(Trace<json::Level2> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::FundingBegin> const &) {
+void DropCopy::operator()(Trace<json::FundingBegin> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::FundingEnd> const &) {
+void DropCopy::operator()(Trace<json::FundingEnd> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::Snapshot24h> const &) {
+void DropCopy::operator()(Trace<json::Snapshot24h> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::OrderChange> const &) {
+void DropCopy::operator()(Trace<json::OrderChange> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::OrderMarginChange> const &) {
+void DropCopy::operator()(Trace<json::OrderMarginChange> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::AvailableBalanceChange> const &) {
+void DropCopy::operator()(Trace<json::AvailableBalanceChange> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::WithdrawHoldChange> const &) {
+void DropCopy::operator()(Trace<json::WithdrawHoldChange> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::PositionChange> const &) {
+void DropCopy::operator()(Trace<json::PositionChange> const &) {
 }
 
-void DropCopy::operator()(server::Trace<json::PositionSettlement> const &) {
+void DropCopy::operator()(Trace<json::PositionSettlement> const &) {
 }
 
 }  // namespace kucoin_futures
