@@ -1,17 +1,50 @@
 {
-"name": "TickerData",
-"type": "comp",
-"values": [
-	{ "name": "symbol", "type": "std::string_view" },
-	{ "name": "sequence", "type": "int64_t" },
-	{ "name": "side", "type": "Side" },
-	{ "name": "size", "type": "double" },
-	{ "name": "price", "type": "double" },
-	{ "name": "bestBidSize", "type": "double" },
-	{ "name": "bestBidPrice", "type": "double" },
-	{ "name": "bestAskSize", "type": "double" },
-	{ "name": "bestAskPrice", "type": "double" },
-	{ "name": "ts", "type": "std::chrono::nanoseconds" },
-	{ "name": "tradeId", "type": "std::string_view" }
-]
+  "name": "TickerData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std::string_view"
+    },
+    {
+      "name": "sequence",
+      "type": "int64_t"
+    },
+    {
+      "name": "side",
+      "type": "Side"
+    },
+    {
+      "name": "size",
+      "type": "double"
+    },
+    {
+      "name": "price",
+      "type": "double"
+    },
+    {
+      "name": "bestBidSize",
+      "type": "double"
+    },
+    {
+      "name": "bestBidPrice",
+      "type": "double"
+    },
+    {
+      "name": "bestAskSize",
+      "type": "double"
+    },
+    {
+      "name": "bestAskPrice",
+      "type": "double"
+    },
+    {
+      "name": "ts",
+      "type": "std::chrono::nanoseconds"
+    },
+    {
+      "name": "tradeId",
+      "type": "std::string_view"
+    }
+  ]
 }

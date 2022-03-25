@@ -48,8 +48,7 @@ class Rest final : public core::web::Client::Handler {
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
     virtual void operator()(Trace<ReferenceData> const &, bool is_last) = 0;
     virtual void operator()(Trace<MarketStatus> const &, bool is_last) = 0;
-    virtual void operator()(
-        Trace<MarketByPriceUpdate> const &, bool is_last, bool refresh) = 0;
+    virtual void operator()(Trace<MarketByPriceUpdate> const &, bool is_last, bool refresh) = 0;
     // cross-communication
     virtual void operator()(PublicToken const &) = 0;
     virtual void operator()(SymbolsUpdate &) = 0;
@@ -86,8 +85,7 @@ class Rest final : public core::web::Client::Handler {
   void operator()(Trace<json::Contracts> const &);
 
   void get_order_book(const std::string_view &symbol);
-  void get_order_book_ack(
-      const Trace<core::web::Response> &, const std::string_view &symbol);
+  void get_order_book_ack(const Trace<core::web::Response> &, const std::string_view &symbol);
   void operator()(Trace<json::OrderBook> const &);
 
   void check_request_queue(std::chrono::nanoseconds now);

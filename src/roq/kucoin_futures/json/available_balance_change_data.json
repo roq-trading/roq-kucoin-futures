@@ -1,10 +1,22 @@
 {
-"name": "AvailableBalanceChangeData",
-"type": "comp",
-"values": [
-	{ "name": "availableBalance", "type": "double" },
-	{ "name": "holdBalance", "type": "double" },
-	{ "name": "currency", "type": "std::string_view" },
-	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
-]
+  "name": "AvailableBalanceChangeData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "availableBalance",
+      "type": "double"
+    },
+    {
+      "name": "holdBalance",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std::chrono::milliseconds"
+    }
+  ]
 }

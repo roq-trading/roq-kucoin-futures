@@ -1,8 +1,14 @@
 {
-"name": "Fills",
-"type": "comp",
-"values": [
-	{ "name": "code", "type": "int32_t" },
-	{ "name": "data", "type": "FillsData" }
-]
+  "name": "Fills",
+  "type": "comp",
+  "values": [
+    {
+      "name": "code",
+      "type": "int32_t"
+    },
+    {
+      "name": "data",
+      "type": "FillsData"
+    }
+  ]
 }

@@ -1,9 +1,15 @@
 {
-"name": "RestState",
-"type": "enum",
-"values": [
-	{ "name": "public_token" },
-	{ "name": "contracts" },
-	{ "name": "done" }
-]
+  "name": "RestState",
+  "type": "enum",
+  "values": [
+    {
+      "name": "public_token"
+    },
+    {
+      "name": "contracts"
+    },
+    {
+      "name": "done"
+    }
+  ]
 }

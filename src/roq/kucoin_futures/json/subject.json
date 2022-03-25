@@ -1,21 +1,61 @@
 {
-"name": "Subject",
-"type": "enum",
-"values": [
-	{ "name": "tickerV2" },
-	{ "name": "ticker" },
-	{ "name": "match" },
-	{ "raw": "mark.index.price", "name": "mark_index_price" },
-	{ "raw": "funding.rate", "name": "funding_rate" },
-	{ "name": "level2" },
-	{ "raw": "funding.begin", "name": "funding_begin" },
-	{ "raw": "funding.end", "name": "funding_end" },
-	{ "raw": "snapshot.24h", "name": "snapshot_24h" },
-	{ "name": "orderChange" },
-	{ "raw": "orderMargin.change", "name": "OrderMarginChange" },
-	{ "raw": "availableBalance.change", "name": "AvailableBalanceChange" },
-	{ "raw": "withdrawHold.change", "name": "WithdrawHoldChange" },
-	{ "raw": "position.change", "name": "PositionChange" },
-	{ "raw": "position.settlement", "name": "PositionSettlement" }
-]
+  "name": "Subject",
+  "type": "enum",
+  "values": [
+    {
+      "name": "tickerV2"
+    },
+    {
+      "name": "ticker"
+    },
+    {
+      "name": "match"
+    },
+    {
+      "raw": "mark.index.price",
+      "name": "mark_index_price"
+    },
+    {
+      "raw": "funding.rate",
+      "name": "funding_rate"
+    },
+    {
+      "name": "level2"
+    },
+    {
+      "raw": "funding.begin",
+      "name": "funding_begin"
+    },
+    {
+      "raw": "funding.end",
+      "name": "funding_end"
+    },
+    {
+      "raw": "snapshot.24h",
+      "name": "snapshot_24h"
+    },
+    {
+      "name": "orderChange"
+    },
+    {
+      "raw": "orderMargin.change",
+      "name": "OrderMarginChange"
+    },
+    {
+      "raw": "availableBalance.change",
+      "name": "AvailableBalanceChange"
+    },
+    {
+      "raw": "withdrawHold.change",
+      "name": "WithdrawHoldChange"
+    },
+    {
+      "raw": "position.change",
+      "name": "PositionChange"
+    },
+    {
+      "raw": "position.settlement",
+      "name": "PositionSettlement"
+    }
+  ]
 }

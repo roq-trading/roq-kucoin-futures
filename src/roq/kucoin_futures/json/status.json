@@ -1,7 +1,9 @@
 {
-"name": "Status",
-"type": "enum",
-"values": [
-	{ "name": "Open" }
-]
+  "name": "Status",
+  "type": "enum",
+  "values": [
+    {
+      "name": "Open"
+    }
+  ]
 }

@@ -1,11 +1,26 @@
 {
-"name": "Snapshot24hData",
-"type": "comp",
-"values": [
-	{ "name": "volume", "type": "double" },
-	{ "name": "turnover", "type": "double" },
-	{ "name": "lastPrice", "type": "double" },
-	{ "name": "priceChgPct", "type": "double" },
-	{ "name": "ts", "type": "std::chrono::nanoseconds" }
-]
+  "name": "Snapshot24hData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "volume",
+      "type": "double"
+    },
+    {
+      "name": "turnover",
+      "type": "double"
+    },
+    {
+      "name": "lastPrice",
+      "type": "double"
+    },
+    {
+      "name": "priceChgPct",
+      "type": "double"
+    },
+    {
+      "name": "ts",
+      "type": "std::chrono::nanoseconds"
+    }
+  ]
 }

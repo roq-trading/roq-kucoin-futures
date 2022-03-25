@@ -1,7 +1,9 @@
 {
-"name": "MarkMethod",
-"type": "enum",
-"values": [
-	{ "name": "FairPrice" }
-]
+  "name": "MarkMethod",
+  "type": "enum",
+  "values": [
+    {
+      "name": "FairPrice"
+    }
+  ]
 }

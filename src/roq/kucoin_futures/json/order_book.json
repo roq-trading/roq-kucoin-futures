@@ -1,8 +1,14 @@
 {
-"name": "OrderBook",
-"type": "comp",
-"values": [
-	{ "name": "code", "type": "int64_t" },
-	{ "name": "data", "type": "OrderBookData" }
-]
+  "name": "OrderBook",
+  "type": "comp",
+  "values": [
+    {
+      "name": "code",
+      "type": "int64_t"
+    },
+    {
+      "name": "data",
+      "type": "OrderBookData"
+    }
+  ]
 }

@@ -1,9 +1,18 @@
 {
-"name": "Level2Data",
-"type": "comp",
-"values": [
-	{ "name": "sequence", "type": "int64_t" },
-	{ "name": "change", "type": "std::string_view" },
-	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
-]
+  "name": "Level2Data",
+  "type": "comp",
+  "values": [
+    {
+      "name": "sequence",
+      "type": "int64_t"
+    },
+    {
+      "name": "change",
+      "type": "std::string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std::chrono::milliseconds"
+    }
+  ]
 }

@@ -1,14 +1,38 @@
 {
-"name": "AccountData",
-"type": "comp",
-"values": [
-	{ "name": "accountEquity", "type": "double" },
-	{ "name": "unrealisedPNL", "type": "double" },
-	{ "name": "marginBalance", "type": "double" },
-	{ "name": "positionMargin", "type": "double" },
-	{ "name": "orderMargin", "type": "double" },
-	{ "name": "frozenFunds", "type": "double" },
-	{ "name": "availableBalance", "type": "double" },
-	{ "name": "currency", "type": "std::string_view" }
-]
+  "name": "AccountData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "accountEquity",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedPNL",
+      "type": "double"
+    },
+    {
+      "name": "marginBalance",
+      "type": "double"
+    },
+    {
+      "name": "positionMargin",
+      "type": "double"
+    },
+    {
+      "name": "orderMargin",
+      "type": "double"
+    },
+    {
+      "name": "frozenFunds",
+      "type": "double"
+    },
+    {
+      "name": "availableBalance",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "std::string_view"
+    }
+  ]
 }

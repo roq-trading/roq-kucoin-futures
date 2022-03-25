@@ -1,39 +1,138 @@
 {
-"name": "PositionChangeData",
-"type": "comp",
-"values": [
-	{ "name": "avgEntryPrice", "type": "double" },
-	{ "name": "bankruptPrice", "type": "double" },
-	{ "name": "crossMode", "type": "bool" },
-	{ "name": "currentComm", "type": "double" },
-	{ "name": "currentCost", "type": "double" },
-	{ "name": "currentQty", "type": "double" },
-	{ "name": "currentTimestamp", "type": "std::chrono::milliseconds" },
-	{ "name": "delevPercentage", "type": "double" },
-	{ "name": "isOpen", "type": "bool" },
-	{ "name": "liquidationPrice", "type": "double" },
-	{ "name": "maintMargin", "type": "double" },
-	{ "name": "maintMarginReq", "type": "double" },
-	{ "name": "markPrice", "type": "double" },
-	{ "name": "markValue", "type": "double" },
-	{ "name": "openingTimestamp", "type": "std::chrono::milliseconds" },
-	{ "name": "posComm", "type": "double" },
-	{ "name": "posCost", "type": "double" },
-	{ "name": "posCross", "type": "double" },
-	{ "name": "posInit", "type": "double" },
-	{ "name": "posLoss", "type": "double" },
-	{ "name": "posMaint", "type": "double" },
-	{ "name": "posMargin", "type": "double" },
-	{ "name": "realLeverage", "type": "double" },
-	{ "name": "realisedCost", "type": "double" },
-	{ "name": "realisedGrossCost", "type": "double" },
-	{ "name": "realisedGrossPnl", "type": "double" },
-	{ "name": "realisedPnl", "type": "double" },
-	{ "name": "riskLimit", "type": "double" },
-	{ "name": "settleCurrency", "type": "std::string_view" },
-	{ "name": "unrealisedCost", "type": "double" },
-	{ "name": "unrealisedPnl", "type": "double" },
-	{ "name": "unrealisedPnlPcnt", "type": "double" },
-	{ "name": "unrealisedRoePcnt", "type": "double" }
-]
+  "name": "PositionChangeData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "avgEntryPrice",
+      "type": "double"
+    },
+    {
+      "name": "bankruptPrice",
+      "type": "double"
+    },
+    {
+      "name": "crossMode",
+      "type": "bool"
+    },
+    {
+      "name": "currentComm",
+      "type": "double"
+    },
+    {
+      "name": "currentCost",
+      "type": "double"
+    },
+    {
+      "name": "currentQty",
+      "type": "double"
+    },
+    {
+      "name": "currentTimestamp",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "delevPercentage",
+      "type": "double"
+    },
+    {
+      "name": "isOpen",
+      "type": "bool"
+    },
+    {
+      "name": "liquidationPrice",
+      "type": "double"
+    },
+    {
+      "name": "maintMargin",
+      "type": "double"
+    },
+    {
+      "name": "maintMarginReq",
+      "type": "double"
+    },
+    {
+      "name": "markPrice",
+      "type": "double"
+    },
+    {
+      "name": "markValue",
+      "type": "double"
+    },
+    {
+      "name": "openingTimestamp",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "posComm",
+      "type": "double"
+    },
+    {
+      "name": "posCost",
+      "type": "double"
+    },
+    {
+      "name": "posCross",
+      "type": "double"
+    },
+    {
+      "name": "posInit",
+      "type": "double"
+    },
+    {
+      "name": "posLoss",
+      "type": "double"
+    },
+    {
+      "name": "posMaint",
+      "type": "double"
+    },
+    {
+      "name": "posMargin",
+      "type": "double"
+    },
+    {
+      "name": "realLeverage",
+      "type": "double"
+    },
+    {
+      "name": "realisedCost",
+      "type": "double"
+    },
+    {
+      "name": "realisedGrossCost",
+      "type": "double"
+    },
+    {
+      "name": "realisedGrossPnl",
+      "type": "double"
+    },
+    {
+      "name": "realisedPnl",
+      "type": "double"
+    },
+    {
+      "name": "riskLimit",
+      "type": "double"
+    },
+    {
+      "name": "settleCurrency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "unrealisedCost",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedPnl",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedPnlPcnt",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedRoePcnt",
+      "type": "double"
+    }
+  ]
 }

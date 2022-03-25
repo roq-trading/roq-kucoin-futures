@@ -1,9 +1,18 @@
 {
-"name": "OrderMarginChangeData",
-"type": "comp",
-"values": [
-	{ "name": "orderMargin", "type": "double" },
-	{ "name": "currency", "type": "std::string_view" },
-	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
-]
+  "name": "OrderMarginChangeData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "orderMargin",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std::chrono::milliseconds"
+    }
+  ]
 }

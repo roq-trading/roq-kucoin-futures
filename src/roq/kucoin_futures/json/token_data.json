@@ -1,8 +1,14 @@
 {
-"name": "TokenData",
-"type": "comp",
-"values": [
-	{ "name": "instanceServers", "type": "std::span<InstanceServer>" },
-	{ "name": "token", "type": "std::string_view" }
-]
+  "name": "TokenData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "instanceServers",
+      "type": "std::span<InstanceServer>"
+    },
+    {
+      "name": "token",
+      "type": "std::string_view"
+    }
+  ]
 }

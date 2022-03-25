@@ -1,13 +1,34 @@
 {
-"name": "TickerV2Data",
-"type": "comp",
-"values": [
-	{ "name": "symbol", "type": "std::string_view" },
-	{ "name": "sequence", "type": "int64_t" },
-	{ "name": "bestBidSize", "type": "double" },
-	{ "name": "bestBidPrice", "type": "double" },
-	{ "name": "bestAskSize", "type": "double" },
-	{ "name": "bestAskPrice", "type": "double" },
-	{ "name": "ts", "type": "std::chrono::nanoseconds" }
-]
+  "name": "TickerV2Data",
+  "type": "comp",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std::string_view"
+    },
+    {
+      "name": "sequence",
+      "type": "int64_t"
+    },
+    {
+      "name": "bestBidSize",
+      "type": "double"
+    },
+    {
+      "name": "bestBidPrice",
+      "type": "double"
+    },
+    {
+      "name": "bestAskSize",
+      "type": "double"
+    },
+    {
+      "name": "bestAskPrice",
+      "type": "double"
+    },
+    {
+      "name": "ts",
+      "type": "std::chrono::nanoseconds"
+    }
+  ]
 }

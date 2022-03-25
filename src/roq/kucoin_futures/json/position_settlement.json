@@ -1,10 +1,22 @@
 {
-"name": "PositionSettlement",
-"type": "comp",
-"values": [
-	{ "name": "userId", "type": "std::string_view" },
-	{ "name": "subject", "type": "Subject" },
-	{ "name": "topic", "type": "std::string_view" },
-	{ "name": "data", "type": "PositionSettlementData" }
-]
+  "name": "PositionSettlement",
+  "type": "comp",
+  "values": [
+    {
+      "name": "userId",
+      "type": "std::string_view"
+    },
+    {
+      "name": "subject",
+      "type": "Subject"
+    },
+    {
+      "name": "topic",
+      "type": "std::string_view"
+    },
+    {
+      "name": "data",
+      "type": "PositionSettlementData"
+    }
+  ]
 }

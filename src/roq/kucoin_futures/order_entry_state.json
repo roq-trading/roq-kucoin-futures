@@ -1,12 +1,24 @@
 {
-"name": "OrderEntryState",
-"type": "enum",
-"values": [
-	{ "name": "private_token" },
-	{ "name": "account" },
-	{ "name": "positions" },
-	{ "name": "orders" },
-	{ "name": "fills" },
-	{ "name": "done" }
-]
+  "name": "OrderEntryState",
+  "type": "enum",
+  "values": [
+    {
+      "name": "private_token"
+    },
+    {
+      "name": "account"
+    },
+    {
+      "name": "positions"
+    },
+    {
+      "name": "orders"
+    },
+    {
+      "name": "fills"
+    },
+    {
+      "name": "done"
+    }
+  ]
 }

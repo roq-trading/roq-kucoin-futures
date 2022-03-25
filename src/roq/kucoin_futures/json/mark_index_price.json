@@ -1,10 +1,22 @@
 {
-"name": "MarkIndexPrice",
-"type": "comp",
-"values": [
-	{ "name": "type", "type": "Type" },
-	{ "name": "subject", "type": "Subject" },
-	{ "name": "topic", "type": "std::string_view" },
-	{ "name": "data", "type": "MarkIndexPriceData" }
-]
+  "name": "MarkIndexPrice",
+  "type": "comp",
+  "values": [
+    {
+      "name": "type",
+      "type": "Type"
+    },
+    {
+      "name": "subject",
+      "type": "Subject"
+    },
+    {
+      "name": "topic",
+      "type": "std::string_view"
+    },
+    {
+      "name": "data",
+      "type": "MarkIndexPriceData"
+    }
+  ]
 }

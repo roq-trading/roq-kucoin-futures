@@ -1,9 +1,18 @@
 {
-"name": "WithdrawHoldChangeData",
-"type": "comp",
-"values": [
-	{ "name": "withdrawHold", "type": "double" },
-	{ "name": "currency", "type": "std::string_view" },
-	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
-]
+  "name": "WithdrawHoldChangeData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "withdrawHold",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std::chrono::milliseconds"
+    }
+  ]
 }

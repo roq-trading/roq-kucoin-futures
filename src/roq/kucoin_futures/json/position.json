@@ -1,42 +1,150 @@
 {
-"name": "Position",
-"type": "item",
-"values": [
-	{ "name": "id", "type": "std::string_view" },
-	{ "name": "symbol", "type": "std::string_view" },
-	{ "name": "autoDeposit", "type": "bool" },
-	{ "name": "maintMarginReq", "type": "double" },
-	{ "name": "riskLimit", "type": "double" },
-	{ "name": "realLeverage", "type": "double" },
-	{ "name": "crossMode", "type": "bool" },
-	{ "name": "delevPercentage", "type": "double" },
-	{ "name": "openingTimestamp", "type": "std::chrono::milliseconds" },
-	{ "name": "currentTimestamp", "type": "std::chrono::milliseconds" },
-	{ "name": "currentQty", "type": "double" },
-	{ "name": "currentCost", "type": "double" },
-	{ "name": "currentComm", "type": "double" },
-	{ "name": "unrealisedCost", "type": "double" },
-	{ "name": "realisedGrossCost", "type": "double" },
-	{ "name": "realisedCost", "type": "double" },
-	{ "name": "isOpen", "type": "bool" },
-	{ "name": "markPrice", "type": "double" },
-	{ "name": "markValue", "type": "double" },
-	{ "name": "posCost", "type": "double" },
-	{ "name": "posCross", "type": "double" },
-	{ "name": "posInit", "type": "double" },
-	{ "name": "posComm", "type": "double" },
-	{ "name": "posLoss", "type": "double" },
-	{ "name": "posMargin", "type": "double" },
-	{ "name": "posMaint", "type": "double" },
-	{ "name": "maintMargin", "type": "double" },
-	{ "name": "realisedGrossPnl", "type": "double" },
-	{ "name": "realisedPnl", "type": "double" },
-	{ "name": "unrealisedPnl", "type": "double" },
-	{ "name": "unrealisedPnlPcnt", "type": "double" },
-	{ "name": "unrealisedRoePcnt", "type": "double" },
-	{ "name": "avgEntryPrice", "type": "double" },
-	{ "name": "liquidationPrice", "type": "double" },
-	{ "name": "bankruptPrice", "type": "double" },
-	{ "name": "settleCurrency", "type": "std::string_view" }
-]
+  "name": "Position",
+  "type": "item",
+  "values": [
+    {
+      "name": "id",
+      "type": "std::string_view"
+    },
+    {
+      "name": "symbol",
+      "type": "std::string_view"
+    },
+    {
+      "name": "autoDeposit",
+      "type": "bool"
+    },
+    {
+      "name": "maintMarginReq",
+      "type": "double"
+    },
+    {
+      "name": "riskLimit",
+      "type": "double"
+    },
+    {
+      "name": "realLeverage",
+      "type": "double"
+    },
+    {
+      "name": "crossMode",
+      "type": "bool"
+    },
+    {
+      "name": "delevPercentage",
+      "type": "double"
+    },
+    {
+      "name": "openingTimestamp",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "currentTimestamp",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "currentQty",
+      "type": "double"
+    },
+    {
+      "name": "currentCost",
+      "type": "double"
+    },
+    {
+      "name": "currentComm",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedCost",
+      "type": "double"
+    },
+    {
+      "name": "realisedGrossCost",
+      "type": "double"
+    },
+    {
+      "name": "realisedCost",
+      "type": "double"
+    },
+    {
+      "name": "isOpen",
+      "type": "bool"
+    },
+    {
+      "name": "markPrice",
+      "type": "double"
+    },
+    {
+      "name": "markValue",
+      "type": "double"
+    },
+    {
+      "name": "posCost",
+      "type": "double"
+    },
+    {
+      "name": "posCross",
+      "type": "double"
+    },
+    {
+      "name": "posInit",
+      "type": "double"
+    },
+    {
+      "name": "posComm",
+      "type": "double"
+    },
+    {
+      "name": "posLoss",
+      "type": "double"
+    },
+    {
+      "name": "posMargin",
+      "type": "double"
+    },
+    {
+      "name": "posMaint",
+      "type": "double"
+    },
+    {
+      "name": "maintMargin",
+      "type": "double"
+    },
+    {
+      "name": "realisedGrossPnl",
+      "type": "double"
+    },
+    {
+      "name": "realisedPnl",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedPnl",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedPnlPcnt",
+      "type": "double"
+    },
+    {
+      "name": "unrealisedRoePcnt",
+      "type": "double"
+    },
+    {
+      "name": "avgEntryPrice",
+      "type": "double"
+    },
+    {
+      "name": "liquidationPrice",
+      "type": "double"
+    },
+    {
+      "name": "bankruptPrice",
+      "type": "double"
+    },
+    {
+      "name": "settleCurrency",
+      "type": "std::string_view"
+    }
+  ]
 }

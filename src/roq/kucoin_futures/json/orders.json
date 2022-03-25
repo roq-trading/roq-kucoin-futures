@@ -1,8 +1,14 @@
 {
-"name": "Orders",
-"type": "comp",
-"values": [
-	{ "name": "code", "type": "int32_t" },
-	{ "name": "data", "type": "OrdersData" }
-]
+  "name": "Orders",
+  "type": "comp",
+  "values": [
+    {
+      "name": "code",
+      "type": "int32_t"
+    },
+    {
+      "name": "data",
+      "type": "OrdersData"
+    }
+  ]
 }

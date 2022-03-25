@@ -1,8 +1,15 @@
 {
-"name": "Welcome",
-"type": "comp",
-"values": [
-	{ "name": "type", "type": "Type" },
-	{ "name": "id", "type": "std::string_view", "optional": true }
-]
+  "name": "Welcome",
+  "type": "comp",
+  "values": [
+    {
+      "name": "type",
+      "type": "Type"
+    },
+    {
+      "name": "id",
+      "type": "std::string_view",
+      "optional": true
+    }
+  ]
 }

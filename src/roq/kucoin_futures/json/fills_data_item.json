@@ -1,24 +1,78 @@
 {
-"name": "FillsDataItem",
-"type": "item",
-"values": [
-	{ "name": "symbol", "type": "std::string_view" },
-	{ "name": "tradeId", "type": "std::string_view" },
-	{ "name": "orderId", "type": "std::string_view" },
-	{ "name": "side", "type": "std::string_view" },
-	{ "name": "liquidity", "type": "std::string_view" },
-	{ "name": "price", "type": "double" },
-	{ "name": "size", "type": "double" },
-	{ "name": "value", "type": "double" },
-	{ "name": "feeRate", "type": "double" },
-	{ "name": "fixFee", "type": "double" },
-	{ "name": "feeCurrency", "type": "std::string_view" },
-	{ "name": "stop", "type": "std::string_view" },
-	{ "name": "fee", "type": "double" },
-	{ "name": "orderType", "type": "std::string_view" },
-	{ "name": "tradeType", "type": "std::string_view" },
-	{ "name": "createdAt", "type": "std::chrono::milliseconds" },
-	{ "name": "settleCurrency", "type": "std::string_view" },
-	{ "name": "tradeTime", "type": "std::chrono::nanoseconds" }
-]
+  "name": "FillsDataItem",
+  "type": "item",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std::string_view"
+    },
+    {
+      "name": "tradeId",
+      "type": "std::string_view"
+    },
+    {
+      "name": "orderId",
+      "type": "std::string_view"
+    },
+    {
+      "name": "side",
+      "type": "std::string_view"
+    },
+    {
+      "name": "liquidity",
+      "type": "std::string_view"
+    },
+    {
+      "name": "price",
+      "type": "double"
+    },
+    {
+      "name": "size",
+      "type": "double"
+    },
+    {
+      "name": "value",
+      "type": "double"
+    },
+    {
+      "name": "feeRate",
+      "type": "double"
+    },
+    {
+      "name": "fixFee",
+      "type": "double"
+    },
+    {
+      "name": "feeCurrency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "stop",
+      "type": "std::string_view"
+    },
+    {
+      "name": "fee",
+      "type": "double"
+    },
+    {
+      "name": "orderType",
+      "type": "std::string_view"
+    },
+    {
+      "name": "tradeType",
+      "type": "std::string_view"
+    },
+    {
+      "name": "createdAt",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "settleCurrency",
+      "type": "std::string_view"
+    },
+    {
+      "name": "tradeTime",
+      "type": "std::chrono::nanoseconds"
+    }
+  ]
 }

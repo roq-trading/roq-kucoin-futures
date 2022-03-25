@@ -1,7 +1,9 @@
 {
-"name": "FairMethod",
-"type": "enum",
-"values": [
-	{ "name": "FundingRate" }
-]
+  "name": "FairMethod",
+  "type": "enum",
+  "values": [
+    {
+      "name": "FundingRate"
+    }
+  ]
 }

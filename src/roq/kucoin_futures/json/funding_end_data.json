@@ -1,10 +1,22 @@
 {
-"name": "FundingEndData",
-"type": "comp",
-"values": [
-	{ "name": "symbol", "type": "std::string_view" },
-	{ "name": "fundingTime", "type": "std::chrono::milliseconds" },
-	{ "name": "fundingRate", "type": "double" },
-	{ "name": "timestamp", "type": "std::chrono::milliseconds" }
-]
+  "name": "FundingEndData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std::string_view"
+    },
+    {
+      "name": "fundingTime",
+      "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "fundingRate",
+      "type": "double"
+    },
+    {
+      "name": "timestamp",
+      "type": "std::chrono::milliseconds"
+    }
+  ]
 }
