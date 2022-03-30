@@ -20,7 +20,7 @@ namespace kucoin_futures {
 
 namespace {
 const auto NAME = "om"sv;
-const auto SUPPORTS = Mask{
+const Mask<SupportType> SUPPORTS{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
@@ -189,7 +189,7 @@ void OrderEntry::operator()(ConnectionStatus status) {
     StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
-        .supports = SUPPORTS.get(),
+        .supports = SUPPORTS,
         .status = status_,
         .type = StreamType::REST,
         .priority = Priority::PRIMARY,
@@ -571,7 +571,8 @@ void OrderEntry::create_order(
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
     auto remark = ""sv;
-    auto reduce_only = create_order.execution_instruction == ExecutionInstruction::DO_NOT_INCREASE;
+    auto reduce_only =
+        create_order.execution_instructions.has(ExecutionInstruction::DO_NOT_INCREASE);
     auto time_in_force = "GTC"sv;  // GTC, IOC
     auto body = fmt::format(
         R"({{)"
