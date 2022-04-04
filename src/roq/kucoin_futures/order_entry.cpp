@@ -20,7 +20,7 @@ namespace kucoin_futures {
 
 namespace {
 const auto NAME = "om"sv;
-const Mask<SupportType> SUPPORTS{
+const Mask SUPPORTS{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
