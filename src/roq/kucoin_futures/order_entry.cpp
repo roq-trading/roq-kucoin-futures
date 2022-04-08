@@ -201,25 +201,26 @@ void OrderEntry::operator()(ConnectionStatus status) {
 
 uint32_t OrderEntry::download(OrderEntryState state) {
   switch (state) {
-    case OrderEntryState::UNDEFINED:
+    using enum OrderEntryState;
+    case UNDEFINED:
       assert(false);
       break;
-    case OrderEntryState::PRIVATE_TOKEN:
+    case PRIVATE_TOKEN:
       get_private_token();
       return 1;
-    case OrderEntryState::ACCOUNT:
+    case ACCOUNT:
       get_account();
       return 1;
-    case OrderEntryState::POSITIONS:
+    case POSITIONS:
       get_positions();
       return 1;
-    case OrderEntryState::ORDERS:
+    case ORDERS:
       get_orders();
       return 1;
-    case OrderEntryState::FILLS:
+    case FILLS:
       get_fills();
       return 1;
-    case OrderEntryState::DONE:
+    case DONE:
       (*this)(ConnectionStatus::READY);
       return {};
   }
@@ -342,9 +343,10 @@ void OrderEntry::get_account_ack(const Trace<core::web::Response> &event, uint32
         return;
       }
       switch (category) {
-        case core::http::Category::SUCCESS:  // 2xx
+        using enum core::http::Category;
+        case SUCCESS:  // 2xx
           break;
-        case core::http::Category::CLIENT_ERROR:  // 4xx
+        case CLIENT_ERROR:  // 4xx
           log::fatal("{}"sv, response.body());
           break;
         default:
@@ -630,11 +632,12 @@ void OrderEntry::create_order_ack(
       auto [status, category, body] = response.result();
       log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       switch (category) {
-        case core::http::Category::SUCCESS: {  // 2xx
+        using enum core::http::Category;
+        case SUCCESS: {  // 2xx
           // XXX HANS PARSE
           break;
         }
-        case core::http::Category::CLIENT_ERROR: {
+        case CLIENT_ERROR: {
           std::string_view text;
           // XXX HANS PARSE
           oms::Response response{
@@ -736,12 +739,13 @@ void OrderEntry::cancel_order_ack(
       auto [status, category, body] = response.result();
       log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       switch (category) {
-        case core::http::Category::SUCCESS: {  // 2xx
+        using enum core::http::Category;
+        case SUCCESS: {  // 2xx
           core::json::Buffer buffer(decode_buffer_);
           // XXX HANS PARSE
           break;
         }
-        case core::http::Category::CLIENT_ERROR: {  // 4xx
+        case CLIENT_ERROR: {  // 4xx
           std::string_view text;
           // XXX HANS PARSE
           oms::Response response{
@@ -844,12 +848,13 @@ void OrderEntry::cancel_all_orders_ack(const Trace<core::web::Response> &event) 
       auto [status, category, body] = response.result();
       log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       switch (category) {
-        case core::http::Category::SUCCESS: {  // 2xx
+        using enum core::http::Category;
+        case SUCCESS: {  // 2xx
           core::json::Buffer buffer(decode_buffer_);
           // XXX HANS PARSE
           break;
         }
-        case core::http::Category::CLIENT_ERROR: {  // 4xx
+        case CLIENT_ERROR: {  // 4xx
           // XXX HANS PARSE
           // note! this event does not require a response
           break;

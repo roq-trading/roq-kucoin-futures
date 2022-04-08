@@ -21,54 +21,56 @@ bool Parser::dispatch(
   auto root = parser.root();
   json::Message message_(root, buffer);
   switch (message_.type) {
-    case json::Type::UNDEFINED:
-    case json::Type::UNKNOWN:
+    using enum json::Type::type_t;
+    case UNDEFINED:
+    case UNKNOWN:
       switch (message_.subject) {
-        case json::Subject::UNDEFINED:
-        case json::Subject::UNKNOWN:
+        using enum json::Subject::type_t;
+        case UNDEFINED:
+        case UNKNOWN:
           log::fatal("Unexpected"sv);
           break;
-        case json::Subject::TICKER:
-        case json::Subject::TICKER_V2:
-        case json::Subject::MATCH:
-        case json::Subject::MARK_INDEX_PRICE:
-        case json::Subject::FUNDING_RATE:
-        case json::Subject::LEVEL2:
-        case json::Subject::FUNDING_BEGIN:
-        case json::Subject::FUNDING_END:
-        case json::Subject::SNAPSHOT_24H:
-        case json::Subject::ORDER_CHANGE:
+        case TICKER:
+        case TICKER_V2:
+        case MATCH:
+        case MARK_INDEX_PRICE:
+        case FUNDING_RATE:
+        case LEVEL2:
+        case FUNDING_BEGIN:
+        case FUNDING_END:
+        case SNAPSHOT_24H:
+        case ORDER_CHANGE:
           log::fatal("Unexpected"sv);
           break;
-        case json::Subject::ORDER_MARGIN_CHANGE: {
+        case ORDER_MARGIN_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::OrderMarginChange order_margin_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, order_margin_change);
           break;
         }
-        case json::Subject::AVAILABLE_BALANCE_CHANGE: {
+        case AVAILABLE_BALANCE_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::AvailableBalanceChange available_balance_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, available_balance_change);
           break;
         }
-        case json::Subject::WITHDRAW_HOLD_CHANGE: {
+        case WITHDRAW_HOLD_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::WithdrawHoldChange withdraw_hold_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, withdraw_hold_change);
           break;
         }
-        case json::Subject::POSITION_CHANGE: {
+        case POSITION_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::PositionChange position_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, position_change);
           break;
         }
-        case json::Subject::POSITION_SETTLEMENT: {
+        case POSITION_SETTLEMENT: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::PositionSettlement position_settlement(root, buffer);
@@ -77,115 +79,116 @@ bool Parser::dispatch(
         }
       }
       break;
-    case json::Type::WELCOME: {
+    case WELCOME: {
       core::json::Parser parser(message);
       auto root = parser.root();
       json::Welcome welcome(root, buffer);
       create_trace_and_dispatch(handler, trace_info, welcome);
       break;
     }
-    case json::Type::ERROR: {
+    case ERROR: {
       core::json::Parser parser(message);
       auto root = parser.root();
       json::Error error(root, buffer);
       create_trace_and_dispatch(handler, trace_info, error);
       break;
     }
-    case json::Type::PONG: {
+    case PONG: {
       core::json::Parser parser(message);
       auto root = parser.root();
       json::Pong pong(root, buffer);
       create_trace_and_dispatch(handler, trace_info, pong);
       break;
     }
-    case json::Type::ACK: {
+    case ACK: {
       core::json::Parser parser(message);
       auto root = parser.root();
       json::Ack ack(root, buffer);
       create_trace_and_dispatch(handler, trace_info, ack);
       break;
     }
-    case json::Type::MESSAGE:
+    case MESSAGE:
       switch (message_.subject) {
-        case json::Subject::UNDEFINED:
-        case json::Subject::UNKNOWN:
+        using enum json::Subject::type_t;
+        case UNDEFINED:
+        case UNKNOWN:
           log::fatal("Unexpected"sv);
           break;
-        case json::Subject::TICKER: {
+        case TICKER: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Ticker ticker(root, buffer);
           create_trace_and_dispatch(handler, trace_info, ticker);
           break;
         }
-        case json::Subject::TICKER_V2: {
+        case TICKER_V2: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::TickerV2 ticker_v2(root, buffer);
           create_trace_and_dispatch(handler, trace_info, ticker_v2);
           break;
         }
-        case json::Subject::MATCH: {
+        case MATCH: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Match match(root, buffer);
           create_trace_and_dispatch(handler, trace_info, match);
           break;
         }
-        case json::Subject::MARK_INDEX_PRICE: {
+        case MARK_INDEX_PRICE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::MarkIndexPrice mark_index_price(root, buffer);
           create_trace_and_dispatch(handler, trace_info, mark_index_price);
           break;
         }
-        case json::Subject::FUNDING_RATE: {
+        case FUNDING_RATE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::FundingRate funding_rate(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_rate);
           break;
         }
-        case json::Subject::LEVEL2: {
+        case LEVEL2: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Level2 level2(root, buffer);
           create_trace_and_dispatch(handler, trace_info, level2);
           break;
         }
-        case json::Subject::FUNDING_BEGIN: {
+        case FUNDING_BEGIN: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::FundingBegin funding_begin(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_begin);
           break;
         }
-        case json::Subject::FUNDING_END: {
+        case FUNDING_END: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::FundingEnd funding_end(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_end);
           break;
         }
-        case json::Subject::SNAPSHOT_24H: {
+        case SNAPSHOT_24H: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::Snapshot24h snapshot_24h(root, buffer);
           create_trace_and_dispatch(handler, trace_info, snapshot_24h);
           break;
         }
-        case json::Subject::ORDER_CHANGE: {
+        case ORDER_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
           json::OrderChange order_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, order_change);
           break;
         }
-        case json::Subject::ORDER_MARGIN_CHANGE:
-        case json::Subject::AVAILABLE_BALANCE_CHANGE:
-        case json::Subject::WITHDRAW_HOLD_CHANGE:
-        case json::Subject::POSITION_CHANGE:
-        case json::Subject::POSITION_SETTLEMENT:
+        case ORDER_MARGIN_CHANGE:
+        case AVAILABLE_BALANCE_CHANGE:
+        case WITHDRAW_HOLD_CHANGE:
+        case POSITION_CHANGE:
+        case POSITION_SETTLEMENT:
           log::fatal("Unexpected"sv);
           break;
       }
