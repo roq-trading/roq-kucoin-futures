@@ -29,9 +29,9 @@ namespace kucoin_futures {
 class DropCopy final : public core::web::ClientSocket::Handler, public json::Parser::Handler {
  public:
   struct Handler {
-    virtual void operator()(const Trace<StreamStatus> &) = 0;
-    virtual void operator()(const Trace<ExternalLatency> &) = 0;
-    virtual void operator()(const Trace<FundsUpdate> &, bool is_last) = 0;
+    virtual void operator()(const Trace<StreamStatus const> &) = 0;
+    virtual void operator()(const Trace<ExternalLatency const> &) = 0;
+    virtual void operator()(const Trace<FundsUpdate const> &, bool is_last) = 0;
   };
 
   DropCopy(
@@ -77,27 +77,27 @@ class DropCopy final : public core::web::ClientSocket::Handler, public json::Par
 
   void parse(const std::string_view &message);
 
-  void operator()(Trace<json::Welcome> const &) override;
-  void operator()(Trace<json::Error> const &) override;
-  void operator()(Trace<json::Pong> const &) override;
-  void operator()(Trace<json::Ack> const &) override;
+  void operator()(Trace<json::Welcome const> const &) override;
+  void operator()(Trace<json::Error const> const &) override;
+  void operator()(Trace<json::Pong const> const &) override;
+  void operator()(Trace<json::Ack const> const &) override;
 
-  void operator()(Trace<json::Ticker> const &) override;
-  void operator()(Trace<json::TickerV2> const &) override;
-  void operator()(Trace<json::Match> const &) override;
-  void operator()(Trace<json::MarkIndexPrice> const &) override;
-  void operator()(Trace<json::FundingRate> const &) override;
-  void operator()(Trace<json::Level2> const &) override;
-  void operator()(Trace<json::FundingBegin> const &) override;
-  void operator()(Trace<json::FundingEnd> const &) override;
-  void operator()(Trace<json::Snapshot24h> const &) override;
+  void operator()(Trace<json::Ticker const> const &) override;
+  void operator()(Trace<json::TickerV2 const> const &) override;
+  void operator()(Trace<json::Match const> const &) override;
+  void operator()(Trace<json::MarkIndexPrice const> const &) override;
+  void operator()(Trace<json::FundingRate const> const &) override;
+  void operator()(Trace<json::Level2 const> const &) override;
+  void operator()(Trace<json::FundingBegin const> const &) override;
+  void operator()(Trace<json::FundingEnd const> const &) override;
+  void operator()(Trace<json::Snapshot24h const> const &) override;
 
-  void operator()(Trace<json::OrderChange> const &) override;
-  void operator()(Trace<json::OrderMarginChange> const &) override;
-  void operator()(Trace<json::AvailableBalanceChange> const &) override;
-  void operator()(Trace<json::WithdrawHoldChange> const &) override;
-  void operator()(Trace<json::PositionChange> const &) override;
-  void operator()(Trace<json::PositionSettlement> const &) override;
+  void operator()(Trace<json::OrderChange const> const &) override;
+  void operator()(Trace<json::OrderMarginChange const> const &) override;
+  void operator()(Trace<json::AvailableBalanceChange const> const &) override;
+  void operator()(Trace<json::WithdrawHoldChange const> const &) override;
+  void operator()(Trace<json::PositionChange const> const &) override;
+  void operator()(Trace<json::PositionSettlement const> const &) override;
 
  private:
   Handler &handler_;

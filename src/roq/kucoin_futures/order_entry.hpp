@@ -44,9 +44,9 @@ class OrderEntry final : public core::web::Client::Handler {
   };
 
   struct Handler {
-    virtual void operator()(const Trace<StreamStatus> &) = 0;
-    virtual void operator()(const Trace<ExternalLatency> &) = 0;
-    virtual void operator()(const Trace<FundsUpdate> &, bool is_last) = 0;
+    virtual void operator()(const Trace<StreamStatus const> &) = 0;
+    virtual void operator()(const Trace<ExternalLatency const> &) = 0;
+    virtual void operator()(const Trace<FundsUpdate const> &, bool is_last) = 0;
     // cross-communication
     virtual void operator()(PrivateToken const &) = 0;
   };
@@ -89,29 +89,32 @@ class OrderEntry final : public core::web::Client::Handler {
   uint32_t download(OrderEntryState state);
 
   void get_private_token();
-  void get_private_token_ack(const Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(const Trace<json::Token> &);
+  void get_private_token_ack(const Trace<core::web::Response const> &, uint32_t sequence);
+  void operator()(const Trace<json::Token const> &);
 
   void get_account();
-  void get_account_ack(const Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(const Trace<json::Account> &);
+  void get_account_ack(const Trace<core::web::Response const> &, uint32_t sequence);
+  void operator()(const Trace<json::Account const> &);
 
   void get_positions();
-  void get_positions_ack(const Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(const Trace<json::Positions> &);
+  void get_positions_ack(const Trace<core::web::Response const> &, uint32_t sequence);
+  void operator()(const Trace<json::Positions const> &);
 
   void get_orders();
-  void get_orders_ack(const Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(const Trace<json::Orders> &);
+  void get_orders_ack(const Trace<core::web::Response const> &, uint32_t sequence);
+  void operator()(const Trace<json::Orders const> &);
 
   void get_fills();
-  void get_fills_ack(const Trace<core::web::Response> &, uint32_t sequence);
-  void operator()(const Trace<json::Fills> &);
+  void get_fills_ack(const Trace<core::web::Response const> &, uint32_t sequence);
+  void operator()(const Trace<json::Fills const> &);
 
   void create_order(
       const Event<CreateOrder> &, const oms::Order &, const std::string_view &request_id);
   void create_order_ack(
-      const Trace<core::web::Response> &, uint8_t user_id, uint32_t order_id, uint32_t version);
+      const Trace<core::web::Response const> &,
+      uint8_t user_id,
+      uint32_t order_id,
+      uint32_t version);
 
   void cancel_order(
       const Event<CancelOrder> &,
@@ -119,10 +122,13 @@ class OrderEntry final : public core::web::Client::Handler {
       const std::string_view &request_id,
       const std::string_view &previous_request_id);
   void cancel_order_ack(
-      const Trace<core::web::Response> &, uint8_t user_id, uint32_t order_id, uint32_t version);
+      const Trace<core::web::Response const> &,
+      uint8_t user_id,
+      uint32_t order_id,
+      uint32_t version);
 
   void cancel_all_orders(const Event<CancelAllOrders> &, const std::string_view &request_id);
-  void cancel_all_orders_ack(const Trace<core::web::Response> &);
+  void cancel_all_orders_ack(const Trace<core::web::Response const> &);
 
  private:
   Handler &handler_;

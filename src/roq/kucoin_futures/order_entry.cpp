@@ -174,7 +174,7 @@ void OrderEntry::operator()(const core::web::Client::Disconnected &) {
 
 void OrderEntry::operator()(const core::web::Client::Latency &latency) {
   auto trace_info = server::create_trace_info();
-  ExternalLatency external_latency{
+  const ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = security_.get_account(),
       .latency = latency.sample,
@@ -186,7 +186,7 @@ void OrderEntry::operator()(const core::web::Client::Latency &latency) {
 void OrderEntry::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
     auto trace_info = server::create_trace_info();
-    StreamStatus stream_status{
+    const StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
         .supports = SUPPORTS,
@@ -259,7 +259,8 @@ void OrderEntry::get_private_token() {
   });
 }
 
-void OrderEntry::get_private_token_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_private_token_ack(
+    const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::PRIVATE_TOKEN;
@@ -272,7 +273,7 @@ void OrderEntry::get_private_token_ack(const Trace<core::web::Response> &event, 
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto token = core::json::Parser::create<json::Token>(body, buffer);
+      const auto token = core::json::Parser::create<json::Token>(body, buffer);
       if (token.code == 200000) {
         Trace event(trace_info, token);
         (*this)(event);
@@ -288,7 +289,7 @@ void OrderEntry::get_private_token_ack(const Trace<core::web::Response> &event, 
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Token> &event) {
+void OrderEntry::operator()(const Trace<json::Token const> &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -333,7 +334,7 @@ void OrderEntry::get_account() {
   });
 }
 
-void OrderEntry::get_account_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_account_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ACCOUNT;
@@ -356,7 +357,7 @@ void OrderEntry::get_account_ack(const Trace<core::web::Response> &event, uint32
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto account = core::json::Parser::create<json::Account>(body, buffer);
+      const auto account = core::json::Parser::create<json::Account>(body, buffer);
       if (account.code == 200000) {
         Trace event(trace_info, account);
         (*this)(event);
@@ -372,7 +373,7 @@ void OrderEntry::get_account_ack(const Trace<core::web::Response> &event, uint32
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Account> &event) {
+void OrderEntry::operator()(const Trace<json::Account const> &event) {
   auto &[trace_info, account] = event;
   log::info<2>("account={}"sv, account);
 }
@@ -404,7 +405,8 @@ void OrderEntry::get_positions() {
   });
 }
 
-void OrderEntry::get_positions_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_positions_ack(
+    const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::POSITIONS;
@@ -417,7 +419,7 @@ void OrderEntry::get_positions_ack(const Trace<core::web::Response> &event, uint
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto positions = core::json::Parser::create<json::Positions>(body, buffer);
+      const auto positions = core::json::Parser::create<json::Positions>(body, buffer);
       if (positions.code == 200000) {
         Trace event(trace_info, positions);
         (*this)(event);
@@ -433,7 +435,7 @@ void OrderEntry::get_positions_ack(const Trace<core::web::Response> &event, uint
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Positions> &event) {
+void OrderEntry::operator()(const Trace<json::Positions const> &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
 }
@@ -466,7 +468,7 @@ void OrderEntry::get_orders() {
   });
 }
 
-void OrderEntry::get_orders_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_orders_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ORDERS;
@@ -479,7 +481,7 @@ void OrderEntry::get_orders_ack(const Trace<core::web::Response> &event, uint32_
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto orders = core::json::Parser::create<json::Orders>(body, buffer);
+      const auto orders = core::json::Parser::create<json::Orders>(body, buffer);
       if (orders.code == 200000) {
         Trace event(trace_info, orders);
         (*this)(event);
@@ -495,7 +497,7 @@ void OrderEntry::get_orders_ack(const Trace<core::web::Response> &event, uint32_
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Orders> &event) {
+void OrderEntry::operator()(const Trace<json::Orders const> &event) {
   auto &[trace_info, orders] = event;
   log::info<2>("orders={}"sv, orders);
 }
@@ -527,7 +529,7 @@ void OrderEntry::get_fills() {
   });
 }
 
-void OrderEntry::get_fills_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void OrderEntry::get_fills_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.fills_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::FILLS;
@@ -540,7 +542,7 @@ void OrderEntry::get_fills_ack(const Trace<core::web::Response> &event, uint32_t
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto fills = core::json::Parser::create<json::Fills>(body, buffer);
+      const auto fills = core::json::Parser::create<json::Fills>(body, buffer);
       if (fills.code == 200000) {
         Trace event(trace_info, fills);
         (*this)(event);
@@ -556,7 +558,7 @@ void OrderEntry::get_fills_ack(const Trace<core::web::Response> &event, uint32_t
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Fills> &event) {
+void OrderEntry::operator()(const Trace<json::Fills const> &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
 }
@@ -626,7 +628,10 @@ void OrderEntry::create_order(
 }
 
 void OrderEntry::create_order_ack(
-    const Trace<core::web::Response> &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
+    const Trace<core::web::Response const> &event,
+    uint8_t user_id,
+    uint32_t order_id,
+    uint32_t version) {
   profile_.create_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -733,7 +738,10 @@ void OrderEntry::cancel_order(
 }
 
 void OrderEntry::cancel_order_ack(
-    const Trace<core::web::Response> &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
+    const Trace<core::web::Response const> &event,
+    uint8_t user_id,
+    uint32_t order_id,
+    uint32_t version) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -843,7 +851,7 @@ void OrderEntry::cancel_all_orders(
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(const Trace<core::web::Response> &event) {
+void OrderEntry::cancel_all_orders_ack(const Trace<core::web::Response const> &event) {
   profile_.cancel_all_orders_ack([&]() {
     auto &[trace_info, response] = event;
     try {

@@ -45,35 +45,35 @@ bool Parser::dispatch(
         case ORDER_MARGIN_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::OrderMarginChange order_margin_change(root, buffer);
+          const json::OrderMarginChange order_margin_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, order_margin_change);
           break;
         }
         case AVAILABLE_BALANCE_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::AvailableBalanceChange available_balance_change(root, buffer);
+          const json::AvailableBalanceChange available_balance_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, available_balance_change);
           break;
         }
         case WITHDRAW_HOLD_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::WithdrawHoldChange withdraw_hold_change(root, buffer);
+          const json::WithdrawHoldChange withdraw_hold_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, withdraw_hold_change);
           break;
         }
         case POSITION_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::PositionChange position_change(root, buffer);
+          const json::PositionChange position_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, position_change);
           break;
         }
         case POSITION_SETTLEMENT: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::PositionSettlement position_settlement(root, buffer);
+          const json::PositionSettlement position_settlement(root, buffer);
           create_trace_and_dispatch(handler, trace_info, position_settlement);
           break;
         }
@@ -82,28 +82,28 @@ bool Parser::dispatch(
     case WELCOME: {
       core::json::Parser parser(message);
       auto root = parser.root();
-      json::Welcome welcome(root, buffer);
+      const json::Welcome welcome(root, buffer);
       create_trace_and_dispatch(handler, trace_info, welcome);
       break;
     }
     case ERROR: {
       core::json::Parser parser(message);
       auto root = parser.root();
-      json::Error error(root, buffer);
+      const json::Error error(root, buffer);
       create_trace_and_dispatch(handler, trace_info, error);
       break;
     }
     case PONG: {
       core::json::Parser parser(message);
       auto root = parser.root();
-      json::Pong pong(root, buffer);
+      const json::Pong pong(root, buffer);
       create_trace_and_dispatch(handler, trace_info, pong);
       break;
     }
     case ACK: {
       core::json::Parser parser(message);
       auto root = parser.root();
-      json::Ack ack(root, buffer);
+      const json::Ack ack(root, buffer);
       create_trace_and_dispatch(handler, trace_info, ack);
       break;
     }
@@ -117,70 +117,70 @@ bool Parser::dispatch(
         case TICKER: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::Ticker ticker(root, buffer);
+          const json::Ticker ticker(root, buffer);
           create_trace_and_dispatch(handler, trace_info, ticker);
           break;
         }
         case TICKER_V2: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::TickerV2 ticker_v2(root, buffer);
+          const json::TickerV2 ticker_v2(root, buffer);
           create_trace_and_dispatch(handler, trace_info, ticker_v2);
           break;
         }
         case MATCH: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::Match match(root, buffer);
+          const json::Match match(root, buffer);
           create_trace_and_dispatch(handler, trace_info, match);
           break;
         }
         case MARK_INDEX_PRICE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::MarkIndexPrice mark_index_price(root, buffer);
+          const json::MarkIndexPrice mark_index_price(root, buffer);
           create_trace_and_dispatch(handler, trace_info, mark_index_price);
           break;
         }
         case FUNDING_RATE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::FundingRate funding_rate(root, buffer);
+          const json::FundingRate funding_rate(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_rate);
           break;
         }
         case LEVEL2: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::Level2 level2(root, buffer);
+          const json::Level2 level2(root, buffer);
           create_trace_and_dispatch(handler, trace_info, level2);
           break;
         }
         case FUNDING_BEGIN: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::FundingBegin funding_begin(root, buffer);
+          const json::FundingBegin funding_begin(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_begin);
           break;
         }
         case FUNDING_END: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::FundingEnd funding_end(root, buffer);
+          const json::FundingEnd funding_end(root, buffer);
           create_trace_and_dispatch(handler, trace_info, funding_end);
           break;
         }
         case SNAPSHOT_24H: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::Snapshot24h snapshot_24h(root, buffer);
+          const json::Snapshot24h snapshot_24h(root, buffer);
           create_trace_and_dispatch(handler, trace_info, snapshot_24h);
           break;
         }
         case ORDER_CHANGE: {
           core::json::Parser parser(message);
           auto root = parser.root();
-          json::OrderChange order_change(root, buffer);
+          const json::OrderChange order_change(root, buffer);
           create_trace_and_dispatch(handler, trace_info, order_change);
           break;
         }

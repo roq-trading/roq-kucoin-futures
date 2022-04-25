@@ -123,7 +123,7 @@ void Rest::operator()(metrics::Writer &writer) {
 void Rest::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
     auto trace_info = server::create_trace_info();
-    StreamStatus stream_status{
+    const StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = {},
         .supports = SUPPORTS,
@@ -156,7 +156,7 @@ void Rest::operator()(const core::web::Client::Disconnected &) {
 
 void Rest::operator()(const core::web::Client::Latency &latency) {
   auto trace_info = server::create_trace_info();
-  ExternalLatency external_latency{
+  const ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = {},
       .latency = latency.sample,
@@ -213,7 +213,7 @@ void Rest::get_public_token() {
   });
 }
 
-void Rest::get_public_token_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void Rest::get_public_token_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = RestState::PUBLIC_TOKEN;
@@ -226,7 +226,7 @@ void Rest::get_public_token_ack(const Trace<core::web::Response> &event, uint32_
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto token = core::json::Parser::create<json::Token>(body, buffer);
+      const auto token = core::json::Parser::create<json::Token>(body, buffer);
       Trace event(trace_info, token);
       (*this)(event);
       download_.check(state);
@@ -237,7 +237,7 @@ void Rest::get_public_token_ack(const Trace<core::web::Response> &event, uint32_
   });
 }
 
-void Rest::operator()(const Trace<json::Token> &event) {
+void Rest::operator()(const Trace<json::Token const> &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -282,7 +282,7 @@ void Rest::get_contracts() {
   });
 }
 
-void Rest::get_contracts_ack(const Trace<core::web::Response> &event, uint32_t sequence) {
+void Rest::get_contracts_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
   auto state = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
     auto &[trace_info, response] = event;
@@ -295,7 +295,7 @@ void Rest::get_contracts_ack(const Trace<core::web::Response> &event, uint32_t s
       }
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
+      const auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
       Trace event(trace_info, contracts);
       (*this)(event);
       download_.check(state);
@@ -306,7 +306,7 @@ void Rest::get_contracts_ack(const Trace<core::web::Response> &event, uint32_t s
   });
 }
 
-void Rest::operator()(const Trace<json::Contracts> &event) {
+void Rest::operator()(const Trace<json::Contracts const> &event) {
   auto &[trace_info, contracts] = event;
   log::info<4>("contracts={}"sv, contracts);
   // reference data
@@ -403,7 +403,8 @@ void Rest::get_order_book(const std::string_view &symbol) {
 }
 
 void Rest::get_order_book_ack(
-    const Trace<core::web::Response> &event, [[maybe_unused]] const std::string_view &symbol) {
+    const Trace<core::web::Response const> &event,
+    [[maybe_unused]] const std::string_view &symbol) {
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
     try {
@@ -411,7 +412,7 @@ void Rest::get_order_book_ack(
       log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
-      auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
+      const auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
       Trace event(trace_info, order_book);
       (*this)(event);
     } catch (core::NetworkError &e) {
@@ -421,7 +422,7 @@ void Rest::get_order_book_ack(
   });
 }
 
-void Rest::operator()(Trace<json::OrderBook> const &event) {
+void Rest::operator()(Trace<json::OrderBook const> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
@@ -442,7 +443,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
         sequence,
         [&](auto &bids, auto &asks, auto sequence) {  // snapshot
           log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          MarketByPriceUpdate market_by_price_update{
+          const MarketByPriceUpdate market_by_price_update{
               .stream_id = stream_id_,
               .exchange = Flags::exchange(),
               .symbol = symbol,
