@@ -242,7 +242,7 @@ void DropCopy::parse(const std::string_view &message) {
 void DropCopy::operator()(Trace<json::Welcome const> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
-    log::info<1>("event={{trace_info={}, welcome={}}}"sv, trace_info, welcome);
+    log::info<1>("event={{welcome={}, trace_info={}}}"sv, welcome, trace_info);
     welcome_ = true;
     (*this)(ConnectionStatus::DOWNLOADING);
     download_.begin();
@@ -255,21 +255,21 @@ void DropCopy::operator()(Trace<json::Error const> const &event) {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
     log::warn("error={}"sv, error);
-    // log::fatal("event={{trace_info={}, error={}}}"sv, trace_info, error);
+    // log::fatal("event={{error={}, trace_info={}}}"sv, error, trace_info);
   });
 }
 
 void DropCopy::operator()(Trace<json::Pong const> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
-    log::info<4>("event={{trace_info={}, pong={}}}"sv, trace_info, pong);
+    log::info<4>("event={{pong={}, trace_info={}}}"sv, pong, trace_info);
   });
 }
 
 void DropCopy::operator()(Trace<json::Ack const> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
-    log::info<2>("event={{trace_info={}, ack={}}}"sv, trace_info, ack);
+    log::info<2>("event={{ack={}, trace_info={}}}"sv, ack, trace_info);
   });
 }
 

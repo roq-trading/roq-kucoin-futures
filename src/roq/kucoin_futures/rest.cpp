@@ -426,7 +426,7 @@ void Rest::operator()(Trace<json::OrderBook const> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
-  log::info<4>("event={{trace_info={}, order_book={}}}"sv, trace_info, order_book);
+  log::info<4>("event={{order_book={}, trace_info={}}}"sv, order_book, trace_info);
   auto &data = order_book.data;
   auto sequence = data.sequence;
   auto symbol = data.symbol;
