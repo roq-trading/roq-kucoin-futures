@@ -18,7 +18,7 @@ using namespace std::literals;
 using namespace Catch::literals;
 
 TEST_CASE("json_fills_simple", "[json_fills]") {
-  const auto message = R"({)"
+  auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
                        R"("currentPage":1,)"

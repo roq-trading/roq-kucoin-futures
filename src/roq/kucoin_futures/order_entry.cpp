@@ -19,7 +19,7 @@ namespace roq {
 namespace kucoin_futures {
 
 namespace {
-const auto NAME = "om"sv;
+auto const NAME = "om"sv;
 const Mask SUPPORTS{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
@@ -27,10 +27,10 @@ const Mask SUPPORTS{
     SupportType::FUNDS,
 };
 
-const auto ALLOW_PIPELINING = true;
+auto const ALLOW_PIPELINING = true;
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(const std::string_view &group, const std::string_view &function)
+  explicit create_metrics(std::string_view const &group, std::string_view const &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
 
@@ -54,11 +54,7 @@ auto create_connection(auto &handler, auto &context) {
 }  // namespace
 
 OrderEntry::OrderEntry(
-    Handler &handler,
-    core::io::Context &context,
-    uint16_t stream_id,
-    Security &security,
-    Shared &shared)
+    Handler &handler, core::io::Context &context, uint16_t stream_id, Security &security, Shared &shared)
     : handler_(handler), stream_id_(stream_id),
       name_(fmt::format("{}:{}:{}"sv, stream_id_, NAME, security.get_account())),
       connection_(create_connection(*this, context)), decode_buffer_(Flags::decode_buffer_size()),
@@ -90,15 +86,15 @@ OrderEntry::OrderEntry(
       download_(Flags::rest_request_timeout(), [this](auto state) { return download(state); }) {
 }
 
-void OrderEntry::operator()(const Event<Start> &) {
+void OrderEntry::operator()(Event<Start> const &) {
   connection_.start();
 }
 
-void OrderEntry::operator()(const Event<Stop> &) {
+void OrderEntry::operator()(Event<Stop> const &) {
   connection_.stop();
 }
 
-void OrderEntry::operator()(const Event<Timer> &event) {
+void OrderEntry::operator()(Event<Timer> const &event) {
   connection_.refresh(event.value.now);
 }
 
@@ -128,35 +124,34 @@ void OrderEntry::operator()(metrics::Writer &writer) {
 }
 
 uint16_t OrderEntry::operator()(
-    const Event<CreateOrder> &event, const oms::Order &order, const std::string_view &request_id) {
+    Event<CreateOrder> const &event, oms::Order const &order, std::string_view const &request_id) {
   create_order(event, order, request_id);
   return stream_id_;
 }
 
 uint16_t OrderEntry::operator()(
-    const Event<ModifyOrder> &,
-    const oms::Order &,
-    [[maybe_unused]] const std::string_view &request_id,
-    [[maybe_unused]] const std::string_view &previous_request_id) {
+    Event<ModifyOrder> const &,
+    oms::Order const &,
+    [[maybe_unused]] std::string_view const &request_id,
+    [[maybe_unused]] std::string_view const &previous_request_id) {
   throw oms::NotSupported("not supported"sv);
 }
 
 uint16_t OrderEntry::operator()(
-    const Event<CancelOrder> &event,
-    const oms::Order &order,
-    const std::string_view &request_id,
-    const std::string_view &previous_request_id) {
+    Event<CancelOrder> const &event,
+    oms::Order const &order,
+    std::string_view const &request_id,
+    std::string_view const &previous_request_id) {
   cancel_order(event, order, request_id, previous_request_id);
   return stream_id_;
 }
 
-uint16_t OrderEntry::operator()(
-    const Event<CancelAllOrders> &event, const std::string_view &request_id) {
+uint16_t OrderEntry::operator()(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   cancel_all_orders(event, request_id);
   return stream_id_;
 }
 
-void OrderEntry::operator()(const core::web::Client::Connected &) {
+void OrderEntry::operator()(core::web::Client::Connected const &) {
   if (download_.downloading()) {
     download_.bump();
   } else {
@@ -165,14 +160,14 @@ void OrderEntry::operator()(const core::web::Client::Connected &) {
   }
 }
 
-void OrderEntry::operator()(const core::web::Client::Disconnected &) {
+void OrderEntry::operator()(core::web::Client::Disconnected const &) {
   ++counter_.disconnect;
   (*this)(ConnectionStatus::DISCONNECTED);
   if (!download_.downloading())
     download_.reset();
 }
 
-void OrderEntry::operator()(const core::web::Client::Latency &latency) {
+void OrderEntry::operator()(core::web::Client::Latency const &latency) {
   auto trace_info = server::create_trace_info();
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -248,19 +243,15 @@ void OrderEntry::get_private_token() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
     };
     auto sequence = download_.sequence();
-    connection_(
-        "private_token",
-        request,
-        [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
-          get_private_token_ack(event, sequence);
-        });
+    connection_("private_token", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      auto trace_info = server::create_trace_info();
+      Trace event(trace_info, response);
+      get_private_token_ack(event, sequence);
+    });
   });
 }
 
-void OrderEntry::get_private_token_ack(
-    const Trace<core::web::Response const> &event, uint32_t sequence) {
+void OrderEntry::get_private_token_ack(Trace<core::web::Response const> const &event, uint32_t sequence) {
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::PRIVATE_TOKEN;
@@ -289,7 +280,7 @@ void OrderEntry::get_private_token_ack(
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Token const> &event) {
+void OrderEntry::operator()(Trace<json::Token const> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -325,16 +316,15 @@ void OrderEntry::get_account() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
     };
     auto sequence = download_.sequence();
-    connection_(
-        "account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
-          get_account_ack(event, sequence);
-        });
+    connection_("account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      auto trace_info = server::create_trace_info();
+      Trace event(trace_info, response);
+      get_account_ack(event, sequence);
+    });
   });
 }
 
-void OrderEntry::get_account_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
+void OrderEntry::get_account_ack(Trace<core::web::Response const> const &event, uint32_t sequence) {
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ACCOUNT;
@@ -373,7 +363,7 @@ void OrderEntry::get_account_ack(const Trace<core::web::Response const> &event, 
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Account const> &event) {
+void OrderEntry::operator()(Trace<json::Account const> const &event) {
   auto &[trace_info, account] = event;
   log::info<2>("account={}"sv, account);
 }
@@ -396,17 +386,15 @@ void OrderEntry::get_positions() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
     };
     auto sequence = download_.sequence();
-    connection_(
-        "positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
-          get_positions_ack(event, sequence);
-        });
+    connection_("positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      auto trace_info = server::create_trace_info();
+      Trace event(trace_info, response);
+      get_positions_ack(event, sequence);
+    });
   });
 }
 
-void OrderEntry::get_positions_ack(
-    const Trace<core::web::Response const> &event, uint32_t sequence) {
+void OrderEntry::get_positions_ack(Trace<core::web::Response const> const &event, uint32_t sequence) {
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::POSITIONS;
@@ -435,7 +423,7 @@ void OrderEntry::get_positions_ack(
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Positions const> &event) {
+void OrderEntry::operator()(Trace<json::Positions const> const &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
 }
@@ -459,16 +447,15 @@ void OrderEntry::get_orders() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
     };
     auto sequence = download_.sequence();
-    connection_(
-        "orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
-          get_orders_ack(event, sequence);
-        });
+    connection_("orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      auto trace_info = server::create_trace_info();
+      Trace event(trace_info, response);
+      get_orders_ack(event, sequence);
+    });
   });
 }
 
-void OrderEntry::get_orders_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
+void OrderEntry::get_orders_ack(Trace<core::web::Response const> const &event, uint32_t sequence) {
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ORDERS;
@@ -497,7 +484,7 @@ void OrderEntry::get_orders_ack(const Trace<core::web::Response const> &event, u
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Orders const> &event) {
+void OrderEntry::operator()(Trace<json::Orders const> const &event) {
   auto &[trace_info, orders] = event;
   log::info<2>("orders={}"sv, orders);
 }
@@ -520,16 +507,15 @@ void OrderEntry::get_fills() {
         .quality_of_service = core::web::QualityOfService::IMMEDIATE,
     };
     auto sequence = download_.sequence();
-    connection_(
-        "fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
-          get_fills_ack(event, sequence);
-        });
+    connection_("fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      auto trace_info = server::create_trace_info();
+      Trace event(trace_info, response);
+      get_fills_ack(event, sequence);
+    });
   });
 }
 
-void OrderEntry::get_fills_ack(const Trace<core::web::Response const> &event, uint32_t sequence) {
+void OrderEntry::get_fills_ack(Trace<core::web::Response const> const &event, uint32_t sequence) {
   profile_.fills_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::FILLS;
@@ -558,15 +544,14 @@ void OrderEntry::get_fills_ack(const Trace<core::web::Response const> &event, ui
   });
 }
 
-void OrderEntry::operator()(const Trace<json::Fills const> &event) {
+void OrderEntry::operator()(Trace<json::Fills const> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
 }
 
 // create-order
 
-void OrderEntry::create_order(
-    const Event<CreateOrder> &event, const oms::Order &, const std::string_view &request_id) {
+void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const &, std::string_view const &request_id) {
   profile_.create_order([&]() {
     if (!ready())
       throw oms::NotReady("not ready"sv);
@@ -577,8 +562,7 @@ void OrderEntry::create_order(
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
     auto remark = ""sv;
-    auto reduce_only =
-        create_order.execution_instructions.has(ExecutionInstruction::DO_NOT_INCREASE);
+    auto reduce_only = create_order.execution_instructions.has(ExecutionInstruction::DO_NOT_INCREASE);
     auto time_in_force = "GTC"sv;  // GTC, IOC
     auto body = fmt::format(
         R"({{)"
@@ -628,10 +612,7 @@ void OrderEntry::create_order(
 }
 
 void OrderEntry::create_order_ack(
-    const Trace<core::web::Response const> &event,
-    uint8_t user_id,
-    uint32_t order_id,
-    uint32_t version) {
+    Trace<core::web::Response const> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -659,12 +640,7 @@ void OrderEntry::create_order_ack(
               .price = NaN,
           };
           if (shared_.update_order(
-                  user_id,
-                  order_id,
-                  stream_id_,
-                  trace_info,
-                  response,
-                  []([[maybe_unused]] auto &order) {})) {
+                  user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
           } else {
             log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
           }
@@ -687,12 +663,7 @@ void OrderEntry::create_order_ack(
           .price = NaN,
       };
       if (shared_.update_order(
-              user_id,
-              order_id,
-              stream_id_,
-              trace_info,
-              response,
-              []([[maybe_unused]] auto &order) {})) {
+              user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
       } else {
         log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
       }
@@ -703,10 +674,10 @@ void OrderEntry::create_order_ack(
 // cancel-order
 
 void OrderEntry::cancel_order(
-    const Event<CancelOrder> &event,
-    const oms::Order &order,
-    [[maybe_unused]] const std::string_view &request_id,
-    [[maybe_unused]] const std::string_view &previous_request_id) {
+    Event<CancelOrder> const &event,
+    oms::Order const &order,
+    [[maybe_unused]] std::string_view const &request_id,
+    [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {
     if (!ready())
       throw oms::NotReady("not ready"sv);
@@ -726,10 +697,8 @@ void OrderEntry::cancel_order(
     connection_(
         request_id,
         request,
-        [this,
-         user_id = message_info.source,
-         order_id = cancel_order.order_id,
-         version = cancel_order.version]([[maybe_unused]] auto &request_id, auto &response) {
+        [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
+            [[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
           Trace event(trace_info, response);
           cancel_order_ack(event, user_id, order_id, version);
@@ -738,10 +707,7 @@ void OrderEntry::cancel_order(
 }
 
 void OrderEntry::cancel_order_ack(
-    const Trace<core::web::Response const> &event,
-    uint8_t user_id,
-    uint32_t order_id,
-    uint32_t version) {
+    Trace<core::web::Response const> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -770,18 +736,9 @@ void OrderEntry::cancel_order_ack(
               .price = NaN,
           };
           if (shared_.update_order(
-                  user_id,
-                  order_id,
-                  stream_id_,
-                  trace_info,
-                  response,
-                  []([[maybe_unused]] auto &order) {})) {
+                  user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
           } else {
-            log::warn(
-                "Did not find order: user_id={}, order_id={}, version={}"sv,
-                user_id,
-                order_id,
-                version);
+            log::warn("Did not find order: user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
           }
           break;
         }
@@ -802,18 +759,9 @@ void OrderEntry::cancel_order_ack(
           .price = NaN,
       };
       if (shared_.update_order(
-              user_id,
-              order_id,
-              stream_id_,
-              trace_info,
-              response,
-              []([[maybe_unused]] auto &order) {})) {
+              user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
       } else {
-        log::warn(
-            "Did not find order: user_id={}, order_id={}, version={}"sv,
-            user_id,
-            order_id,
-            version);
+        log::warn("Did not find order: user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
       }
     }
   });
@@ -822,7 +770,7 @@ void OrderEntry::cancel_order_ack(
 // cancel-all-orders
 
 void OrderEntry::cancel_all_orders(
-    const Event<CancelAllOrders> &event, [[maybe_unused]] const std::string_view &request_id) {
+    Event<CancelAllOrders> const &event, [[maybe_unused]] std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
     if (ready()) {
       auto method = core::http::Method::DELETE;
@@ -844,14 +792,12 @@ void OrderEntry::cancel_all_orders(
       });
     } else {
       auto &[message_info, cancel_all_orders] = event;
-      log::warn(
-          R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"sv,
-          cancel_all_orders.account);
+      log::warn(R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"sv, cancel_all_orders.account);
     }
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(const Trace<core::web::Response const> &event) {
+void OrderEntry::cancel_all_orders_ack(Trace<core::web::Response const> const &event) {
   profile_.cancel_all_orders_ack([&]() {
     auto &[trace_info, response] = event;
     try {

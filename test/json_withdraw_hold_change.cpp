@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 using namespace Catch::literals;
 
 TEST_CASE("json_withdraw_hold_change_example", "[json_withdraw_hold_change]") {
-  const auto message = R"({)"
+  auto const message = R"({)"
                        R"("userId": "xbc453tg732eba53a88ggyt8c",)"
                        R"("topic": "/contractAccount/wallet",)"
                        R"("subject": "withdrawHold.change",)"

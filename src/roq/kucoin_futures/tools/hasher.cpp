@@ -15,10 +15,10 @@ namespace kucoin_futures {
 namespace tools {
 
 namespace {
-auto create_hmac(const std::string_view &secret) {
+auto create_hmac(std::string_view const &secret) {
   return core::crypto::HMAC_SHA256(secret);
 }
-auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, const std::string_view &passphrase) {
+auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, std::string_view const &passphrase) {
   hmac.clear();
   hmac.update(passphrase);
   std::array<char, 32> buffer;
@@ -28,17 +28,16 @@ auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, const std::string
 }
 }  // namespace
 
-Hasher::Hasher(
-    const std::string_view &key, const std::string_view &secret, const std::string_view &passphrase)
+Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
     : key_(key), hmac_(create_hmac(secret)), passphrase_(passphrase),
       signed_passphrase_(create_signed_passphrase(hmac_, passphrase)) {
 }
 
 std::string Hasher::create_headers_v1(
     core::http::Method method,
-    const std::string_view &path,
-    const std::string_view &query,
-    const std::string_view &body,
+    std::string_view const &path,
+    std::string_view const &query,
+    std::string_view const &body,
     std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
@@ -63,9 +62,9 @@ std::string Hasher::create_headers_v1(
 
 std::string Hasher::create_headers_v2(
     core::http::Method method,
-    const std::string_view &path,
-    const std::string_view &query,
-    const std::string_view &body,
+    std::string_view const &path,
+    std::string_view const &query,
+    std::string_view const &body,
     std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);

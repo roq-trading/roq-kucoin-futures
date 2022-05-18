@@ -27,7 +27,7 @@ namespace roq {
 namespace kucoin_futures {
 
 namespace {
-const auto NAME = "md"sv;
+auto const NAME = "md"sv;
 const Mask SUPPORTS{
     SupportType::MARKET_STATUS,
     SupportType::TOP_OF_BOOK,
@@ -37,11 +37,11 @@ const Mask SUPPORTS{
 };
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(const std::string_view &group, const std::string_view &function)
+  explicit create_metrics(std::string_view const &group, std::string_view const &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
 
-auto create_connection(auto &handler, auto &context, const auto &uri, const auto &query) {
+auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   core::URI uri_{uri};
   core::web::ClientSocket::Config config{
       .validate_certificate = server::Flags::tls_validate_certificate(),
@@ -61,12 +61,11 @@ MarketData::MarketData(
     uint32_t stream_id,
     Shared &shared,
     size_t index,
-    const std::string_view &uri,
-    const std::string_view &query,
+    std::string_view const &uri,
+    std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
-      index_(index), ping_frequency_(ping_frequency),
-      connection_(create_connection(*this, context, uri, query)),
+    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)), index_(index),
+      ping_frequency_(ping_frequency), connection_(create_connection(*this, context, uri, query)),
       decode_buffer_(Flags::decode_buffer_size()),
       request_id_(static_cast<uint64_t>(stream_id_) * 1000000),  // scale (debugging)
       counter_{
@@ -98,15 +97,15 @@ MarketData::MarketData(
   log::info("ping_frequency={}"sv, ping_frequency_);
 }
 
-void MarketData::operator()(const Event<Start> &) {
+void MarketData::operator()(Event<Start> const &) {
   connection_.start();
 }
 
-void MarketData::operator()(const Event<Stop> &) {
+void MarketData::operator()(Event<Stop> const &) {
   connection_.stop();
 }
 
-void MarketData::operator()(const Event<Timer> &event) {
+void MarketData::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
   connection_.refresh(now);
   if (connection_.ready()) {
@@ -151,13 +150,13 @@ void MarketData::subscribe(size_t start_from) {
     subscribe(shared_.symbols.get_slice(index_, start_from));
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Connected &) {
+void MarketData::operator()(core::web::ClientSocket::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Disconnected &) {
+void MarketData::operator()(core::web::ClientSocket::Disconnected const &) {
   ++counter_.disconnect;
   (*this)(ConnectionStatus::DISCONNECTED);
   welcome_ = false;
@@ -167,14 +166,14 @@ void MarketData::operator()(const core::web::ClientSocket::Disconnected &) {
   shared_.mbp_collector.clear();  // XXX HANS this is SHARED !!!
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Ready &) {
+void MarketData::operator()(core::web::ClientSocket::Ready const &) {
   // note! wait for welcome
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Close &) {
+void MarketData::operator()(core::web::ClientSocket::Close const &) {
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Latency &latency) {
+void MarketData::operator()(core::web::ClientSocket::Latency const &latency) {
   auto trace_info = server::create_trace_info();
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -185,11 +184,11 @@ void MarketData::operator()(const core::web::ClientSocket::Latency &latency) {
   latency_.ping.update(latency.sample);
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Text &text) {
+void MarketData::operator()(core::web::ClientSocket::Text const &text) {
   parse(text.payload);
 }
 
-void MarketData::operator()(const core::web::ClientSocket::Binary &) {
+void MarketData::operator()(core::web::ClientSocket::Binary const &) {
   log::fatal("Unexpected"sv);
 }
 
@@ -211,7 +210,7 @@ void MarketData::operator()(ConnectionStatus status) {
   }
 }
 
-void MarketData::subscribe(const std::span<Symbol const> &symbols) {
+void MarketData::subscribe(std::span<Symbol const> const &symbols) {
   subscribe("/contract/announcement"sv);  // XXX HANS ???
   if (std::empty(symbols))
     return;
@@ -224,7 +223,7 @@ void MarketData::subscribe(const std::span<Symbol const> &symbols) {
   subscribe("/contractMarket/level2"sv, symbols);
 }
 
-void MarketData::subscribe(const std::string_view &topic) {
+void MarketData::subscribe(std::string_view const &topic) {
   auto now = core::clock::GetSystem();
   auto message = fmt::format(
       R"({{)"
@@ -239,7 +238,7 @@ void MarketData::subscribe(const std::string_view &topic) {
   subscribe_queue_.emplace_back(message);
 }
 
-void MarketData::subscribe(const std::string_view &topic, const std::span<Symbol const> &symbols) {
+void MarketData::subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
     auto now = core::clock::GetSystem();
@@ -266,7 +265,7 @@ void MarketData::send_ping(std::chrono::nanoseconds now) {
   connection_.send_text(message);
 }
 
-void MarketData::parse(const std::string_view &message) {
+void MarketData::parse(std::string_view const &message) {
   profile_.parse([&]() {
     try {
       auto trace_info = server::create_trace_info();
@@ -502,14 +501,11 @@ void MarketData::operator()(Trace<json::Level2 const> const &event) {
                 .checksum = {},
             };
             Trace event(trace_info, market_by_price_update);
-            shared_(event, true, [&](auto &market_by_price) {
-              collector.apply(market_by_price, sequence, false);
-            });
+            shared_(event, true, [&](auto &market_by_price) { collector.apply(market_by_price, sequence, false); });
           },
           [&](auto retries) {  // request
             log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
-            if (Flags::ws_mbp_request_max_retries() &&
-                Flags::ws_mbp_request_max_retries() < retries) {
+            if (Flags::ws_mbp_request_max_retries() && Flags::ws_mbp_request_max_retries() < retries) {
               log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
             }
             auto now = trace_info.source_receive_time;

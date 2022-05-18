@@ -11,7 +11,7 @@ namespace roq {
 namespace kucoin_futures {
 namespace tools {
 
-extern std::tuple<Side, double, double> split(const std::string_view &change);
+extern std::tuple<Side, double, double> split(std::string_view const &change);
 
 }  // namespace tools
 }  // namespace kucoin_futures

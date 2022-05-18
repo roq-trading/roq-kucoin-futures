@@ -30,14 +30,13 @@ namespace kucoin_futures {
 class MarketData final : public core::web::ClientSocket::Handler, public json::Parser::Handler {
  public:
   struct Handler {
-    virtual void operator()(const Trace<StreamStatus const> &) = 0;
-    virtual void operator()(const Trace<ExternalLatency const> &) = 0;
-    virtual void operator()(const Trace<MarketStatus const> &, bool is_last) = 0;
-    virtual void operator()(const Trace<TopOfBook const> &, bool is_last) = 0;
-    virtual void operator()(
-        const Trace<MarketByPriceUpdate const> &, bool is_last, bool refresh) = 0;
-    virtual void operator()(const Trace<TradeSummary const> &, bool is_last) = 0;
-    virtual void operator()(const Trace<StatisticsUpdate const> &, bool is_last) = 0;
+    virtual void operator()(Trace<StreamStatus const> const &) = 0;
+    virtual void operator()(Trace<ExternalLatency const> const &) = 0;
+    virtual void operator()(Trace<MarketStatus const> const &, bool is_last) = 0;
+    virtual void operator()(Trace<TopOfBook const> const &, bool is_last) = 0;
+    virtual void operator()(Trace<MarketByPriceUpdate const> const &, bool is_last, bool refresh) = 0;
+    virtual void operator()(Trace<TradeSummary const> const &, bool is_last) = 0;
+    virtual void operator()(Trace<StatisticsUpdate const> const &, bool is_last) = 0;
   };
 
   MarketData(
@@ -46,45 +45,45 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
       uint32_t stream_id,
       Shared &,
       size_t index,
-      const std::string_view &uri,
-      const std::string_view &query,
+      std::string_view const &uri,
+      std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
   MarketData(MarketData &&) = delete;
-  MarketData(const MarketData &) = delete;
+  MarketData(MarketData const &) = delete;
 
   uint16_t stream_id() const { return stream_id_; }
 
   bool ready() const { return status_ == ConnectionStatus::READY; }
 
-  void operator()(const Event<Start> &);
-  void operator()(const Event<Stop> &);
-  void operator()(const Event<Timer> &);
+  void operator()(Event<Start> const &);
+  void operator()(Event<Stop> const &);
+  void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &);
 
   void subscribe(size_t start_from = 0);
 
  protected:
-  void operator()(const core::web::ClientSocket::Connected &) override;
-  void operator()(const core::web::ClientSocket::Disconnected &) override;
-  void operator()(const core::web::ClientSocket::Ready &) override;
-  void operator()(const core::web::ClientSocket::Close &) override;
-  void operator()(const core::web::ClientSocket::Latency &) override;
-  void operator()(const core::web::ClientSocket::Text &) override;
-  void operator()(const core::web::ClientSocket::Binary &) override;
+  void operator()(core::web::ClientSocket::Connected const &) override;
+  void operator()(core::web::ClientSocket::Disconnected const &) override;
+  void operator()(core::web::ClientSocket::Ready const &) override;
+  void operator()(core::web::ClientSocket::Close const &) override;
+  void operator()(core::web::ClientSocket::Latency const &) override;
+  void operator()(core::web::ClientSocket::Text const &) override;
+  void operator()(core::web::ClientSocket::Binary const &) override;
 
  private:
   void operator()(ConnectionStatus);
 
-  void subscribe(const std::span<Symbol const> &symbols);
+  void subscribe(std::span<Symbol const> const &symbols);
 
-  void subscribe(const std::string_view &topic);
-  void subscribe(const std::string_view &topic, const std::span<Symbol const> &symbols);
+  void subscribe(std::string_view const &topic);
+  void subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
 
-  void parse(const std::string_view &message);
+  void parse(std::string_view const &message);
 
   void operator()(Trace<json::Welcome const> const &) override;
   void operator()(Trace<json::Error const> const &) override;
@@ -128,8 +127,8 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match,
-        mark_index_price, funding_rate, level2, funding_begin, funding_end, snapshot_24h;
+    core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, mark_index_price, funding_rate,
+        level2, funding_begin, funding_end, snapshot_24h;
   } profile_;
   struct {
     core::metrics::Latency ping, heartbeat;

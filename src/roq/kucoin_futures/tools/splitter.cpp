@@ -11,7 +11,7 @@ namespace kucoin_futures {
 namespace tools {
 
 namespace {
-Side to_side(const std::string_view &text) {
+Side to_side(std::string_view const &text) {
   if (text.compare("buy"sv) == 0)
     return Side::BUY;
   if (text.compare("sell"sv) == 0)
@@ -20,7 +20,7 @@ Side to_side(const std::string_view &text) {
 }
 }  // namespace
 
-std::tuple<Side, double, double> split(const std::string_view &change) {
+std::tuple<Side, double, double> split(std::string_view const &change) {
   auto sep_1 = change.find_first_of(',');
   if (sep_1 != change.npos) {
     auto sep_2 = change.find_first_of(',', sep_1 + 1);

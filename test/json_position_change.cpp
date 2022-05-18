@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 using namespace Catch::literals;
 
 TEST_CASE("json_position_change_example_1", "[json_position_change]") {
-  const auto message = R"({ )"
+  auto const message = R"({ )"
                        R"("userId": "5c32d69203aa676ce4b543c7",)"
                        R"("topic": "/contract/position:XBTUSDM",  )"
                        R"("subject": "position.change", )"
@@ -102,7 +102,7 @@ TEST_CASE("json_position_change_example_1", "[json_position_change]") {
 }
 
 TEST_CASE("json_position_change_example_2", "[json_position_change]") {
-  const auto message = R"({ )"
+  auto const message = R"({ )"
                        R"("userId": "5cd3f1a7b7ebc19ae9558591",)"
                        R"("topic": "/contract/position:XBTUSDM",  )"
                        R"("subject": "position.change", )"

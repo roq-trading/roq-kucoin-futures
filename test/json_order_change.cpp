@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 using namespace Catch::literals;
 
 TEST_CASE("json_order_change_example", "[json_order_change]") {
-  const auto message = R"({)"
+  auto const message = R"({)"
                        R"("type": "message",)"
                        R"("topic": "/contractMarket/tradeOrders",)"
                        R"("subject": "orderChange",)"

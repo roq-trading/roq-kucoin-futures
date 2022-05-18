@@ -29,9 +29,9 @@ namespace kucoin_futures {
 class DropCopy final : public core::web::ClientSocket::Handler, public json::Parser::Handler {
  public:
   struct Handler {
-    virtual void operator()(const Trace<StreamStatus const> &) = 0;
-    virtual void operator()(const Trace<ExternalLatency const> &) = 0;
-    virtual void operator()(const Trace<FundsUpdate const> &, bool is_last) = 0;
+    virtual void operator()(Trace<StreamStatus const> const &) = 0;
+    virtual void operator()(Trace<ExternalLatency const> const &) = 0;
+    virtual void operator()(Trace<FundsUpdate const> const &, bool is_last) = 0;
   };
 
   DropCopy(
@@ -40,29 +40,29 @@ class DropCopy final : public core::web::ClientSocket::Handler, public json::Par
       uint16_t stream_id,
       Security &,
       Shared &,
-      const std::string_view &uri,
-      const std::string_view &query,
+      std::string_view const &uri,
+      std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
   DropCopy(DropCopy &&) = delete;
-  DropCopy(const DropCopy &) = delete;
+  DropCopy(DropCopy const &) = delete;
 
   bool ready() const;
 
-  void operator()(const Event<Start> &);
-  void operator()(const Event<Stop> &);
-  void operator()(const Event<Timer> &);
+  void operator()(Event<Start> const &);
+  void operator()(Event<Stop> const &);
+  void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &);
 
  protected:
-  void operator()(const core::web::ClientSocket::Connected &) override;
-  void operator()(const core::web::ClientSocket::Disconnected &) override;
-  void operator()(const core::web::ClientSocket::Ready &) override;
-  void operator()(const core::web::ClientSocket::Close &) override;
-  void operator()(const core::web::ClientSocket::Latency &) override;
-  void operator()(const core::web::ClientSocket::Text &) override;
-  void operator()(const core::web::ClientSocket::Binary &) override;
+  void operator()(core::web::ClientSocket::Connected const &) override;
+  void operator()(core::web::ClientSocket::Disconnected const &) override;
+  void operator()(core::web::ClientSocket::Ready const &) override;
+  void operator()(core::web::ClientSocket::Close const &) override;
+  void operator()(core::web::ClientSocket::Latency const &) override;
+  void operator()(core::web::ClientSocket::Text const &) override;
+  void operator()(core::web::ClientSocket::Binary const &) override;
 
  private:
   void operator()(ConnectionStatus);
@@ -71,11 +71,11 @@ class DropCopy final : public core::web::ClientSocket::Handler, public json::Par
 
   void subscribe();
 
-  void subscribe(const std::string_view &topic);
+  void subscribe(std::string_view const &topic);
 
   void send_ping(std::chrono::nanoseconds now);
 
-  void parse(const std::string_view &message);
+  void parse(std::string_view const &message);
 
   void operator()(Trace<json::Welcome const> const &) override;
   void operator()(Trace<json::Error const> const &) override;

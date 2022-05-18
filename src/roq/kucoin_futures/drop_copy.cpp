@@ -19,7 +19,7 @@ namespace roq {
 namespace kucoin_futures {
 
 namespace {
-const auto NAME = "ex"sv;
+auto const NAME = "ex"sv;
 const Mask SUPPORTS{
     SupportType::ORDER_ACK,
     SupportType::ORDER,
@@ -28,11 +28,11 @@ const Mask SUPPORTS{
 };
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(const std::string_view &group, const std::string_view &function)
+  explicit create_metrics(std::string_view const &group, std::string_view const &function)
       : core::metrics::Factory(server::Flags::name(), group, function) {}
 };
 
-auto create_connection(auto &handler, auto &context, const auto &uri, const auto &query) {
+auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   core::URI uri_{uri};
   core::web::ClientSocket::Config config{
       .validate_certificate = server::Flags::tls_validate_certificate(),
@@ -52,8 +52,8 @@ DropCopy::DropCopy(
     uint16_t stream_id,
     Security &security,
     Shared &shared,
-    const std::string_view &uri,
-    const std::string_view &query,
+    std::string_view const &uri,
+    std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
       connection_(create_connection(*this, context, uri, query)), ping_frequency_(ping_frequency),
@@ -72,23 +72,22 @@ DropCopy::DropCopy(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      security_(security), shared_(shared),
-      download_({}, [this](auto state) { return download(state); }) {
+      security_(security), shared_(shared), download_({}, [this](auto state) { return download(state); }) {
 }
 
 bool DropCopy::ready() const {
   return connection_.ready();
 }
 
-void DropCopy::operator()(const Event<Start> &) {
+void DropCopy::operator()(Event<Start> const &) {
   connection_.start();
 }
 
-void DropCopy::operator()(const Event<Stop> &) {
+void DropCopy::operator()(Event<Stop> const &) {
   connection_.stop();
 }
 
-void DropCopy::operator()(const Event<Timer> &event) {
+void DropCopy::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
   connection_.refresh(now);
   if (connection_.ready()) {
@@ -118,13 +117,13 @@ void DropCopy::operator()(metrics::Writer &writer) {
       .write(latency_.heartbeat, metrics::LATENCY);
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Connected &) {
+void DropCopy::operator()(core::web::ClientSocket::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Disconnected &) {
+void DropCopy::operator()(core::web::ClientSocket::Disconnected const &) {
   ++counter_.disconnect;
   ready_ = false;
   (*this)(ConnectionStatus::DISCONNECTED);
@@ -134,14 +133,14 @@ void DropCopy::operator()(const core::web::ClientSocket::Disconnected &) {
   next_ping_ = {};
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Ready &) {
+void DropCopy::operator()(core::web::ClientSocket::Ready const &) {
   // note! wait for welcome
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Close &) {
+void DropCopy::operator()(core::web::ClientSocket::Close const &) {
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Latency &latency) {
+void DropCopy::operator()(core::web::ClientSocket::Latency const &latency) {
   auto trace_info = server::create_trace_info();
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -152,11 +151,11 @@ void DropCopy::operator()(const core::web::ClientSocket::Latency &latency) {
   latency_.ping.update(latency.sample);
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Text &text) {
+void DropCopy::operator()(core::web::ClientSocket::Text const &text) {
   parse(text.payload);
 }
 
-void DropCopy::operator()(const core::web::ClientSocket::Binary &) {
+void DropCopy::operator()(core::web::ClientSocket::Binary const &) {
   log::fatal("Unexpected"sv);
 }
 
@@ -203,7 +202,7 @@ void DropCopy::subscribe() {
   subscribe("/contract/position"sv);  // XXX HANS maybe need symbol
 }
 
-void DropCopy::subscribe(const std::string_view &topic) {
+void DropCopy::subscribe(std::string_view const &topic) {
   auto now = core::clock::GetSystem();
   auto message = fmt::format(
       R"({{)"
@@ -226,7 +225,7 @@ void DropCopy::send_ping(std::chrono::nanoseconds now) {
   connection_.send_text(message);
 }
 
-void DropCopy::parse(const std::string_view &message) {
+void DropCopy::parse(std::string_view const &message) {
   profile_.parse([&]() {
     try {
       auto trace_info = server::create_trace_info();

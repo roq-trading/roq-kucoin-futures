@@ -13,10 +13,7 @@ namespace kucoin_futures {
 namespace json {
 
 bool Parser::dispatch(
-    Handler &handler,
-    std::string_view const &message,
-    core::json::Buffer &buffer,
-    TraceInfo const &trace_info) {
+    Handler &handler, std::string_view const &message, core::json::Buffer &buffer, TraceInfo const &trace_info) {
   core::json::Parser parser(message);
   auto root = parser.root();
   json::Message message_(root, buffer);

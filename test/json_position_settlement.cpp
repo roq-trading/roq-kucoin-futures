@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 using namespace Catch::literals;
 
 TEST_CASE("json_position_settlement_example", "[json_position_settlement]") {
-  const auto message = R"({)"
+  auto const message = R"({)"
                        R"("userId": "xbc453tg732eba53a88ggyt8c",)"
                        R"("topic": "/contract/position:XBTUSDM",)"
                        R"("subject": "position.settlement",)"
