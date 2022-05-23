@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "roq/core/datetime.hpp"
 
@@ -36,7 +36,7 @@ TEST_CASE("json_withdraw_hold_change_example", "[json_withdraw_hold_change]") {
   CHECK(obj.topic == "/contractAccount/wallet"sv);
   CHECK(obj.subject == json::Subject::WITHDRAW_HOLD_CHANGE);
   auto &data = obj.data;
-  CHECK(data.withdraw_hold == 5923.0);
+  CHECK(data.withdraw_hold == 5923.0_a);
   CHECK(data.currency == "USDT"sv);
   CHECK(data.timestamp == 1553842862614ms);
 }
