@@ -310,11 +310,7 @@ void Rest::operator()(Trace<json::Contracts const> const &event) {
     auto &item = contracts.data[i];
     log::info<2>("item={}"sv, item);
     auto &symbol = item.symbol;
-    if (shared_.discard_symbol(item.symbol))
-      continue;
-    if (all_symbols_.emplace(symbol).second)  // only include new
-      symbols.emplace_back(symbol);
-    ++counter;
+    auto discard = shared_.discard_symbol(symbol);
     const ReferenceData reference_data{
         .stream_id = stream_id_,
         .exchange = Flags::exchange(),
@@ -339,8 +335,14 @@ void Rest::operator()(Trace<json::Contracts const> const &event) {
         .settlement_date = utils::safe_cast(item.settle_date),
         .expiry_datetime = utils::safe_cast(item.expire_date),
         .expiry_datetime_utc = utils::safe_cast(item.expire_date),
+        .discard = discard,
     };
     create_trace_and_dispatch(handler_, trace_info, reference_data, true);
+    if (discard)
+      continue;
+    if (all_symbols_.emplace(symbol).second)  // only include new
+      symbols.emplace_back(symbol);
+    ++counter;
   }
   if (!std::empty(symbols)) {
     SymbolsUpdate symbols_update{
