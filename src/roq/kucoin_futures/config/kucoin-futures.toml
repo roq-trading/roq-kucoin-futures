@@ -1,5 +1,7 @@
-#symbols = ".*"
-symbols=".*USDM"
+symbols=[
+  "^ETHUSD[A-Z]M$",                                                                                                                                                      
+  "^XBTUSD[A-Z]M$"
+]
 
 [accounts]
 
