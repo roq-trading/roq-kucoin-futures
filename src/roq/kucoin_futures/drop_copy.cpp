@@ -35,7 +35,7 @@ struct create_metrics final : public core::metrics::Factory {
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   core::URI uri_{uri};
   core::web::ClientSocket::Config config{
-      .validate_certificate = server::Flags::tls_validate_certificate(),
+      .validate_certificate = server::Flags::net_tls_validate_certificate(),
       .uris = {&uri_, 1},
       .query = query,
       .ping_frequency = Flags::ws_ping_freq(),
