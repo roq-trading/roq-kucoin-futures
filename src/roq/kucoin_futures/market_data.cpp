@@ -46,7 +46,7 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
   core::web::ClientSocket::Config config{
       .always_reconnect = true,
       .connection_timeout = server::Flags::net_connection_timeout(),
-      .disconnect_on_idle_timeout = {},
+      .disconnect_on_idle_timeout = server::Flags::net_disconnect_on_idle_timeout(),
       .validate_certificate = server::Flags::net_tls_validate_certificate(),
       .uris = {&uri_, 1},
       .query = query,
@@ -285,6 +285,7 @@ void MarketData::operator()(Trace<json::Welcome const> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("event={{welcome={}, trace_info={}}}"sv, welcome, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     welcome_ = true;
     (*this)(ConnectionStatus::READY);
     subscribe();
@@ -318,6 +319,7 @@ void MarketData::operator()(Trace<json::Ticker const> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker] = event;
     log::info<4>("event={{ticker={}, trace_info={}}}"sv, ticker, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto &data = ticker.data;
     const TopOfBook top_of_book{
         .stream_id = stream_id_,
@@ -341,6 +343,7 @@ void MarketData::operator()(Trace<json::TickerV2 const> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker_v2] = event;
     log::info<4>("event={{ticker_v2={}, trace_info={}}}"sv, ticker_v2, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto &data = ticker_v2.data;
     auto symbol = data.symbol;
     const TopOfBook top_of_book{
@@ -365,6 +368,7 @@ void MarketData::operator()(Trace<json::Match const> const &event) {
   profile_.match([&]() {
     auto &[trace_info, match] = event;
     log::info<4>("event={{match={}, trace_info={}}}"sv, match, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto &data = match.data;
     Trade trade{
         .side = json::map(data.side),
@@ -387,6 +391,7 @@ void MarketData::operator()(Trace<json::MarkIndexPrice const> const &event) {
   profile_.mark_index_price([&]() {
     auto &[trace_info, mark_index_price] = event;
     log::info<4>("event={{mark_index_price={}, trace_info={}}}"sv, mark_index_price, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(mark_index_price.topic);
     auto &data = mark_index_price.data;
     Statistics statistics[] = {
@@ -419,6 +424,7 @@ void MarketData::operator()(Trace<json::FundingRate const> const &event) {
   profile_.funding_rate([&]() {
     auto &[trace_info, funding_rate] = event;
     log::info<4>("event={{funding_rate={}, trace_info={}}}"sv, funding_rate, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(funding_rate.topic);
     auto &data = funding_rate.data;
     Statistics statistics[] = {
@@ -447,6 +453,7 @@ void MarketData::operator()(Trace<json::Level2 const> const &event) {
     auto &trace_info = event.trace_info;
     auto &level2 = event.value;
     log::info<4>("event={{level2={}, trace_info={}}}"sv, level2, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
     auto first_sequence = data.sequence;
@@ -528,6 +535,7 @@ void MarketData::operator()(Trace<json::FundingBegin const> const &event) {
   profile_.funding_begin([&]() {
     auto &[trace_info, funding_begin] = event;
     log::info<4>("event={{funding_begin={}, trace_info={}}}"sv, funding_begin, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto &data = funding_begin.data;
     Statistics statistics[] = {
         {
@@ -553,6 +561,7 @@ void MarketData::operator()(Trace<json::FundingEnd const> const &event) {
   profile_.funding_end([&]() {
     auto &[trace_info, funding_end] = event;
     log::info<4>("event={{funding_end={}, trace_info={}}}"sv, funding_end, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     // what to do?
   });
 }
@@ -561,6 +570,7 @@ void MarketData::operator()(Trace<json::Snapshot24h const> const &event) {
   profile_.snapshot_24h([&]() {
     auto &[trace_info, snapshot_24h] = event;
     log::info<4>("event={{snapshot_24h={}, trace_info={}}}"sv, snapshot_24h, trace_info);
+    connection_.touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(snapshot_24h.topic);
     auto &data = snapshot_24h.data;
     Statistics statistics[] = {
