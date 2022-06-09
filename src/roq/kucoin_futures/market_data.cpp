@@ -465,8 +465,9 @@ void MarketData::operator()(Trace<json::Level2 const> const &event) {
         .price = price,
         .quantity = quantity,
         .implied_quantity = NaN,
-        .price_level = {},
         .number_of_orders = {},
+        .update_action = {},
+        .price_level = {},
     };
     std::span<MBPUpdate> bids_or_asks{&mbp_update, 1}, empty;
     auto bids = side == Side::BUY ? bids_or_asks : empty;

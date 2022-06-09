@@ -63,8 +63,9 @@ void emplace(MBPUpdate &result, double price, double size) {
       .price = price,
       .quantity = size,
       .implied_quantity = NaN,
-      .price_level = {},
       .number_of_orders = {},
+      .update_action = {},
+      .price_level = {},
   };
 }
 }  // namespace
