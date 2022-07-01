@@ -17,11 +17,11 @@ URI="api-sandbox-futures.kucoin.com"
 REST_URI="https://$URI"
 
 $PREFIX ./roq-kucoin-futures \
-  --name "${NAME}" \
+  --name "$NAME" \
   --config_file "$CONFIG_FILE" \
-  --event_log_dir "${HOME}/var/lib/roq/data" \
+  --event_log_dir "$HOME/var/lib/roq/data" \
   --event_log_symlink \
-  --client_listen_address "${HOME}/run/${NAME}.sock" \
-  --metrics_listen_address "${HOME}/run/${NAME}_metrics.sock" \
+  --client_listen_address "$HOME/run/$NAME.sock" \
+  --metrics_listen_address "$HOME/run/${NAME}_metrics.sock" \
   --rest_uri "$REST_URI" \
   $@
