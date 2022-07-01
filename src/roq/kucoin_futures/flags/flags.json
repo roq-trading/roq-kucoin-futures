@@ -22,6 +22,13 @@
       "description": "exchange identifier (string)"
     },
     {
+      "name": "api",
+      "type": "std::string",
+      "validator": "roq::core::flags::NonEmpty<std::string>",
+      "default": "v1",
+      "description": "what api to use (v1, v2)"
+    },
+    {
       "name": "rest_uri",
       "type": "roq::core::URI",
       "validator": "roq::core::flags::URI<std::string>",

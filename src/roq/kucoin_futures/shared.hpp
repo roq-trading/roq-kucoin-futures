@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <absl/container/flat_hash_map.h>
+#include <absl/container/node_hash_map.h>
 
 #include <chrono>
 #include <string>
@@ -18,6 +18,8 @@
 #include "roq/core/limit/rate_limiter.hpp"
 
 #include "roq/core/market/mbp_sequencer.hpp"
+
+#include "roq/kucoin_futures/api.hpp"
 
 namespace roq {
 namespace kucoin_futures {
@@ -41,9 +43,10 @@ struct Shared final {
   }
 
  public:
+  const API api;
   core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
-  absl::flat_hash_map<Symbol, core::market::MBP_Sequencer> mbp_collector;
+  absl::node_hash_map<Symbol, core::market::MBP_Sequencer> mbp_collector;
 
  private:
   server::Dispatcher &dispatcher_;

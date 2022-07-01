@@ -303,7 +303,7 @@ void OrderEntry::operator()(Trace<json::Token const> const &event) {
 void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/account-overview"sv;
+    auto path = shared_.api.get_account_overview;
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
     core::web::Request request{
         .method = method,
@@ -373,7 +373,7 @@ void OrderEntry::operator()(Trace<json::Account const> const &event) {
 void OrderEntry::get_positions() {
   profile_.positions([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/positions"sv;
+    auto path = shared_.api.get_all_position;
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
     core::web::Request request{
         .method = method,
@@ -433,8 +433,8 @@ void OrderEntry::operator()(Trace<json::Positions const> const &event) {
 void OrderEntry::get_orders() {
   profile_.orders([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/orders"sv;
-    auto query = "?status=active"sv;
+    auto path = shared_.api.get_orders_all_active;
+    auto query = shared_.api.version == 1 ? "?status=active"sv : ""sv;
     auto headers = security_.create_signature_api_v2(method, path, query, {});
     core::web::Request request{
         .method = method,
@@ -494,7 +494,8 @@ void OrderEntry::operator()(Trace<json::Orders const> const &event) {
 void OrderEntry::get_fills() {
   profile_.fills([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/fills"sv;
+    auto path = shared_.api.get_orders_historical_trades;
+    // XXX HANS for v2 we ned SYMBOL !!!
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
     core::web::Request request{
         .method = method,
@@ -557,7 +558,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
       throw oms::NotReady("not ready"sv);
     auto &[message_info, create_order] = event;
     auto method = core::http::Method::POST;
-    auto path = "/api/v1/orders"sv;
+    auto path = shared_.api.post_order;
     auto side = json::map(create_order.side).as_raw_text();
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
@@ -683,10 +684,12 @@ void OrderEntry::cancel_order(
       throw oms::NotReady("not ready"sv);
     auto &[message_info, cancel_order] = event;
     auto method = core::http::Method::DELETE;
-    auto path = fmt::format("/api/v1/orders/{}"sv, order.external_order_id);
+    auto path = shared_.api.delete_order;
+    auto real_path = shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path;
+    // XXX HANS v2 requires SYMBOL
     core::web::Request request{
         .method = method,
-        .path = path,
+        .path = real_path,
         .query = {},
         .accept = core::http::Accept::JSON,
         .content_type = {},
@@ -774,7 +777,7 @@ void OrderEntry::cancel_all_orders(
   profile_.cancel_all_orders([&]() {
     if (ready()) {
       auto method = core::http::Method::DELETE;
-      auto path = "/api/v1/orders"sv;
+      auto path = shared_.api.delete_orders;
       core::web::Request request{
           .method = method,
           .path = path,

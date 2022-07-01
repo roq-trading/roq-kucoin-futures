@@ -256,7 +256,7 @@ void Rest::operator()(Trace<json::Token const> const &event) {
 void Rest::get_contracts() {
   profile_.contracts([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/contracts/active"sv;
+    auto path = shared_.api.get_contracts_active;
     core::web::Request request{
         .method = method,
         .path = path,
@@ -374,7 +374,7 @@ void Rest::operator()(Trace<json::Contracts const> const &event) {
 void Rest::get_order_book(std::string_view const &symbol) {
   profile_.order_book([&]() {
     auto method = core::http::Method::GET;
-    auto path = "/api/v1/level2/snapshot"sv;
+    auto path = shared_.api.get_order_book;
     auto query = fmt::format("?symbol={}"sv, symbol);
     core::web::Request request{
         .method = method,
