@@ -30,6 +30,7 @@ bool Parser::dispatch(
         case TICKER:
         case TICKER_V2:
         case MATCH:
+        case EXECUTION:
         case MARK_INDEX_PRICE:
         case FUNDING_RATE:
         case LEVEL2:
@@ -130,6 +131,13 @@ bool Parser::dispatch(
           auto root = parser.root();
           const json::Match match(root, buffer);
           create_trace_and_dispatch(handler, trace_info, match);
+          break;
+        }
+        case EXECUTION: {
+          core::json::Parser parser(message);
+          auto root = parser.root();
+          const json::Execution execution(root, buffer);
+          create_trace_and_dispatch(handler, trace_info, execution);
           break;
         }
         case MARK_INDEX_PRICE: {

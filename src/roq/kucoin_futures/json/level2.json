@@ -17,6 +17,11 @@
     {
       "name": "data",
       "type": "Level2Data"
+    },
+    {
+      "name": "sn",
+      "type": "int64_t",
+      "comment": "v2"
     }
   ]
 }

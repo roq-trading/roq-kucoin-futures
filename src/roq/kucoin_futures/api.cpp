@@ -29,7 +29,13 @@ API API::create() {
         .delete_order = "/api/v1/orders"sv,  // note! append order id
         .delete_orders = "/api/v1/orders"sv,
         // ws
-        .get_listen_key = "/dapi/v1/listenKey"sv,
+        // -- public
+        .ticker = "/contractMarket/tickerV2"sv,
+        .execution = "/contractMarket/execution"sv,
+        .level2 = "/contractMarket/level2"sv,
+        .mark_price = {},    // only v2
+        .funding_rate = {},  // only v2
+        // account
         .get_balance = "/dapi/v1/balance"sv,
         .get_account = "/dapi/v1/account"sv,
         .get_open_orders = "/dapi/v1/openOrders"sv,
@@ -54,7 +60,13 @@ API API::create() {
         .delete_order = "/api/v2/order"sv,
         .delete_orders = "/api/v2/orders"sv,
         // ws
-        .get_listen_key = "/fapi/v1/listenKey"sv,
+        // -- public
+        .ticker = "/futuresMarket/ticker"sv,
+        .execution = "/futuresMarket/execution"sv,
+        .level2 = "/futuresMarket/level2"sv,
+        .mark_price = "/futuresContract/markPrice"sv,
+        .funding_rate = "/futuresContract/fundingRate"sv,
+        // account
         .get_balance = "/fapi/v2/balance"sv,
         .get_account = "/fapi/v2/account"sv,
         .get_open_orders = "/fapi/v1/openOrders"sv,

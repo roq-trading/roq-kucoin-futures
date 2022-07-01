@@ -5,61 +5,64 @@ set(SOURCES parser.cpp)
 include(RoqAutogen)
 
 set(AUTOGEN_SCHEMAS
-    account.json
     account_data.json
+    account.json
     ack.json
-    available_balance_change.json
     available_balance_change_data.json
+    available_balance_change.json
     contract.json
     contracts.json
     error.json
+    execution_data.json
+    execution.json
     fair_method.json
-    fills.json
-    fills_data.json
     fills_data_item.json
-    funding_begin.json
+    fills_data.json
+    fills.json
     funding_begin_data.json
-    funding_end.json
+    funding_begin.json
     funding_end_data.json
-    funding_rate.json
+    funding_end.json
     funding_rate_data.json
+    funding_rate.json
     instance_server.json
-    level2.json
+    level2_data_item.json
     level2_data.json
-    mark_index_price.json
+    level2.json
     mark_index_price_data.json
+    mark_index_price.json
     mark_method.json
-    match.json
     match_data.json
+    match.json
     message.json
-    order_book.json
-    order_book_data.json
     order_book_data_item.json
-    order_change.json
+    order_book_data.json
+    order_book.json
     order_change_data.json
-    order_margin_change.json
+    order_change.json
     order_margin_change_data.json
-    orders.json
-    orders_data.json
+    order_margin_change.json
     orders_data_item.json
+    orders_data.json
+    orders.json
     pong.json
-    position.json
-    position_change.json
     position_change_data.json
-    position_settlement.json
+    position_change.json
+    position.json
     position_settlement_data.json
+    position_settlement.json
     positions.json
     side.json
-    snapshot24h.json
     snapshot24h_data.json
+    snapshot24h.json
     status.json
     subject.json
-    ticker.json
     ticker_data.json
-    ticker_v2.json
+    ticker.json
     ticker_v2_data.json
-    token.json
+    ticker_v2.json
     token_data.json
+    token.json
     type.json
     welcome.json
     withdraw_hold_change.json

@@ -403,7 +403,7 @@ void Rest::get_order_book_ack(
     auto &[trace_info, response] = event;
     try {
       auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
+      // log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       response.expect(core::http::Status::OK);
       core::json::Buffer buffer(decode_buffer_);
       const auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
@@ -444,7 +444,7 @@ void Rest::operator()(Trace<json::OrderBook const> const &event) {
               .bids = bids,
               .asks = asks,
               .update_type = UpdateType::SNAPSHOT,
-              .exchange_time_utc = {},
+              .exchange_time_utc = data.ts,
               .exchange_sequence = collector.last_sequence(),
               .price_decimals = {},
               .quantity_decimals = {},

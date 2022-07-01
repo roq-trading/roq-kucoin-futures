@@ -1,5 +1,5 @@
 {
-  "name": "Ticker",
+  "name": "Execution",
   "type": "comp",
   "values": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "name": "data",
-      "type": "TickerData"
+      "type": "ExecutionData"
     }
   ]
 }

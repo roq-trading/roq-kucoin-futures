@@ -284,6 +284,9 @@ void DropCopy::operator()(Trace<json::TickerV2 const> const &) {
 void DropCopy::operator()(Trace<json::Match const> const &) {
 }
 
+void DropCopy::operator()(Trace<json::Execution const> const &) {
+}
+
 void DropCopy::operator()(Trace<json::MarkIndexPrice const> const &) {
 }
 

@@ -1,0 +1,14 @@
+{
+  "name": "Level2DataItem",
+  "type": "array_item",
+  "values": [
+    {
+      "name": "price",
+      "type": "double"
+    },
+    {
+      "name": "size",
+      "type": "double"
+    }
+  ]
+}

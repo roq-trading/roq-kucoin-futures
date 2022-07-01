@@ -17,6 +17,11 @@
     {
       "name": "timestamp",
       "type": "std::chrono::milliseconds"
+    },
+    {
+      "name": "symbol",
+      "type": "std::string_view",
+      "comment": "v2"
     }
   ]
 }

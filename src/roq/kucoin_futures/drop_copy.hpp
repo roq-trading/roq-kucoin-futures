@@ -85,6 +85,7 @@ class DropCopy final : public core::web::ClientSocket::Handler, public json::Par
   void operator()(Trace<json::Ticker const> const &) override;
   void operator()(Trace<json::TickerV2 const> const &) override;
   void operator()(Trace<json::Match const> const &) override;
+  void operator()(Trace<json::Execution const> const &) override;
   void operator()(Trace<json::MarkIndexPrice const> const &) override;
   void operator()(Trace<json::FundingRate const> const &) override;
   void operator()(Trace<json::Level2 const> const &) override;

@@ -20,7 +20,13 @@
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std::chrono::milliseconds",
+      "comment": "was ns (v1) but never used"
+    },
+    {
+      "name": "contractId",
+      "type": "int64_t",
+      "comment": "v2"
     }
   ]
 }

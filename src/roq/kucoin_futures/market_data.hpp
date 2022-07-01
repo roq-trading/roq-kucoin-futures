@@ -93,6 +93,7 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
   void operator()(Trace<json::Ticker const> const &) override;
   void operator()(Trace<json::TickerV2 const> const &) override;
   void operator()(Trace<json::Match const> const &) override;
+  void operator()(Trace<json::Execution const> const &) override;
   void operator()(Trace<json::MarkIndexPrice const> const &) override;
   void operator()(Trace<json::FundingRate const> const &) override;
   void operator()(Trace<json::Level2 const> const &) override;
@@ -127,8 +128,8 @@ class MarketData final : public core::web::ClientSocket::Handler, public json::P
     core::metrics::Counter disconnect;
   } counter_;
   struct {
-    core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, mark_index_price, funding_rate,
-        level2, funding_begin, funding_end, snapshot_24h;
+    core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, execution, mark_index_price,
+        funding_rate, level2, funding_begin, funding_end, snapshot_24h;
   } profile_;
   struct {
     core::metrics::Latency ping, heartbeat;

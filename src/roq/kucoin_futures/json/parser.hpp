@@ -13,6 +13,7 @@
 #include "roq/kucoin_futures/json/pong.hpp"
 #include "roq/kucoin_futures/json/welcome.hpp"
 
+#include "roq/kucoin_futures/json/execution.hpp"
 #include "roq/kucoin_futures/json/funding_begin.hpp"
 #include "roq/kucoin_futures/json/funding_end.hpp"
 #include "roq/kucoin_futures/json/funding_rate.hpp"
@@ -44,6 +45,7 @@ struct Parser final {
     virtual void operator()(Trace<json::Ticker const> const &) = 0;
     virtual void operator()(Trace<json::TickerV2 const> const &) = 0;
     virtual void operator()(Trace<json::Match const> const &) = 0;
+    virtual void operator()(Trace<json::Execution const> const &) = 0;
     virtual void operator()(Trace<json::MarkIndexPrice const> const &) = 0;
     virtual void operator()(Trace<json::FundingRate const> const &) = 0;
     virtual void operator()(Trace<json::Level2 const> const &) = 0;

@@ -226,6 +226,10 @@
     {
       "name": "priceChg",
       "type": "double"
+    },
+    {
+      "name": "settlementFeeRate",
+      "type": "double"
     }
   ]
 }

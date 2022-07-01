@@ -48,6 +48,12 @@
       "name": "userId",
       "type": "std::string_view",
       "optional": true
+    },
+    {
+      "name": "sn",
+      "type": "int64_t",
+      "optional": true,
+      "comment": "v2"
     }
   ]
 }

@@ -40,7 +40,8 @@
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std::chrono::nanoseconds",
+      "comment": "ns (v1) and ms (v2)"
     },
     {
       "name": "tradeId",
