@@ -12,6 +12,8 @@
 #include "roq/core/clock.hpp"
 #include "roq/core/utils.hpp"
 
+#include "roq/core/io/context_factory.hpp"
+
 #include "roq/kucoin_futures/flags.hpp"
 
 #include "roq/kucoin_futures/json/utils.hpp"
@@ -50,9 +52,9 @@ auto create_drop_copy(T &security) {
 
 Gateway::Gateway(server::Dispatcher &dispatcher, Config const &config)
     : dispatcher_(dispatcher), master_account_(config.get_master_account()),
-      security_(create_security<decltype(security_)>(config)), shared_(dispatcher),
-      rest_(*this, context_, ++stream_id_, shared_),
-      order_entry_(create_order_entry<decltype(order_entry_)>(*this, context_, stream_id_, security_, shared_)),
+      security_(create_security<decltype(security_)>(config)), context_(core::io::ContextFactory::create()),
+      shared_(dispatcher), rest_(*this, *context_, ++stream_id_, shared_),
+      order_entry_(create_order_entry<decltype(order_entry_)>(*this, *context_, stream_id_, security_, shared_)),
       drop_copy_(create_drop_copy<decltype(drop_copy_)>(security_)) {
 }
 
@@ -89,7 +91,7 @@ void Gateway::operator()(Event<Timer> const &event) {
       (*drop_copy)(event);
   for (auto &iter : market_data_)
     (*iter)(event);
-  context_.dispatch(true);
+  (*context_).drain();
 }
 
 void Gateway::operator()(Event<Connected> const &) {
@@ -164,7 +166,7 @@ void Gateway::ensure_symbol_slices(size_t size) {
     auto index = std::size(market_data_);
     log::debug("Create MarketData (stream_id={}, index={})"sv, stream_id, index);
     auto market_data = std::make_unique<MarketData>(
-        *this, context_, stream_id, shared_, index, public_ws_uri_, public_ws_query_, public_ws_ping_frequency_);
+        *this, *context_, stream_id, shared_, index, public_ws_uri_, public_ws_query_, public_ws_ping_frequency_);
     MessageInfo message_info;
     Start start;
     create_event_and_dispatch(*market_data, message_info, start);
@@ -183,7 +185,7 @@ void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
   if (!drop_copy) {
     auto tmp = std::make_unique<DropCopy>(
         *this,
-        context_,
+        *context_,
         ++stream_id_,
         *security_[account],
         shared_,
