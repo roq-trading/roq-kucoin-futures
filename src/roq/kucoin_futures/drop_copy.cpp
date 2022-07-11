@@ -33,7 +33,7 @@ struct create_metrics final : public core::metrics::Factory {
 };
 
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
-  core::URI uri_{uri};
+  io::web::URI uri_{uri};
   core::web::ClientSocket::Config config{
       .always_reconnect = true,
       .connection_timeout = server::Flags::net_connection_timeout(),

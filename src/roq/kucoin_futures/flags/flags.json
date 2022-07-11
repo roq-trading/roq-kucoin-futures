@@ -30,14 +30,14 @@
     },
     {
       "name": "rest_uri",
-      "type": "roq::core::URI",
+      "type": "roq::io::web::URI",
       "validator": "roq::core::flags::URI<std::string>",
       "default": "https://api-sandbox-futures.kucoin.com",
       "description": "REST end-point (URI)"
     },
     {
       "name": "rest_proxy",
-      "type": "roq::core::URI",
+      "type": "roq::io::web::URI",
       "validator": "roq::core::flags::URI<std::string>",
       "description": "proxy end-point (URI)"
     },
