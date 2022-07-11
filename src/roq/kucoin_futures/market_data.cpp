@@ -72,7 +72,7 @@ void emplace(MBPUpdate &result, const T &value) {
 
 MarketData::MarketData(
     Handler &handler,
-    core::io::Context &context,
+    io::Context &context,
     uint32_t stream_id,
     Shared &shared,
     size_t index,
