@@ -9,6 +9,8 @@
 
 #include "roq/core/json/buffer.hpp"
 
+#include "roq/web/socket/client_factory.hpp"
+
 #include "roq/kucoin_futures/flags.hpp"
 
 #include "roq/kucoin_futures/json/utils.hpp"
@@ -34,7 +36,7 @@ struct create_metrics final : public core::metrics::Factory {
 
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   io::web::URI uri_{uri};
-  core::web::ClientSocket::Config config{
+  web::socket::Client::Config config{
       .always_reconnect = true,
       .connection_timeout = server::Flags::net_connection_timeout(),
       .disconnect_on_idle_timeout = {},
@@ -45,7 +47,7 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
       .read_buffer_size = Flags::decode_buffer_size(),
       .encode_buffer_size = Flags::encode_buffer_size(),
   };
-  return core::web::ClientSocket{handler, context, config, []() { return std::string(); }};
+  return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
 }
 }  // namespace
 
@@ -79,21 +81,21 @@ DropCopy::DropCopy(
 }
 
 bool DropCopy::ready() const {
-  return connection_.ready();
+  return (*connection_).ready();
 }
 
 void DropCopy::operator()(Event<Start> const &) {
-  connection_.start();
+  (*connection_).start();
 }
 
 void DropCopy::operator()(Event<Stop> const &) {
-  connection_.stop();
+  (*connection_).stop();
 }
 
 void DropCopy::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
-  connection_.refresh(now);
-  if (connection_.ready()) {
+  (*connection_).refresh(now);
+  if ((*connection_).ready()) {
     if (welcome_) {
       if (next_ping_ < now)
         send_ping(now);
@@ -101,7 +103,7 @@ void DropCopy::operator()(Event<Timer> const &event) {
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
     log::warn("Did not receive the welcome message, disconnecting now..."sv);
-    connection_.close();
+    (*connection_).close();
   }
 }
 
@@ -120,13 +122,13 @@ void DropCopy::operator()(metrics::Writer &writer) {
       .write(latency_.heartbeat, metrics::LATENCY);
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Connected const &) {
+void DropCopy::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Disconnected const &) {
+void DropCopy::operator()(web::socket::Client::Disconnected const &) {
   ++counter_.disconnect;
   ready_ = false;
   (*this)(ConnectionStatus::DISCONNECTED);
@@ -136,14 +138,14 @@ void DropCopy::operator()(core::web::ClientSocket::Disconnected const &) {
   next_ping_ = {};
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Ready const &) {
+void DropCopy::operator()(web::socket::Client::Ready const &) {
   // note! wait for welcome
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Close const &) {
+void DropCopy::operator()(web::socket::Client::Close const &) {
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Latency const &latency) {
+void DropCopy::operator()(web::socket::Client::Latency const &latency) {
   auto trace_info = server::create_trace_info();
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -154,11 +156,11 @@ void DropCopy::operator()(core::web::ClientSocket::Latency const &latency) {
   latency_.ping.update(latency.sample);
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Text const &text) {
+void DropCopy::operator()(web::socket::Client::Text const &text) {
   parse(text.payload);
 }
 
-void DropCopy::operator()(core::web::ClientSocket::Binary const &) {
+void DropCopy::operator()(web::socket::Client::Binary const &) {
   log::fatal("Unexpected"sv);
 }
 
@@ -217,7 +219,7 @@ void DropCopy::subscribe(std::string_view const &topic) {
       now.count(),
       topic);
   log::debug("message={}"sv, message);
-  connection_.send_text(message);
+  (*connection_).send_text(message);
 }
 
 void DropCopy::send_ping(std::chrono::nanoseconds now) {
@@ -225,7 +227,7 @@ void DropCopy::send_ping(std::chrono::nanoseconds now) {
   next_ping_ = now + ping_frequency_ / 2;
   auto message = fmt::format(R"({{"id":{},"type":"ping"}})"sv, now.count());
   log::debug<1>(R"(message="{}")"sv, message);
-  connection_.send_text(message);
+  (*connection_).send_text(message);
 }
 
 void DropCopy::parse(std::string_view const &message) {

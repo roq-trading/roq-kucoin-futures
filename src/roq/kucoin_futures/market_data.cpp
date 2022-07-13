@@ -15,6 +15,8 @@
 
 #include "roq/core/metrics/factory.hpp"
 
+#include "roq/web/socket/client_factory.hpp"
+
 #include "roq/kucoin_futures/flags.hpp"
 
 #include "roq/kucoin_futures/json/utils.hpp"
@@ -43,7 +45,7 @@ struct create_metrics final : public core::metrics::Factory {
 
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   io::web::URI uri_{uri};
-  core::web::ClientSocket::Config config{
+  web::socket::Client::Config config{
       .always_reconnect = true,
       .connection_timeout = server::Flags::net_connection_timeout(),
       .disconnect_on_idle_timeout = server::Flags::net_disconnect_on_idle_timeout(),
@@ -54,7 +56,7 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
       .read_buffer_size = Flags::decode_buffer_size(),
       .encode_buffer_size = Flags::encode_buffer_size(),
   };
-  return core::web::ClientSocket{handler, context, config, []() { return std::string(); }};
+  return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
 }
 
 template <typename T>
@@ -114,17 +116,17 @@ MarketData::MarketData(
 }
 
 void MarketData::operator()(Event<Start> const &) {
-  connection_.start();
+  (*connection_).start();
 }
 
 void MarketData::operator()(Event<Stop> const &) {
-  connection_.stop();
+  (*connection_).stop();
 }
 
 void MarketData::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
-  connection_.refresh(now);
-  if (connection_.ready()) {
+  (*connection_).refresh(now);
+  if ((*connection_).ready()) {
     if (welcome_) {
       if (next_ping_ < now)
         send_ping(now);
@@ -133,7 +135,7 @@ void MarketData::operator()(Event<Timer> const &event) {
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
     log::warn("Did not receive the welcome message, disconnecting now..."sv);
-    connection_.close();
+    (*connection_).close();
   }
 }
 
@@ -167,13 +169,13 @@ void MarketData::subscribe(size_t start_from) {
     subscribe(shared_.symbols.get_slice(index_, start_from));
 }
 
-void MarketData::operator()(core::web::ClientSocket::Connected const &) {
+void MarketData::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = core::clock::GetSystem();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
-void MarketData::operator()(core::web::ClientSocket::Disconnected const &) {
+void MarketData::operator()(web::socket::Client::Disconnected const &) {
   ++counter_.disconnect;
   (*this)(ConnectionStatus::DISCONNECTED);
   welcome_ = false;
@@ -183,14 +185,14 @@ void MarketData::operator()(core::web::ClientSocket::Disconnected const &) {
   shared_.mbp_collector.clear();  // XXX HANS this is SHARED !!!
 }
 
-void MarketData::operator()(core::web::ClientSocket::Ready const &) {
+void MarketData::operator()(web::socket::Client::Ready const &) {
   // note! wait for welcome
 }
 
-void MarketData::operator()(core::web::ClientSocket::Close const &) {
+void MarketData::operator()(web::socket::Client::Close const &) {
 }
 
-void MarketData::operator()(core::web::ClientSocket::Latency const &latency) {
+void MarketData::operator()(web::socket::Client::Latency const &latency) {
   auto trace_info = server::create_trace_info();
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
@@ -201,11 +203,11 @@ void MarketData::operator()(core::web::ClientSocket::Latency const &latency) {
   latency_.ping.update(latency.sample);
 }
 
-void MarketData::operator()(core::web::ClientSocket::Text const &text) {
+void MarketData::operator()(web::socket::Client::Text const &text) {
   parse(text.payload);
 }
 
-void MarketData::operator()(core::web::ClientSocket::Binary const &) {
+void MarketData::operator()(web::socket::Client::Binary const &) {
   log::fatal("Unexpected"sv);
 }
 
@@ -292,7 +294,7 @@ void MarketData::send_ping(std::chrono::nanoseconds now) {
   next_ping_ = now + ping_frequency_ / 2;
   auto message = fmt::format(R"({{"id":{},"type":"ping"}})"sv, now.count());
   log::debug<1>(R"(message="{}")"sv, message);
-  connection_.send_text(message);
+  (*connection_).send_text(message);
 }
 
 void MarketData::parse(std::string_view const &message) {
@@ -312,7 +314,7 @@ void MarketData::operator()(Trace<json::Welcome const> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("event={{welcome={}, trace_info={}}}"sv, welcome, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     welcome_ = true;
     (*this)(ConnectionStatus::READY);
     subscribe();
@@ -346,7 +348,7 @@ void MarketData::operator()(Trace<json::Ticker const> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker] = event;
     log::info<4>("event={{ticker={}, trace_info={}}}"sv, ticker, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = ticker.data;
     auto ts_factor = shared_.api.version == 1 ? 1 : 1000000;
     const TopOfBook top_of_book{
@@ -371,7 +373,7 @@ void MarketData::operator()(Trace<json::TickerV2 const> const &event) {
   profile_.ticker([&]() {
     auto &[trace_info, ticker_v2] = event;
     log::info<4>("event={{ticker_v2={}, trace_info={}}}"sv, ticker_v2, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = ticker_v2.data;
     auto symbol = data.symbol;
     const TopOfBook top_of_book{
@@ -396,7 +398,7 @@ void MarketData::operator()(Trace<json::Match const> const &event) {
   profile_.match([&]() {
     auto &[trace_info, match] = event;
     log::info<4>("event={{match={}, trace_info={}}}"sv, match, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = match.data;
     Trade trade{
         .side = json::map(data.side),
@@ -419,7 +421,7 @@ void MarketData::operator()(Trace<json::Execution const> const &event) {
   profile_.execution([&]() {
     auto &[trace_info, execution] = event;
     log::info<4>("event={{execution={}, trace_info={}}}"sv, execution, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = execution.data;
     auto trade_id = fmt::format("{}"sv, data.trade_id);  // alloc
     Trade trade{
@@ -443,7 +445,7 @@ void MarketData::operator()(Trace<json::MarkIndexPrice const> const &event) {
   profile_.mark_index_price([&]() {
     auto &[trace_info, mark_index_price] = event;
     log::info<4>("event={{mark_index_price={}, trace_info={}}}"sv, mark_index_price, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = mark_index_price.data;
     auto symbol = shared_.api.version == 1 ? json::strip_symbol_from_topic(mark_index_price.topic) : data.symbol;
     Statistics statistics[] = {
@@ -476,7 +478,7 @@ void MarketData::operator()(Trace<json::FundingRate const> const &event) {
   profile_.funding_rate([&]() {
     auto &[trace_info, funding_rate] = event;
     log::info<4>("event={{funding_rate={}, trace_info={}}}"sv, funding_rate, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(funding_rate.topic);
     auto &data = funding_rate.data;
     Statistics statistics[] = {
@@ -505,7 +507,7 @@ void MarketData::operator()(Trace<json::Level2 const> const &event) {
     auto &trace_info = event.trace_info;
     auto &level2 = event.value;
     log::info<4>("event={{level2={}, trace_info={}}}"sv, level2, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(level2.topic);
     auto &data = level2.data;
     if (shared_.api.version == 1) {
@@ -658,7 +660,7 @@ void MarketData::operator()(Trace<json::FundingBegin const> const &event) {
   profile_.funding_begin([&]() {
     auto &[trace_info, funding_begin] = event;
     log::info<4>("event={{funding_begin={}, trace_info={}}}"sv, funding_begin, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto &data = funding_begin.data;
     Statistics statistics[] = {
         {
@@ -684,7 +686,7 @@ void MarketData::operator()(Trace<json::FundingEnd const> const &event) {
   profile_.funding_end([&]() {
     auto &[trace_info, funding_end] = event;
     log::info<4>("event={{funding_end={}, trace_info={}}}"sv, funding_end, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     // what to do?
   });
 }
@@ -693,7 +695,7 @@ void MarketData::operator()(Trace<json::Snapshot24h const> const &event) {
   profile_.snapshot_24h([&]() {
     auto &[trace_info, snapshot_24h] = event;
     log::info<4>("event={{snapshot_24h={}, trace_info={}}}"sv, snapshot_24h, trace_info);
-    connection_.touch(trace_info.source_receive_time);
+    (*connection_).touch(trace_info.source_receive_time);
     auto symbol = json::strip_symbol_from_topic(snapshot_24h.topic);
     auto &data = snapshot_24h.data;
     Statistics statistics[] = {
@@ -745,7 +747,7 @@ void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
       [&](auto now) { return shared_.rate_limiter.can_request(now); },
       [&](auto &message) {
         log::debug(R"(Subscribe: "{}")"sv, message);
-        connection_.send_text(message);
+        (*connection_).send_text(message);
       },
       now);
 }

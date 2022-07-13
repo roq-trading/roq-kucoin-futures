@@ -6,7 +6,7 @@
 #include <string>
 #include <string_view>
 
-#include "roq/core/http/method.hpp"
+#include "roq/web/http/method.hpp"
 
 #include "roq/core/crypto/hmac_sha256.hpp"
 
@@ -22,14 +22,14 @@ class Hasher final {
   Hasher(Hasher const &) = delete;
 
   std::string create_headers_v1(
-      core::http::Method,
+      web::http::Method,
       std::string_view const &path,
       std::string_view const &query,
       std::string_view const &body,
       std::chrono::milliseconds now);
 
   std::string create_headers_v2(
-      core::http::Method,
+      web::http::Method,
       std::string_view const &path,
       std::string_view const &query,
       std::string_view const &body,

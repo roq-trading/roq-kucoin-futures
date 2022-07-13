@@ -15,7 +15,7 @@
 
 #include "roq/io/context.hpp"
 
-#include "roq/core/web/client.hpp"
+#include "roq/web/rest/client.hpp"
 
 #include "roq/server.hpp"
 
@@ -32,7 +32,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-class OrderEntry final : public core::web::Client::Handler {
+class OrderEntry final : public web::rest::Client::Handler {
  public:
   struct PrivateToken final {
     std::string_view account;
@@ -77,46 +77,46 @@ class OrderEntry final : public core::web::Client::Handler {
   uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id);
 
  protected:
-  void operator()(core::web::Client::Connected const &);
-  void operator()(core::web::Client::Disconnected const &);
-  void operator()(core::web::Client::Latency const &);
+  void operator()(web::rest::Client::Connected const &);
+  void operator()(web::rest::Client::Disconnected const &);
+  void operator()(web::rest::Client::Latency const &);
 
   void operator()(ConnectionStatus);
 
   uint32_t download(OrderEntryState state);
 
   void get_private_token();
-  void get_private_token_ack(Trace<core::web::Response const> const &, uint32_t sequence);
+  void get_private_token_ack(Trace<web::rest::Response const> const &, uint32_t sequence);
   void operator()(Trace<json::Token const> const &);
 
   void get_account();
-  void get_account_ack(Trace<core::web::Response const> const &, uint32_t sequence);
+  void get_account_ack(Trace<web::rest::Response const> const &, uint32_t sequence);
   void operator()(Trace<json::Account const> const &);
 
   void get_positions();
-  void get_positions_ack(Trace<core::web::Response const> const &, uint32_t sequence);
+  void get_positions_ack(Trace<web::rest::Response const> const &, uint32_t sequence);
   void operator()(Trace<json::Positions const> const &);
 
   void get_orders();
-  void get_orders_ack(Trace<core::web::Response const> const &, uint32_t sequence);
+  void get_orders_ack(Trace<web::rest::Response const> const &, uint32_t sequence);
   void operator()(Trace<json::Orders const> const &);
 
   void get_fills();
-  void get_fills_ack(Trace<core::web::Response const> const &, uint32_t sequence);
+  void get_fills_ack(Trace<web::rest::Response const> const &, uint32_t sequence);
   void operator()(Trace<json::Fills const> const &);
 
   void create_order(Event<CreateOrder> const &, oms::Order const &, std::string_view const &request_id);
-  void create_order_ack(Trace<core::web::Response const> const &, uint8_t user_id, uint32_t order_id, uint32_t version);
+  void create_order_ack(Trace<web::rest::Response const> const &, uint8_t user_id, uint32_t order_id, uint32_t version);
 
   void cancel_order(
       Event<CancelOrder> const &,
       oms::Order const &,
       std::string_view const &request_id,
       std::string_view const &previous_request_id);
-  void cancel_order_ack(Trace<core::web::Response const> const &, uint8_t user_id, uint32_t order_id, uint32_t version);
+  void cancel_order_ack(Trace<web::rest::Response const> const &, uint8_t user_id, uint32_t order_id, uint32_t version);
 
   void cancel_all_orders(Event<CancelAllOrders> const &, std::string_view const &request_id);
-  void cancel_all_orders_ack(Trace<core::web::Response const> const &);
+  void cancel_all_orders_ack(Trace<web::rest::Response const> const &);
 
  private:
   Handler &handler_;
@@ -124,7 +124,7 @@ class OrderEntry final : public core::web::Client::Handler {
   const uint16_t stream_id_;
   const std::string name_;
   // connection
-  core::web::Client connection_;
+  std::unique_ptr<web::rest::Client> connection_;
   // buffers
   core::Buffer decode_buffer_;
   // metrics

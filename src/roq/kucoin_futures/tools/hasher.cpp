@@ -34,7 +34,7 @@ Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std:
 }
 
 std::string Hasher::create_headers_v1(
-    core::http::Method method,
+    web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body,
@@ -61,7 +61,7 @@ std::string Hasher::create_headers_v1(
 }
 
 std::string Hasher::create_headers_v2(
-    core::http::Method method,
+    web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body,

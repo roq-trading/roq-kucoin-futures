@@ -15,7 +15,7 @@ Security::Security(Config const &config, std::string_view const &account)
 }
 
 std::string Security::create_signature_api_v1(
-    core::http::Method method,
+    web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body) {
@@ -24,7 +24,7 @@ std::string Security::create_signature_api_v1(
 }
 
 std::string Security::create_signature_api_v2(
-    core::http::Method method,
+    web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body) {

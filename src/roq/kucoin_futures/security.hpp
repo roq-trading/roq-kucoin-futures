@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include "roq/core/http/method.hpp"
+#include "roq/web/http/method.hpp"
 
 #include "roq/kucoin_futures/config.hpp"
 
@@ -24,9 +24,9 @@ class Security final {
   std::string_view get_account() const { return account_; }
 
   std::string create_signature_api_v1(
-      core::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
+      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
   std::string create_signature_api_v2(
-      core::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
+      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
 
  private:
   const std::string account_;
