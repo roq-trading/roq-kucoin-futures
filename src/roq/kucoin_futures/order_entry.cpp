@@ -274,7 +274,7 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response const> const &e
         log::fatal("Unexpected"sv);
       }
       download_.check(state);
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
@@ -357,7 +357,7 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response const> const &event, 
         log::fatal("Unexpected"sv);
       }
       download_.check(state);
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
@@ -417,7 +417,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response const> const &event
         log::fatal("Unexpected"sv);
       }
       download_.check(state);
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
@@ -478,7 +478,7 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response const> const &event, u
         log::fatal("Unexpected"sv);
       }
       download_.check(state);
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
@@ -539,7 +539,7 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response const> const &event, ui
         log::fatal("Unexpected"sv);
       }
       download_.check(state);
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       download_.retry(state);
     }
@@ -651,7 +651,7 @@ void OrderEntry::create_order_ack(
         default:
           response.expect(web::http::Status::OK);  // throws
       }
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       oms::Response response{
           .type = RequestType::CREATE_ORDER,
@@ -749,7 +749,7 @@ void OrderEntry::cancel_order_ack(
         default:
           response.expect(web::http::Status::OK);  // throws
       }
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       oms::Response response{
           .type = RequestType::CANCEL_ORDER,
@@ -822,7 +822,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response const> const &e
         default:
           response.expect(web::http::Status::OK);  // throws
       }
-    } catch (core::NetworkError &e) {
+    } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
       // note! this event does not require a response
     }
