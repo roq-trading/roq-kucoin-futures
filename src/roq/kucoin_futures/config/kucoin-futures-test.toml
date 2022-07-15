@@ -1,5 +1,8 @@
-#symbols = "BTCUSDTM"
-symbols = ".*"
+#symbols = ".*"
+symbols=[
+  "^ETHUSD[A-Z]M$",                                                                                                                                                      
+  "^XBTUSD[A-Z]M$"
+]
 
 #accounts = {}
 
