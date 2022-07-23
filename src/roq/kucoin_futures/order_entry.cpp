@@ -686,7 +686,8 @@ void OrderEntry::cancel_order(
     auto &[message_info, cancel_order] = event;
     auto method = web::http::Method::DELETE;
     auto path = shared_.api.delete_order;
-    auto real_path = shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path;
+    auto real_path =
+        std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
     web::rest::Request request{
         .method = method,
