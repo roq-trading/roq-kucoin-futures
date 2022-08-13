@@ -125,7 +125,7 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
   uint64_t request_id_ = {};
   // metrics
   struct {
-    core::metrics::Counter disconnect;
+    core::metrics::Counter disconnect, total_bytes_received;
   } counter_;
   struct {
     core::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, execution, mark_index_price,
