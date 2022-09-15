@@ -252,7 +252,7 @@ void OrderEntry::get_private_token() {
   });
 }
 
-void OrderEntry::get_private_token_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.private_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::PRIVATE_TOKEN;
@@ -281,7 +281,7 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response const> const &e
   });
 }
 
-void OrderEntry::operator()(Trace<json::Token const> const &event) {
+void OrderEntry::operator()(Trace<json::Token> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -325,7 +325,7 @@ void OrderEntry::get_account() {
   });
 }
 
-void OrderEntry::get_account_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.account_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ACCOUNT;
@@ -364,7 +364,7 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response const> const &event, 
   });
 }
 
-void OrderEntry::operator()(Trace<json::Account const> const &event) {
+void OrderEntry::operator()(Trace<json::Account> const &event) {
   auto &[trace_info, account] = event;
   log::info<2>("account={}"sv, account);
 }
@@ -395,7 +395,7 @@ void OrderEntry::get_positions() {
   });
 }
 
-void OrderEntry::get_positions_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.positions_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::POSITIONS;
@@ -424,7 +424,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response const> const &event
   });
 }
 
-void OrderEntry::operator()(Trace<json::Positions const> const &event) {
+void OrderEntry::operator()(Trace<json::Positions> const &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
 }
@@ -456,7 +456,7 @@ void OrderEntry::get_orders() {
   });
 }
 
-void OrderEntry::get_orders_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.orders_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::ORDERS;
@@ -485,7 +485,7 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response const> const &event, u
   });
 }
 
-void OrderEntry::operator()(Trace<json::Orders const> const &event) {
+void OrderEntry::operator()(Trace<json::Orders> const &event) {
   auto &[trace_info, orders] = event;
   log::info<2>("orders={}"sv, orders);
 }
@@ -517,7 +517,7 @@ void OrderEntry::get_fills() {
   });
 }
 
-void OrderEntry::get_fills_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.fills_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = OrderEntryState::FILLS;
@@ -546,7 +546,7 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response const> const &event, ui
   });
 }
 
-void OrderEntry::operator()(Trace<json::Fills const> const &event) {
+void OrderEntry::operator()(Trace<json::Fills> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
 }
@@ -614,7 +614,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
 }
 
 void OrderEntry::create_order_ack(
-    Trace<web::rest::Response const> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
+    Trace<web::rest::Response> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -712,7 +712,7 @@ void OrderEntry::cancel_order(
 }
 
 void OrderEntry::cancel_order_ack(
-    Trace<web::rest::Response const> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
+    Trace<web::rest::Response> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, response] = event;
     log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
@@ -802,7 +802,7 @@ void OrderEntry::cancel_all_orders(
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response const> const &event) {
+void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event) {
   profile_.cancel_all_orders_ack([&]() {
     auto &[trace_info, response] = event;
     try {

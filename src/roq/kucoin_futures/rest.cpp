@@ -212,7 +212,7 @@ void Rest::get_public_token() {
   });
 }
 
-void Rest::get_public_token_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   profile_.public_token_ack([&]() {
     auto &[trace_info, response] = event;
     auto state = RestState::PUBLIC_TOKEN;
@@ -236,7 +236,7 @@ void Rest::get_public_token_ack(Trace<web::rest::Response const> const &event, u
   });
 }
 
-void Rest::operator()(Trace<json::Token const> const &event) {
+void Rest::operator()(Trace<json::Token> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers))
@@ -278,7 +278,7 @@ void Rest::get_contracts() {
   });
 }
 
-void Rest::get_contracts_ack(Trace<web::rest::Response const> const &event, uint32_t sequence) {
+void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto state = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
     auto &[trace_info, response] = event;
@@ -302,7 +302,7 @@ void Rest::get_contracts_ack(Trace<web::rest::Response const> const &event, uint
   });
 }
 
-void Rest::operator()(Trace<json::Contracts const> const &event) {
+void Rest::operator()(Trace<json::Contracts> const &event) {
   auto &[trace_info, contracts] = event;
   log::info<4>("contracts={}"sv, contracts);
   // reference data
@@ -401,7 +401,7 @@ void Rest::get_order_book(std::string_view const &symbol) {
 }
 
 void Rest::get_order_book_ack(
-    Trace<web::rest::Response const> const &event, [[maybe_unused]] std::string_view const &symbol) {
+    Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
   profile_.order_book_ack([&]() {
     auto &[trace_info, response] = event;
     try {
@@ -419,7 +419,7 @@ void Rest::get_order_book_ack(
   });
 }
 
-void Rest::operator()(Trace<json::OrderBook const> const &event) {
+void Rest::operator()(Trace<json::OrderBook> const &event) {
   // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
