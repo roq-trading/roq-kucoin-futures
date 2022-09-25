@@ -60,7 +60,7 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
 }
 
 template <typename T>
-void emplace(MBPUpdate &result, const T &value) {
+void emplace(MBPUpdate &result, T const &value) {
   new (&result) MBPUpdate{
       .price = value.price,
       .quantity = value.size,
@@ -408,6 +408,8 @@ void MarketData::operator()(Trace<json::Match> const &event) {
         .price = data.price,
         .quantity = data.size,
         .trade_id = data.trade_id,
+        .taker_order_id = data.taker_order_id,
+        .maker_order_id = data.maker_order_id,
     };
     const TradeSummary trade_summary{
         .stream_id = stream_id_,
@@ -415,6 +417,7 @@ void MarketData::operator()(Trace<json::Match> const &event) {
         .symbol = data.symbol,
         .trades = {&trade, 1},
         .exchange_time_utc = utils::safe_cast(data.ts),
+        .exchange_sequence = data.sequence,
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
@@ -432,6 +435,8 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
         .price = data.price,
         .quantity = data.size,
         .trade_id = trade_id,
+        .taker_order_id = {},
+        .maker_order_id = {},
     };
     const TradeSummary trade_summary{
         .stream_id = stream_id_,
@@ -439,6 +444,7 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
         .symbol = data.symbol,
         .trades = {&trade, 1},
         .exchange_time_utc = utils::safe_cast(data.ts),
+        .exchange_sequence = {},
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
