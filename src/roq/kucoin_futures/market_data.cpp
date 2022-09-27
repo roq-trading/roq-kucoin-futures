@@ -28,8 +28,11 @@ using namespace std::literals;
 namespace roq {
 namespace kucoin_futures {
 
+// === CONSTANTS ===
+
 namespace {
 auto const NAME = "md"sv;
+
 const Mask SUPPORTS{
     SupportType::MARKET_STATUS,
     SupportType::TOP_OF_BOOK,
@@ -37,11 +40,14 @@ const Mask SUPPORTS{
     SupportType::TRADE_SUMMARY,
     SupportType::STATISTICS,
 };
+}  // namespace
 
-struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(std::string_view const &group, std::string_view const &function)
-      : core::metrics::Factory(server::Flags::name(), group, function) {}
-};
+// === HELPERS ===
+
+namespace {
+auto create_name(auto stream_id) {
+  return fmt::format("{}:{}"sv, stream_id, NAME);
+}
 
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   io::web::URI uri_{uri};
@@ -59,18 +65,13 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
   return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
 }
 
-template <typename T>
-void emplace(MBPUpdate &result, T const &value) {
-  new (&result) MBPUpdate{
-      .price = value.price,
-      .quantity = value.size,
-      .implied_quantity = NaN,
-      .number_of_orders = {},
-      .update_action = {},
-      .price_level = {},
-  };
-}
+struct create_metrics final : public core::metrics::Factory {
+  explicit create_metrics(auto const &group, auto const &function)
+      : core::metrics::Factory(server::Flags::name(), group, function) {}
+};
 }  // namespace
+
+// === IMPLEMENTATION ===
 
 MarketData::MarketData(
     Handler &handler,
@@ -81,7 +82,7 @@ MarketData::MarketData(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)), index_(index),
+    : handler_(handler), stream_id_(stream_id), name_(create_name(stream_id_)), index_(index),
       ping_frequency_(ping_frequency), connection_(create_connection(*this, context, uri, query)),
       decode_buffer_(Flags::decode_buffer_size()),
       request_id_(static_cast<uint64_t>(stream_id_) * 1000000),  // scale (debugging)
@@ -512,7 +513,6 @@ void MarketData::operator()(Trace<json::FundingRate> const &event) {
 
 void MarketData::operator()(Trace<json::Level2> const &event) {
   profile_.level2([&]() {
-    // auto &[trace_info, level2] = event;
     auto &trace_info = event.trace_info;
     auto &level2 = event.value;
     log::info<4>("event={{level2={}, trace_info={}}}"sv, level2, trace_info);
@@ -598,11 +598,21 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
       auto last_sequence = data.end;
       auto previous_sequence = data.start;
       auto &collector = shared_.mbp_collector[symbol];
+      auto create_mbp_update = []<typename T>(T &result, auto const &value) {
+        new (&result) T{
+            .price = value.price,
+            .quantity = value.size,
+            .implied_quantity = NaN,
+            .number_of_orders = {},
+            .update_action = {},
+            .price_level = {},
+        };
+      };
       core::back_emplacer bids(shared_.bids), asks(shared_.asks);
       for (auto &item : data.bids)
-        bids.emplace_back([&item](auto &result) { emplace(result, item); });
+        bids.emplace_back([&](auto &result) { create_mbp_update(result, item); });
       for (auto &item : data.asks)
-        asks.emplace_back([&item](auto &result) { emplace(result, item); });
+        asks.emplace_back([&](auto &result) { create_mbp_update(result, item); });
       try {
         // log::debug("sequence=({}, {})"sv, first_sequence, last_sequence);
         collector(

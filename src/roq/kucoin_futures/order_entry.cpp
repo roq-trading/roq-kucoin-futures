@@ -20,21 +20,25 @@ using namespace std::literals;
 namespace roq {
 namespace kucoin_futures {
 
+// === CONSTANTS ===
+
 namespace {
 auto const NAME = "om"sv;
+
 const Mask SUPPORTS{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
     SupportType::FUNDS,
 };
+}  // namespace
 
-auto const ALLOW_PIPELINING = true;
+// === HELPERS ===
 
-struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(std::string_view const &group, std::string_view const &function)
-      : core::metrics::Factory(server::Flags::name(), group, function) {}
-};
+namespace {
+auto create_name(auto stream_id, auto const &account) {
+  return fmt::format("{}:{}:{}"sv, stream_id, NAME, account);
+}
 
 auto create_connection(auto &handler, auto &context) {
   auto uri = Flags::rest_uri();
@@ -53,11 +57,17 @@ auto create_connection(auto &handler, auto &context) {
   };
   return web::rest::ClientFactory::create(handler, context, config);
 }
+
+struct create_metrics final : public core::metrics::Factory {
+  explicit create_metrics(auto const &group, auto const &function)
+      : core::metrics::Factory(server::Flags::name(), group, function) {}
+};
 }  // namespace
 
+// === IMPLEMENTATION ===
+
 OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Security &security, Shared &shared)
-    : handler_(handler), stream_id_(stream_id),
-      name_(fmt::format("{}:{}:{}"sv, stream_id_, NAME, security.get_account())),
+    : handler_(handler), stream_id_(stream_id), name_(create_name(stream_id_, security.get_account())),
       connection_(create_connection(*this, context)), decode_buffer_(Flags::decode_buffer_size()),
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),

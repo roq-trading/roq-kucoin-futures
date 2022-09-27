@@ -27,6 +27,8 @@ using namespace std::literals;
 namespace roq {
 namespace kucoin_futures {
 
+// === CONSTANTS ===
+
 namespace {
 auto const NAME = "rest"sv;
 
@@ -34,13 +36,14 @@ const Mask SUPPORTS{
     SupportType::REFERENCE_DATA,
     SupportType::MARKET_STATUS,
 };
+}  // namespace
 
-auto const ALLOW_PIPELINING = true;
+// === HELPERS ===
 
-struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(std::string_view const &group, std::string_view const &function)
-      : core::metrics::Factory(server::Flags::name(), group, function) {}
-};
+namespace {
+auto create_name(auto stream_id) {
+  return fmt::format("{}:{}"sv, stream_id, NAME);
+}
 
 auto create_connection(auto &handler, auto &context) {
   auto uri = Flags::rest_uri();
@@ -60,20 +63,16 @@ auto create_connection(auto &handler, auto &context) {
   return web::rest::ClientFactory::create(handler, context, config);
 }
 
-void emplace(MBPUpdate &result, double price, double size) {
-  new (&result) MBPUpdate{
-      .price = price,
-      .quantity = size,
-      .implied_quantity = NaN,
-      .number_of_orders = {},
-      .update_action = {},
-      .price_level = {},
-  };
-}
+struct create_metrics final : public core::metrics::Factory {
+  explicit create_metrics(auto const &group, auto const &function)
+      : core::metrics::Factory(server::Flags::name(), group, function) {}
+};
 }  // namespace
 
+// === IMPLEMENTATION ===
+
 Rest::Rest(Handler &handler, io::Context &context, uint16_t stream_id, Shared &shared)
-    : handler_(handler), stream_id_(stream_id), name_(fmt::format("{}:{}"sv, stream_id_, NAME)),
+    : handler_(handler), stream_id_(stream_id), name_(create_name(stream_id_)),
       connection_(create_connection(*this, context)), decode_buffer_(Flags::decode_buffer_size()),
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
@@ -420,7 +419,6 @@ void Rest::get_order_book_ack(
 }
 
 void Rest::operator()(Trace<json::OrderBook> const &event) {
-  // auto &[trace_info, order_book] = event;
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
   log::info<4>("event={{order_book={}, trace_info={}}}"sv, order_book, trace_info);
@@ -429,10 +427,20 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   auto symbol = data.symbol;
   auto &collector = shared_.mbp_collector[symbol];
   core::back_emplacer bids(shared_.bids), asks(shared_.asks);
+  auto create_mbp_update = []<typename T>(T &result, auto price, auto size) {
+    new (&result) T{
+        .price = price,
+        .quantity = size,
+        .implied_quantity = NaN,
+        .number_of_orders = {},
+        .update_action = {},
+        .price_level = {},
+    };
+  };
   for (auto &item : data.bids)
-    bids.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+    bids.emplace_back([&](auto &result) { create_mbp_update(result, item.price, item.size); });
   for (auto &item : data.asks)
-    asks.emplace_back([&](auto &result) { emplace(result, item.price, item.size); });
+    asks.emplace_back([&](auto &result) { create_mbp_update(result, item.price, item.size); });
   try {
     collector(
         bids,
