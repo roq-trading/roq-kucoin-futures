@@ -32,7 +32,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "rest"sv;
 
-const Mask SUPPORTS{
+Mask const SUPPORTS{
     SupportType::REFERENCE_DATA,
     SupportType::MARKET_STATUS,
 };
@@ -190,11 +190,9 @@ uint32_t Rest::download(RestState state) {
 
 void Rest::get_public_token() {
   profile_.public_token([&]() {
-    auto method = web::http::Method::POST;
-    auto path = "/api/v1/bullet-public"sv;
     web::rest::Request request{
-        .method = method,
-        .path = path,
+        .method = web::http::Method::POST,
+        .path = "/api/v1/bullet-public"sv,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -205,7 +203,7 @@ void Rest::get_public_token() {
     auto sequence = download_.sequence();
     (*connection_)("public_token"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_public_token_ack(event, sequence);
     });
   });
@@ -223,9 +221,9 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto token = core::json::Parser::create<json::Token>(body, buffer);
-      Trace event(trace_info, token);
+      Trace event{trace_info, token};
       (*this)(event);
       download_.check(state);
     } catch (NetworkError &e) {
@@ -256,11 +254,9 @@ void Rest::operator()(Trace<json::Token> const &event) {
 
 void Rest::get_contracts() {
   profile_.contracts([&]() {
-    auto method = web::http::Method::GET;
-    auto path = shared_.api.get_contracts_active;
     web::rest::Request request{
-        .method = method,
-        .path = path,
+        .method = web::http::Method::GET,
+        .path = shared_.api.get_contracts_active,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -271,7 +267,7 @@ void Rest::get_contracts() {
     auto sequence = download_.sequence();
     (*connection_)("contracts"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_contracts_ack(event, sequence);
     });
   });
@@ -289,9 +285,9 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-      Trace event(trace_info, contracts);
+      Trace event{trace_info, contracts};
       (*this)(event);
       download_.check(state);
     } catch (NetworkError &e) {
@@ -375,12 +371,10 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
 
 void Rest::get_order_book(std::string_view const &symbol) {
   profile_.order_book([&]() {
-    auto method = web::http::Method::GET;
-    auto path = shared_.api.get_order_book;
     auto query = fmt::format("?symbol={}"sv, symbol);
     web::rest::Request request{
-        .method = method,
-        .path = path,
+        .method = web::http::Method::GET,
+        .path = shared_.api.get_order_book,
         .query = query,
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -393,7 +387,7 @@ void Rest::get_order_book(std::string_view const &symbol) {
         request,
         [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
+          Trace event{trace_info, response};
           get_order_book_ack(event, symbol);
         });
   });
@@ -407,9 +401,9 @@ void Rest::get_order_book_ack(
       auto [status, category, body] = response.result();
       // log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-      Trace event(trace_info, order_book);
+      Trace event{trace_info, order_book};
       (*this)(event);
     } catch (NetworkError &e) {
       log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
@@ -457,7 +451,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
           .quantity_decimals = {},
           .checksum = {},
       };
-      Trace event(trace_info, market_by_price_update);
+      Trace event{trace_info, market_by_price_update};
       shared_(event, true, [&](auto &market_by_price) { collector.apply(market_by_price, sequence, false); });
     };
     auto request_snapshot = [&](auto retries) {

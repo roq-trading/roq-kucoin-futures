@@ -25,7 +25,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "ex"sv;
 
-const Mask SUPPORTS{
+Mask const SUPPORTS{
     SupportType::ORDER_ACK,
     SupportType::ORDER,
     SupportType::TRADE,
@@ -53,7 +53,7 @@ auto create_connection(auto &handler, auto &context, auto const &uri, auto const
       .read_buffer_size = Flags::decode_buffer_size(),
       .encode_buffer_size = Flags::encode_buffer_size(),
   };
-  return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
+  return web::socket::ClientFactory::create(handler, context, config, []() -> std::string { return {}; });
 }
 
 struct create_metrics final : public core::metrics::Factory {
@@ -247,7 +247,7 @@ void DropCopy::parse(std::string_view const &message) {
   profile_.parse([&]() {
     try {
       auto trace_info = server::create_trace_info();
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       json::Parser::dispatch(*this, message, buffer, trace_info);
     } catch (...) {
       log::warn(R"(message="{}")"sv, message);

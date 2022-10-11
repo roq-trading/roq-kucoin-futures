@@ -14,11 +14,14 @@ namespace roq {
 namespace kucoin_futures {
 namespace tools {
 
+// === HELPERS ===
+
 namespace {
-auto create_hmac(std::string_view const &secret) {
+auto create_hmac(auto const &secret) {
   return core::crypto::HMAC_SHA256(secret);
 }
-auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, std::string_view const &passphrase) {
+
+auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
   hmac.clear();
   hmac.update(passphrase);
   std::array<char, 32> buffer;
@@ -27,6 +30,8 @@ auto create_signed_passphrase(core::crypto::HMAC_SHA256 &hmac, std::string_view 
   return core::binascii::Base64::encode(buffer, false);
 }
 }  // namespace
+
+// === IMPLEMENTATION ===
 
 Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
     : key_(key), hmac_(create_hmac(secret)), passphrase_(passphrase),

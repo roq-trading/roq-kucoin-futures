@@ -25,7 +25,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "om"sv;
 
-const Mask SUPPORTS{
+Mask const SUPPORTS{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
@@ -145,7 +145,7 @@ uint16_t OrderEntry::operator()(
     oms::Order const &,
     [[maybe_unused]] std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
-  throw oms::NotSupported("not supported"sv);
+  throw oms::NotSupported{"not supported"sv};
 }
 
 uint16_t OrderEntry::operator()(
@@ -256,7 +256,7 @@ void OrderEntry::get_private_token() {
     auto sequence = download_.sequence();
     (*connection_)("private_token", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_private_token_ack(event, sequence);
     });
   });
@@ -274,10 +274,10 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, 
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto token = core::json::Parser::create<json::Token>(body, buffer);
       if (token.code == 200000) {
-        Trace event(trace_info, token);
+        Trace event{trace_info, token};
         (*this)(event);
       } else {
         log::warn("token={}"sv, token);
@@ -329,7 +329,7 @@ void OrderEntry::get_account() {
     auto sequence = download_.sequence();
     (*connection_)("account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_account_ack(event, sequence);
     });
   });
@@ -357,10 +357,10 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32
           response.expect(web::http::Status::OK);  // throws
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto account = core::json::Parser::create<json::Account>(body, buffer);
       if (account.code == 200000) {
-        Trace event(trace_info, account);
+        Trace event{trace_info, account};
         (*this)(event);
       } else {
         log::warn("account={}"sv, account);
@@ -399,7 +399,7 @@ void OrderEntry::get_positions() {
     auto sequence = download_.sequence();
     (*connection_)("positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_positions_ack(event, sequence);
     });
   });
@@ -417,10 +417,10 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto positions = core::json::Parser::create<json::Positions>(body, buffer);
       if (positions.code == 200000) {
-        Trace event(trace_info, positions);
+        Trace event{trace_info, positions};
         (*this)(event);
       } else {
         log::warn("positions={}"sv, positions);
@@ -460,7 +460,7 @@ void OrderEntry::get_orders() {
     auto sequence = download_.sequence();
     (*connection_)("orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_orders_ack(event, sequence);
     });
   });
@@ -478,10 +478,10 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto orders = core::json::Parser::create<json::Orders>(body, buffer);
       if (orders.code == 200000) {
-        Trace event(trace_info, orders);
+        Trace event{trace_info, orders};
         (*this)(event);
       } else {
         log::warn("orders={}"sv, orders);
@@ -521,7 +521,7 @@ void OrderEntry::get_fills() {
     auto sequence = download_.sequence();
     (*connection_)("fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
-      Trace event(trace_info, response);
+      Trace event{trace_info, response};
       get_fills_ack(event, sequence);
     });
   });
@@ -539,10 +539,10 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t
         return;
       }
       response.expect(web::http::Status::OK);
-      core::json::Buffer buffer(decode_buffer_);
+      core::json::Buffer buffer{decode_buffer_};
       const auto fills = core::json::Parser::create<json::Fills>(body, buffer);
       if (fills.code == 200000) {
-        Trace event(trace_info, fills);
+        Trace event{trace_info, fills};
         (*this)(event);
       } else {
         log::warn("fills={}"sv, fills);
@@ -566,10 +566,8 @@ void OrderEntry::operator()(Trace<json::Fills> const &event) {
 void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const &, std::string_view const &request_id) {
   profile_.create_order([&]() {
     if (!ready())
-      throw oms::NotReady("not ready"sv);
+      throw oms::NotReady{"not ready"sv};
     auto &[message_info, create_order] = event;
-    auto method = web::http::Method::POST;
-    auto path = shared_.api.post_order;
     auto side = json::map(create_order.side).as_raw_text();
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
@@ -601,8 +599,8 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
         time_in_force);
     log::debug(R"(body="{}")"sv, body);
     web::rest::Request request{
-        .method = method,
-        .path = path,
+        .method = web::http::Method::POST,
+        .path = shared_.api.post_order,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
@@ -617,7 +615,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
             [[maybe_unused]] auto &request_id, auto &response) {
           uint32_t version = 1;
           auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
+          Trace event{trace_info, response};
           create_order_ack(event, user_id, order_id, version);
         });
   });
@@ -692,15 +690,14 @@ void OrderEntry::cancel_order(
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {
     if (!ready())
-      throw oms::NotReady("not ready"sv);
+      throw oms::NotReady{"not ready"sv};
     auto &[message_info, cancel_order] = event;
-    auto method = web::http::Method::DELETE;
     auto path = shared_.api.delete_order;
     auto real_path =
         std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
     web::rest::Request request{
-        .method = method,
+        .method = web::http::Method::DELETE,
         .path = real_path,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
@@ -715,7 +712,7 @@ void OrderEntry::cancel_order(
         [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
             [[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
-          Trace event(trace_info, response);
+          Trace event{trace_info, response};
           cancel_order_ack(event, user_id, order_id, version);
         });
   });
@@ -732,7 +729,7 @@ void OrderEntry::cancel_order_ack(
       switch (category) {
         using enum web::http::Category;
         case SUCCESS: {  // 2xx
-          core::json::Buffer buffer(decode_buffer_);
+          core::json::Buffer buffer{decode_buffer_};
           // XXX HANS PARSE
           break;
         }
@@ -788,11 +785,9 @@ void OrderEntry::cancel_all_orders(
     Event<CancelAllOrders> const &event, [[maybe_unused]] std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
     if (ready()) {
-      auto method = web::http::Method::DELETE;
-      auto path = shared_.api.delete_orders;
       web::rest::Request request{
-          .method = method,
-          .path = path,
+          .method = web::http::Method::DELETE,
+          .path = shared_.api.delete_orders,
           .query = {},
           .accept = web::http::Accept::APPLICATION_JSON,
           .content_type = {},
@@ -802,7 +797,7 @@ void OrderEntry::cancel_all_orders(
       };
       (*connection_)(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
         auto trace_info = server::create_trace_info();
-        Trace event(trace_info, response);
+        Trace event{trace_info, response};
         cancel_all_orders_ack(event);
       });
     } else {
@@ -821,7 +816,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event) 
       switch (category) {
         using enum web::http::Category;
         case SUCCESS: {  // 2xx
-          core::json::Buffer buffer(decode_buffer_);
+          core::json::Buffer buffer{decode_buffer_};
           // XXX HANS PARSE
           break;
         }
