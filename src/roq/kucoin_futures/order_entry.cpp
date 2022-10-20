@@ -180,7 +180,7 @@ void OrderEntry::operator()(web::rest::Client::Disconnected const &) {
 
 void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
   auto trace_info = server::create_trace_info();
-  const ExternalLatency external_latency{
+  ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = security_.get_account(),
       .latency = latency.sample,
@@ -192,7 +192,7 @@ void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
 void OrderEntry::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
     auto trace_info = server::create_trace_info();
-    const StreamStatus stream_status{
+    StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
         .supports = SUPPORTS,
@@ -253,12 +253,12 @@ void OrderEntry::get_private_token() {
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto sequence = download_.sequence();
-    (*connection_)("private_token", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
       Trace event{trace_info, response};
       get_private_token_ack(event, sequence);
-    });
+    };
+    (*connection_)("private_token", request, callback);
   });
 }
 
@@ -275,7 +275,7 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, 
       }
       response.expect(web::http::Status::OK);
       core::json::Buffer buffer{decode_buffer_};
-      const auto token = core::json::Parser::create<json::Token>(body, buffer);
+      auto token = core::json::Parser::create<json::Token>(body, buffer);
       if (token.code == 200000) {
         Trace event{trace_info, token};
         (*this)(event);
@@ -326,12 +326,12 @@ void OrderEntry::get_account() {
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto sequence = download_.sequence();
-    (*connection_)("account", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
       Trace event{trace_info, response};
       get_account_ack(event, sequence);
-    });
+    };
+    (*connection_)("account", request, callback);
   });
 }
 
@@ -358,7 +358,7 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32
       }
       response.expect(web::http::Status::OK);
       core::json::Buffer buffer{decode_buffer_};
-      const auto account = core::json::Parser::create<json::Account>(body, buffer);
+      auto account = core::json::Parser::create<json::Account>(body, buffer);
       if (account.code == 200000) {
         Trace event{trace_info, account};
         (*this)(event);
@@ -396,12 +396,12 @@ void OrderEntry::get_positions() {
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto sequence = download_.sequence();
-    (*connection_)("positions", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
       Trace event{trace_info, response};
       get_positions_ack(event, sequence);
-    });
+    };
+    (*connection_)("positions", request, callback);
   });
 }
 
@@ -418,7 +418,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
       }
       response.expect(web::http::Status::OK);
       core::json::Buffer buffer{decode_buffer_};
-      const auto positions = core::json::Parser::create<json::Positions>(body, buffer);
+      auto positions = core::json::Parser::create<json::Positions>(body, buffer);
       if (positions.code == 200000) {
         Trace event{trace_info, positions};
         (*this)(event);
@@ -457,12 +457,12 @@ void OrderEntry::get_orders() {
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto sequence = download_.sequence();
-    (*connection_)("orders", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
       Trace event{trace_info, response};
       get_orders_ack(event, sequence);
-    });
+    };
+    (*connection_)("orders", request, callback);
   });
 }
 
@@ -479,7 +479,7 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_
       }
       response.expect(web::http::Status::OK);
       core::json::Buffer buffer{decode_buffer_};
-      const auto orders = core::json::Parser::create<json::Orders>(body, buffer);
+      auto orders = core::json::Parser::create<json::Orders>(body, buffer);
       if (orders.code == 200000) {
         Trace event{trace_info, orders};
         (*this)(event);
@@ -518,12 +518,12 @@ void OrderEntry::get_fills() {
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto sequence = download_.sequence();
-    (*connection_)("fills", request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
       auto trace_info = server::create_trace_info();
       Trace event{trace_info, response};
       get_fills_ack(event, sequence);
-    });
+    };
+    (*connection_)("fills", request, callback);
   });
 }
 
@@ -540,7 +540,7 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t
       }
       response.expect(web::http::Status::OK);
       core::json::Buffer buffer{decode_buffer_};
-      const auto fills = core::json::Parser::create<json::Fills>(body, buffer);
+      auto fills = core::json::Parser::create<json::Fills>(body, buffer);
       if (fills.code == 200000) {
         Trace event{trace_info, fills};
         (*this)(event);
@@ -608,16 +608,14 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
         .body = body,
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    (*connection_)(
-        request_id,
-        request,
-        [this, user_id = message_info.source, order_id = create_order.order_id](
-            [[maybe_unused]] auto &request_id, auto &response) {
-          uint32_t version = 1;
-          auto trace_info = server::create_trace_info();
-          Trace event{trace_info, response};
-          create_order_ack(event, user_id, order_id, version);
-        });
+    auto callback = [this, user_id = message_info.source, order_id = create_order.order_id](
+                        [[maybe_unused]] auto &request_id, auto &response) {
+      auto version = uint32_t{1};
+      auto trace_info = server::create_trace_info();
+      Trace event{trace_info, response};
+      create_order_ack(event, user_id, order_id, version);
+    };
+    (*connection_)(request_id, request, callback);
   });
 }
 
@@ -706,15 +704,14 @@ void OrderEntry::cancel_order(
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    (*connection_)(
-        request_id,
-        request,
+    auto callback =
         [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
             [[maybe_unused]] auto &request_id, auto &response) {
           auto trace_info = server::create_trace_info();
           Trace event{trace_info, response};
           cancel_order_ack(event, user_id, order_id, version);
-        });
+        };
+    (*connection_)(request_id, request, callback);
   });
 }
 
@@ -795,11 +792,12 @@ void OrderEntry::cancel_all_orders(
           .body = {},
           .quality_of_service = io::QualityOfService::IMMEDIATE,
       };
-      (*connection_)(request_id, request, [this]([[maybe_unused]] auto &request_id, auto &response) {
+      auto callback = [this]([[maybe_unused]] auto &request_id, auto &response) {
         auto trace_info = server::create_trace_info();
         Trace event{trace_info, response};
         cancel_all_orders_ack(event);
-      });
+      };
+      (*connection_)(request_id, request, callback);
     } else {
       auto &[message_info, cancel_all_orders] = event;
       log::warn(R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"sv, cancel_all_orders.account);
