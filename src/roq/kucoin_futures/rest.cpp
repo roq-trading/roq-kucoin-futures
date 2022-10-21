@@ -32,7 +32,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "rest"sv;
 
-Mask const SUPPORTS{
+auto const SUPPORTS = Mask{
     SupportType::REFERENCE_DATA,
     SupportType::MARKET_STATUS,
 };
@@ -210,26 +210,25 @@ void Rest::get_public_token() {
 }
 
 void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = RestState::PUBLIC_TOKEN;
   profile_.public_token_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = RestState::PUBLIC_TOKEN;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto token = core::json::Parser::create<json::Token>(body, buffer);
+        Trace event{trace_info, token};
+        (*this)(event);
+        download_.check(STATE);
       }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto token = core::json::Parser::create<json::Token>(body, buffer);
-      Trace event{trace_info, token};
-      (*this)(event);
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -249,8 +248,6 @@ void Rest::operator()(Trace<json::Token> const &event) {
     log::fatal("Unexpected: ping_interval={}"sv, instance_server.ping_interval);
   handler_(public_token);
 }
-
-// contracts
 
 void Rest::get_contracts() {
   profile_.contracts([&]() {
@@ -274,26 +271,25 @@ void Rest::get_contracts() {
 }
 
 void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto state = RestState::CONTRACTS;
+  constexpr auto const STATE = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
-    auto &[trace_info, response] = event;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
+        Trace event{trace_info, contracts};
+        (*this)(event);
+        download_.check(STATE);
       }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-      Trace event{trace_info, contracts};
-      (*this)(event);
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -349,7 +345,7 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
     };
     handler_(symbols_update);
   }
-  if (counter > 0) [[unlikely]]
+  if (counter > 0)
     log::info("Contracts {} / {}"sv, counter, std::size(contracts.data));
   // market status
   for (auto &item : contracts.data) {
@@ -366,8 +362,6 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
     create_trace_and_dispatch(handler_, trace_info, market_status, true);
   }
 }
-
-// order-book
 
 void Rest::get_order_book(std::string_view const &symbol) {
   profile_.order_book([&]() {
@@ -394,19 +388,18 @@ void Rest::get_order_book(std::string_view const &symbol) {
 void Rest::get_order_book_ack(
     Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
   profile_.order_book_ack([&]() {
-    auto &[trace_info, response] = event;
-    try {
-      auto [status, category, body] = response.result();
-      // log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      response.expect(web::http::Status::OK);
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
       core::json::Buffer buffer{decode_buffer_};
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
       Trace event{trace_info, order_book};
       (*this)(event);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      // get_order_book_retry(symbol);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      // XXX WHAT ???
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -468,8 +461,6 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   }
 }
 
-// queue
-
 void Rest::check_request_queue(std::chrono::nanoseconds now) {
   shared_.depth_request_queue.dispatch(
       [&](auto now) { return shared_.rate_limiter.can_request(now); },
@@ -480,5 +471,32 @@ void Rest::check_request_queue(std::chrono::nanoseconds now) {
       now);
 }
 
+template <typename Parse, typename ErrorHandler>
+void Rest::process_response(web::rest::Response const &response, Parse parse, ErrorHandler error_handler) {
+  try {
+    auto [status, category, body] = response.result();
+    log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
+    switch (category) {
+      using enum web::http::Category;
+      case SUCCESS:  // 2xx
+        parse(body);
+        break;
+      case CLIENT_ERROR:  // 4xx
+        parse(body);      // throws
+        break;
+      case SERVER_ERROR:  // 5xx
+        error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, magic_enum::enum_name(status));
+        break;
+      default:
+        response.expect(web::http::Status::OK);  // throws
+    }
+  } catch (NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    error_handler(Origin::GATEWAY, e.request_status(), e.error(), e.what());
+  } catch (std::exception &e) {
+    log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, e.what());
+  }
+}
 }  // namespace kucoin_futures
 }  // namespace roq

@@ -90,6 +90,9 @@ class Rest final : public web::rest::Client::Handler {
 
   void check_request_queue(std::chrono::nanoseconds now);
 
+  template <typename Parse, typename ErrorHandler>
+  void process_response(web::rest::Response const &, Parse, ErrorHandler);
+
  private:
   Handler &handler_;
   // config

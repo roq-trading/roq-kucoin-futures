@@ -7,6 +7,11 @@
       "type": "int32_t"
     },
     {
+      "name": "msg",
+      "type": "std::string_view",
+      "optional": true
+    },
+    {
       "name": "data",
       "type": "OrdersData"
     }

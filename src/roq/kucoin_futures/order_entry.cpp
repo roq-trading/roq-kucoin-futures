@@ -25,12 +25,14 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "om"sv;
 
-Mask const SUPPORTS{
+auto const SUPPORTS = Mask{
     SupportType::CREATE_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
     SupportType::FUNDS,
 };
+
+auto const SYSTEM_CODE_SUCCESS = int32_t{200000};
 }  // namespace
 
 // === HELPERS ===
@@ -263,31 +265,30 @@ void OrderEntry::get_private_token() {
 }
 
 void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = OrderEntryState::PRIVATE_TOKEN;
   profile_.private_token_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = OrderEntryState::PRIVATE_TOKEN;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
-      }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto token = core::json::Parser::create<json::Token>(body, buffer);
-      if (token.code == 200000) {
-        Trace event{trace_info, token};
-        (*this)(event);
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        log::warn("token={}"sv, token);
-        log::fatal("Unexpected"sv);
+        core::json::Buffer buffer{decode_buffer_};
+        auto token = core::json::Parser::create<json::Token>(body, buffer);
+        if (token.code == SYSTEM_CODE_SUCCESS) {
+          Trace event{trace_info, token};
+          (*this)(event);
+        } else {
+          log::warn("token={}"sv, token);
+          log::fatal("Unexpected"sv);
+        }
+        download_.check(STATE);
       }
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -336,41 +337,27 @@ void OrderEntry::get_account() {
 }
 
 void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = OrderEntryState::ACCOUNT;
   profile_.account_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = OrderEntryState::ACCOUNT;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
-      }
-      switch (category) {
-        using enum web::http::Category;
-        case SUCCESS:  // 2xx
-          break;
-        case CLIENT_ERROR:  // 4xx
-          log::fatal("{}"sv, response.body());
-          break;
-        default:
-          response.expect(web::http::Status::OK);  // throws
-      }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto account = core::json::Parser::create<json::Account>(body, buffer);
-      if (account.code == 200000) {
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto account = core::json::Parser::create<json::Account>(body, buffer);
+        if (account.code != SYSTEM_CODE_SUCCESS)
+          log::fatal(R"(Unexpected: code={}, msg="{}")"sv, account.code, account.msg);
         Trace event{trace_info, account};
         (*this)(event);
-      } else {
-        log::warn("account={}"sv, account);
-        log::fatal("Unexpected"sv);
+        download_.check(STATE);
       }
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -406,31 +393,27 @@ void OrderEntry::get_positions() {
 }
 
 void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = OrderEntryState::POSITIONS;
   profile_.positions_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = OrderEntryState::POSITIONS;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
-      }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto positions = core::json::Parser::create<json::Positions>(body, buffer);
-      if (positions.code == 200000) {
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto positions = core::json::Parser::create<json::Positions>(body, buffer);
+        if (positions.code != SYSTEM_CODE_SUCCESS)
+          log::fatal(R"(Unexpected: code={}, msg="{}")"sv, positions.code, positions.msg);
         Trace event{trace_info, positions};
         (*this)(event);
-      } else {
-        log::warn("positions={}"sv, positions);
-        log::fatal("Unexpected"sv);
+        download_.check(STATE);
       }
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -467,31 +450,27 @@ void OrderEntry::get_orders() {
 }
 
 void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = OrderEntryState::ORDERS;
   profile_.orders_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = OrderEntryState::ORDERS;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
-      }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto orders = core::json::Parser::create<json::Orders>(body, buffer);
-      if (orders.code == 200000) {
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto orders = core::json::Parser::create<json::Orders>(body, buffer);
+        if (orders.code != SYSTEM_CODE_SUCCESS)
+          log::fatal(R"(Unexpected: code={}, msg="{}")"sv, orders.code, orders.msg);
         Trace event{trace_info, orders};
         (*this)(event);
-      } else {
-        log::warn("orders={}"sv, orders);
-        log::fatal("Unexpected"sv);
+        download_.check(STATE);
       }
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -528,31 +507,27 @@ void OrderEntry::get_fills() {
 }
 
 void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  constexpr auto const STATE = OrderEntryState::FILLS;
   profile_.fills_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto state = OrderEntryState::FILLS;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-        return;
-      }
-      response.expect(web::http::Status::OK);
-      core::json::Buffer buffer{decode_buffer_};
-      auto fills = core::json::Parser::create<json::Fills>(body, buffer);
-      if (fills.code == 200000) {
+    auto &trace_info = event.trace_info;
+    auto parse = [&](auto &body) {
+      if (download_.skip(sequence, STATE)) {
+        log::info("Download state={} has already been processed"sv, STATE);
+      } else {
+        core::json::Buffer buffer{decode_buffer_};
+        auto fills = core::json::Parser::create<json::Fills>(body, buffer);
+        if (fills.code != SYSTEM_CODE_SUCCESS)
+          log::fatal(R"(Unexpected: code={}, msg="{}")"sv, fills.code, fills.msg);
         Trace event{trace_info, fills};
         (*this)(event);
-      } else {
-        log::warn("fills={}"sv, fills);
-        log::fatal("Unexpected"sv);
+        download_.check(STATE);
       }
-      download_.check(state);
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      download_.retry(state);
-    }
+    };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      download_.retry(STATE);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -622,60 +597,25 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
 void OrderEntry::create_order_ack(
     Trace<web::rest::Response> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
-    auto &[trace_info, response] = event;
-    log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      switch (category) {
-        using enum web::http::Category;
-        case SUCCESS: {  // 2xx
-          // XXX HANS PARSE
-          break;
-        }
-        case CLIENT_ERROR: {
-          std::string_view text;
-          // XXX HANS PARSE
-          oms::Response response{
-              .type = RequestType::CREATE_ORDER,
-              .origin = Origin::EXCHANGE,
-              .status = RequestStatus::REJECTED,
-              .error = Error::UNKNOWN,
-              .text = text,
-              .version = version,
-              .request_id = {},
-              .quantity = NaN,
-              .price = NaN,
-          };
-          if (shared_.update_order(
-                  user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
-          } else {
-            log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
-          }
-          break;
-        }
-        default:
-          response.expect(web::http::Status::OK);  // throws
-      }
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    auto &trace_info = event.trace_info;
+    auto parse = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+    auto handle_error = [&](auto origin, auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
       oms::Response response{
           .type = RequestType::CREATE_ORDER,
-          .origin = Origin::GATEWAY,
-          .status = e.request_status(),
-          .error = e.error(),
-          .text = e.what(),
+          .origin = origin,
+          .status = status,
+          .error = error,
+          .text = text,
           .version = version,
           .request_id = {},
           .quantity = NaN,
           .price = NaN,
       };
-      if (shared_.update_order(
-              user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
-      } else {
-        log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
-      }
-    }
+      Trace event_2{trace_info, response};
+      (*this)(event_2, user_id, order_id);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -718,61 +658,25 @@ void OrderEntry::cancel_order(
 void OrderEntry::cancel_order_ack(
     Trace<web::rest::Response> const &event, uint8_t user_id, uint32_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
-    auto &[trace_info, response] = event;
-    log::debug("user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      switch (category) {
-        using enum web::http::Category;
-        case SUCCESS: {  // 2xx
-          core::json::Buffer buffer{decode_buffer_};
-          // XXX HANS PARSE
-          break;
-        }
-        case CLIENT_ERROR: {  // 4xx
-          std::string_view text;
-          // XXX HANS PARSE
-          oms::Response response{
-              .type = RequestType::CANCEL_ORDER,
-              .origin = Origin::EXCHANGE,
-              .status = RequestStatus::REJECTED,
-              .error = Error::UNKNOWN,
-              .text = text,
-              .version = version,
-              .request_id = {},
-              .quantity = NaN,
-              .price = NaN,
-          };
-          if (shared_.update_order(
-                  user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
-          } else {
-            log::warn("Did not find order: user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
-          }
-          break;
-        }
-        default:
-          response.expect(web::http::Status::OK);  // throws
-      }
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    auto &trace_info = event.trace_info;
+    auto parse = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+    auto handle_error = [&](auto origin, auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
       oms::Response response{
           .type = RequestType::CANCEL_ORDER,
-          .origin = Origin::GATEWAY,
-          .status = e.request_status(),
-          .error = e.error(),
-          .text = e.what(),
+          .origin = origin,
+          .status = status,
+          .error = error,
+          .text = text,
           .version = version,
           .request_id = {},
           .quantity = NaN,
           .price = NaN,
       };
-      if (shared_.update_order(
-              user_id, order_id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {})) {
-      } else {
-        log::warn("Did not find order: user_id={}, order_id={}, version={}"sv, user_id, order_id, version);
-      }
-    }
+      Trace event_2{trace_info, response};
+      (*this)(event_2, user_id, order_id);
+    };
+    process_response(event, parse, handle_error);
   });
 }
 
@@ -807,30 +711,72 @@ void OrderEntry::cancel_all_orders(
 
 void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event) {
   profile_.cancel_all_orders_ack([&]() {
-    auto &[trace_info, response] = event;
-    try {
-      auto [status, category, body] = response.result();
-      log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
-      switch (category) {
-        using enum web::http::Category;
-        case SUCCESS: {  // 2xx
-          core::json::Buffer buffer{decode_buffer_};
-          // XXX HANS PARSE
-          break;
-        }
-        case CLIENT_ERROR: {  // 4xx
-          // XXX HANS PARSE
-          // note! this event does not require a response
-          break;
-        }
-        default:
-          response.expect(web::http::Status::OK);  // throws
-      }
-    } catch (NetworkError &e) {
-      log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
-      // note! this event does not require a response
-    }
+    auto &trace_info = event.trace_info;
+    auto parse = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+      log::warn(R"(error={}, text="{}")"sv, error, text);
+      // note! no response required
+    };
+    process_response(event, parse, handle_error);
   });
+}
+
+template <typename Parse, typename ErrorHandler>
+void OrderEntry::process_response(web::rest::Response const &response, Parse parse, ErrorHandler error_handler) {
+  try {
+    auto [status, category, body] = response.result();
+    log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
+    switch (category) {
+      using enum web::http::Category;
+      case SUCCESS:  // 2xx
+        parse(body);
+        break;
+      case CLIENT_ERROR:  // 4xx
+        parse(body);      // throws
+        break;
+      case SERVER_ERROR:  // 5xx
+        error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, magic_enum::enum_name(status));
+        break;
+      default:
+        response.expect(web::http::Status::OK);  // throws
+    }
+  } catch (oms::Exception &e) {
+    log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    error_handler(e.origin, e.status, e.error, e.what());
+  } catch (NetworkError &e) {
+    log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    error_handler(Origin::GATEWAY, e.request_status(), e.error(), e.what());
+  } catch (std::exception &e) {
+    log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
+    error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, e.what());
+  }
+}
+
+template <typename... Args>
+void OrderEntry::operator()(Trace<oms::Response> const &event, uint8_t user_id, uint32_t order_id, Args &&...args) {
+  auto &[trace_info, response] = event;
+  if (shared_.update_order(
+          user_id,
+          order_id,
+          stream_id_,
+          trace_info,
+          response,
+          std::forward<Args>(args)...,
+          []([[maybe_unused]] auto &order) {})) {
+  } else {
+    log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
+  }
+}
+
+template <typename... Args>
+void OrderEntry::operator()(
+    Trace<oms::OrderUpdate> const &event, std::string_view const &client_order_id, Args &&...args) {
+  auto &[trace_info, order_update] = event;
+  if (shared_.update_order(
+          client_order_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
+  } else {
+    log::warn("*** EXTERNAL ORDER ***"sv);
+  }
 }
 
 }  // namespace kucoin_futures
