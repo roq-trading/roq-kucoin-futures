@@ -212,15 +212,14 @@ void Rest::get_public_token() {
 void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   constexpr auto const STATE = RestState::PUBLIC_TOKEN;
   profile_.public_token_ack([&]() {
-    auto &trace_info = event.trace_info;
-    auto parse = [&](auto &body) {
+    auto handle_success = [&](auto &body) {
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         core::json::Buffer buffer{decode_buffer_};
         auto token = core::json::Parser::create<json::Token>(body, buffer);
-        Trace event{trace_info, token};
-        (*this)(event);
+        Trace event_2{event, token};
+        (*this)(event_2);
         download_.check(STATE);
       }
     };
@@ -228,7 +227,7 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
       log::warn(R"(error={}, text="{}")"sv, error, text);
       download_.retry(STATE);
     };
-    process_response(event, parse, handle_error);
+    process_response(event, handle_success, handle_error);
   });
 }
 
@@ -273,15 +272,14 @@ void Rest::get_contracts() {
 void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   constexpr auto const STATE = RestState::CONTRACTS;
   profile_.contracts_ack([&]() {
-    auto &trace_info = event.trace_info;
-    auto parse = [&](auto &body) {
+    auto handle_success = [&](auto &body) {
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         core::json::Buffer buffer{decode_buffer_};
         auto contracts = core::json::Parser::create<json::Contracts>(body, buffer);
-        Trace event{trace_info, contracts};
-        (*this)(event);
+        Trace event_2{event, contracts};
+        (*this)(event_2);
         download_.check(STATE);
       }
     };
@@ -289,7 +287,7 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
       log::warn(R"(error={}, text="{}")"sv, error, text);
       download_.retry(STATE);
     };
-    process_response(event, parse, handle_error);
+    process_response(event, handle_success, handle_error);
   });
 }
 
@@ -388,18 +386,17 @@ void Rest::get_order_book(std::string_view const &symbol) {
 void Rest::get_order_book_ack(
     Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
   profile_.order_book_ack([&]() {
-    auto &trace_info = event.trace_info;
-    auto parse = [&](auto &body) {
+    auto handle_success = [&](auto &body) {
       core::json::Buffer buffer{decode_buffer_};
       auto order_book = core::json::Parser::create<json::OrderBook>(body, buffer);
-      Trace event{trace_info, order_book};
-      (*this)(event);
+      Trace event_2{event, order_book};
+      (*this)(event_2);
     };
     auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       // XXX WHAT ???
     };
-    process_response(event, parse, handle_error);
+    process_response(event, handle_success, handle_error);
   });
 }
 
@@ -471,18 +468,19 @@ void Rest::check_request_queue(std::chrono::nanoseconds now) {
       now);
 }
 
-template <typename Parse, typename ErrorHandler>
-void Rest::process_response(web::rest::Response const &response, Parse parse, ErrorHandler error_handler) {
+template <typename SuccessHandler, typename ErrorHandler>
+void Rest::process_response(
+    web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
   try {
     auto [status, category, body] = response.result();
     log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
     switch (category) {
       using enum web::http::Category;
       case SUCCESS:  // 2xx
-        parse(body);
+        success_handler(body);
         break;
-      case CLIENT_ERROR:  // 4xx
-        parse(body);      // throws
+      case CLIENT_ERROR:        // 4xx
+        success_handler(body);  // throws
         break;
       case SERVER_ERROR:  // 5xx
         error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, magic_enum::enum_name(status));
