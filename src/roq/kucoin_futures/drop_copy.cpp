@@ -137,7 +137,7 @@ void DropCopy::operator()(metrics::Writer &writer) {
 
 void DropCopy::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
-  auto now = core::clock::GetSystem();
+  auto now = clock::get_system();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
@@ -159,7 +159,7 @@ void DropCopy::operator()(web::socket::Client::Close const &) {
 }
 
 void DropCopy::operator()(web::socket::Client::Latency const &latency) {
-  auto trace_info = server::create_trace_info();
+  TraceInfo trace_info;
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = security_.get_account(),
@@ -179,7 +179,7 @@ void DropCopy::operator()(web::socket::Client::Binary const &) {
 
 void DropCopy::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
-    auto trace_info = server::create_trace_info();
+    TraceInfo trace_info;
     const StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
@@ -221,7 +221,7 @@ void DropCopy::subscribe() {
 }
 
 void DropCopy::subscribe(std::string_view const &topic) {
-  auto now = core::clock::GetSystem();
+  auto now = clock::get_system();
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
@@ -246,7 +246,7 @@ void DropCopy::send_ping(std::chrono::nanoseconds now) {
 void DropCopy::parse(std::string_view const &message) {
   profile_.parse([&]() {
     try {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       core::json::Buffer buffer{decode_buffer_};
       json::Parser::dispatch(*this, message, buffer, trace_info);
     } catch (...) {

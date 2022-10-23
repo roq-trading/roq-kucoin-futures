@@ -181,7 +181,7 @@ void OrderEntry::operator()(web::rest::Client::Disconnected const &) {
 }
 
 void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
-  auto trace_info = server::create_trace_info();
+  TraceInfo trace_info;
   ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = security_.get_account(),
@@ -193,7 +193,7 @@ void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
 
 void OrderEntry::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
-    auto trace_info = server::create_trace_info();
+    TraceInfo trace_info;
     StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = security_.get_account(),
@@ -256,7 +256,7 @@ void OrderEntry::get_private_token() {
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
     auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       get_private_token_ack(event, sequence);
     };
@@ -326,7 +326,7 @@ void OrderEntry::get_account() {
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
     auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       get_account_ack(event, sequence);
     };
@@ -380,7 +380,7 @@ void OrderEntry::get_positions() {
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
     auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       get_positions_ack(event, sequence);
     };
@@ -435,7 +435,7 @@ void OrderEntry::get_orders() {
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
     auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       get_orders_ack(event, sequence);
     };
@@ -490,7 +490,7 @@ void OrderEntry::get_fills() {
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
     auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       get_fills_ack(event, sequence);
     };
@@ -576,7 +576,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
     auto callback = [this, user_id = message_info.source, order_id = create_order.order_id](
                         [[maybe_unused]] auto &request_id, auto &response) {
       auto version = uint32_t{1};
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       Trace event{trace_info, response};
       create_order_ack(event, user_id, order_id, version);
     };
@@ -636,7 +636,7 @@ void OrderEntry::cancel_order(
     auto callback =
         [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
             [[maybe_unused]] auto &request_id, auto &response) {
-          auto trace_info = server::create_trace_info();
+          TraceInfo trace_info;
           Trace event{trace_info, response};
           cancel_order_ack(event, user_id, order_id, version);
         };
@@ -685,7 +685,7 @@ void OrderEntry::cancel_all_orders(
           .quality_of_service = io::QualityOfService::IMMEDIATE,
       };
       auto callback = [this]([[maybe_unused]] auto &request_id, auto &response) {
-        auto trace_info = server::create_trace_info();
+        TraceInfo trace_info;
         Trace event{trace_info, response};
         cancel_all_orders_ack(event);
       };

@@ -174,7 +174,7 @@ void MarketData::subscribe(size_t start_from) {
 
 void MarketData::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
-  auto now = core::clock::GetSystem();
+  auto now = clock::get_system();
   logon_timeout_ = now + Flags::ws_request_timeout();
 }
 
@@ -196,7 +196,7 @@ void MarketData::operator()(web::socket::Client::Close const &) {
 }
 
 void MarketData::operator()(web::socket::Client::Latency const &latency) {
-  auto trace_info = server::create_trace_info();
+  TraceInfo trace_info;
   const ExternalLatency external_latency{
       .stream_id = stream_id_,
       .account = {},
@@ -217,7 +217,7 @@ void MarketData::operator()(web::socket::Client::Binary const &) {
 
 void MarketData::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
-    auto trace_info = server::create_trace_info();
+    TraceInfo trace_info;
     const StreamStatus stream_status{
         .stream_id = stream_id_,
         .account = {},
@@ -260,7 +260,7 @@ void MarketData::subscribe(std::span<Symbol const> const &symbols) {
 }
 
 void MarketData::subscribe(std::string_view const &topic) {
-  auto now = core::clock::GetSystem();
+  auto now = clock::get_system();
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
@@ -277,7 +277,7 @@ void MarketData::subscribe(std::string_view const &topic) {
 void MarketData::subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols) {
   assert(!std::empty(symbols));
   for (auto &symbol : symbols) {
-    auto now = core::clock::GetSystem();
+    auto now = clock::get_system();
     auto message = fmt::format(
         R"({{)"
         R"("id":"{}",)"
@@ -304,7 +304,7 @@ void MarketData::send_ping(std::chrono::nanoseconds now) {
 void MarketData::parse(std::string_view const &message) {
   profile_.parse([&]() {
     try {
-      auto trace_info = server::create_trace_info();
+      TraceInfo trace_info;
       core::json::Buffer buffer{decode_buffer_};
       json::Parser::dispatch(*this, message, buffer, trace_info);
     } catch (...) {
