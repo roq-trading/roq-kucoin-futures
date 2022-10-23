@@ -7,11 +7,11 @@
 #include <chrono>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "roq/api.hpp"
 #include "roq/server.hpp"
 
-#include "roq/core/memory.hpp"
 #include "roq/core/symbols.hpp"
 #include "roq/core/timer_queue.hpp"
 
@@ -44,7 +44,7 @@ struct Shared final {
 
  public:
   const API api;
-  core::page_aligned_vector<MBPUpdate> bids, asks, final_bids, final_asks;
+  std::vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
   absl::node_hash_map<Symbol, core::market::MBP_Sequencer> mbp_collector;
 

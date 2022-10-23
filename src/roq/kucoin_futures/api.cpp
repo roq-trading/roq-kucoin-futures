@@ -77,7 +77,7 @@ API API::create() {
         .countdown_cancel_all = "/fapi/v1/countdownCancelAll"sv,
     };
   }
-  throw RuntimeError(R"(Unknown api="{}")"sv, api);
+  throw RuntimeError{R"(Unknown api="{}")"sv, api};
 }
 
 }  // namespace kucoin_futures
