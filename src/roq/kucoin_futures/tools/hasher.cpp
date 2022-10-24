@@ -18,7 +18,7 @@ namespace tools {
 
 namespace {
 auto create_hmac(auto const &secret) {
-  return core::crypto::HMAC_SHA256(secret);
+  return core::crypto::HMAC_SHA256{secret};
 }
 
 auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
@@ -34,8 +34,8 @@ auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
 // === IMPLEMENTATION ===
 
 Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
-    : key_(key), hmac_(create_hmac(secret)), passphrase_(passphrase),
-      signed_passphrase_(create_signed_passphrase(hmac_, passphrase)) {
+    : key_{key}, hmac_{create_hmac(secret)}, passphrase_{passphrase}, signed_passphrase_{
+                                                                          create_signed_passphrase(hmac_, passphrase)} {
 }
 
 std::string Hasher::create_headers_v1(

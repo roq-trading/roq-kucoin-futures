@@ -7,7 +7,7 @@ using namespace std::literals;
 // === CONSTANTS ===
 
 namespace {
-roq::Service::Info const INFO{
+auto const INFO = roq::Service::Info{
     .description = "Roq KuCoin Futures Gateway"sv,
     .package_name = ROQ_PACKAGE_NAME,
     .host = ROQ_HOST,

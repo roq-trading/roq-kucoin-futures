@@ -25,7 +25,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "ex"sv;
 
-Mask const SUPPORTS{
+auto const SUPPORTS = Mask{
     SupportType::ORDER_ACK,
     SupportType::ORDER,
     SupportType::TRADE,
@@ -73,9 +73,9 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_(handler), stream_id_(stream_id), name_(create_name(stream_id_)),
-      connection_(create_connection(*this, context, uri, query)), ping_frequency_(ping_frequency),
-      decode_buffer_(Flags::decode_buffer_size()),
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, connection_{create_connection(
+                                                                                    *this, context, uri, query)},
+      ping_frequency_{ping_frequency}, decode_buffer_{Flags::decode_buffer_size()},
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
       },
@@ -90,7 +90,7 @@ DropCopy::DropCopy(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      security_(security), shared_(shared), download_({}, [this](auto state) { return download(state); }) {
+      security_{security}, shared_{shared}, download_{{}, [this](auto state) { return download(state); }} {
 }
 
 bool DropCopy::ready() const {

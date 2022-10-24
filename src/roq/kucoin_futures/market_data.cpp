@@ -33,7 +33,7 @@ namespace kucoin_futures {
 namespace {
 auto const NAME = "md"sv;
 
-Mask const SUPPORTS{
+auto const SUPPORTS = Mask{
     SupportType::MARKET_STATUS,
     SupportType::TOP_OF_BOOK,
     SupportType::MARKET_BY_PRICE,
@@ -76,16 +76,16 @@ struct create_metrics final : public core::metrics::Factory {
 MarketData::MarketData(
     Handler &handler,
     io::Context &context,
-    uint32_t stream_id,
+    uint16_t stream_id,
     Shared &shared,
     size_t index,
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_(handler), stream_id_(stream_id), name_(create_name(stream_id_)), index_(index),
-      ping_frequency_(ping_frequency), connection_(create_connection(*this, context, uri, query)),
-      decode_buffer_(Flags::decode_buffer_size()),
-      request_id_(static_cast<uint64_t>(stream_id_) * 1000000),  // scale (debugging)
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index},
+      ping_frequency_{ping_frequency}, connection_{create_connection(*this, context, uri, query)},
+      decode_buffer_{Flags::decode_buffer_size()},
+      request_id_{static_cast<uint64_t>(stream_id_) * 1000000},  // scale (debugging)
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
           .total_bytes_received = create_metrics(name_, "total_bytes_received"sv),
@@ -111,7 +111,7 @@ MarketData::MarketData(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      shared_(shared) {
+      shared_{shared} {
   if (ping_frequency_.count() == 0)
     log::fatal("Unexpected"sv);
   log::info("ping_frequency={}"sv, ping_frequency_);

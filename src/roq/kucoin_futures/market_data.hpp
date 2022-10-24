@@ -42,7 +42,7 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
   MarketData(
       Handler &,
       io::Context &,
-      uint32_t stream_id,
+      uint16_t stream_id,
       Shared &,
       size_t index,
       std::string_view const &uri,
