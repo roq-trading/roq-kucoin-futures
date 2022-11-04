@@ -723,9 +723,11 @@ void OrderEntry::process_response(
       case CLIENT_ERROR:        // 4xx
         success_handler(body);  // throws
         break;
-      case SERVER_ERROR:  // 5xx
-        error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, magic_enum::enum_name(status));
+      case SERVER_ERROR: {  // 5xx
+        auto text = fmt::format("{}"sv, status);
+        error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, text);
         break;
+      }
       default:
         response.expect(web::http::Status::OK);  // throws
     }
