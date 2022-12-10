@@ -24,10 +24,12 @@ auto create_hmac(auto const &secret) {
 auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
   hmac.clear();
   hmac.update(passphrase);
-  std::array<char, 32> buffer;
+  std::array<std::byte, 32> buffer;
   auto length = hmac.digest(buffer);
   assert(length == std::size(buffer));
-  return core::binascii::Base64::encode(buffer, false);
+  std::string result;
+  core::binascii::Base64::encode(result, buffer, false);
+  return result;
 }
 }  // namespace
 
@@ -48,10 +50,11 @@ std::string Hasher::create_headers_v1(
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
-  std::array<char, 32> buffer;
+  std::array<std::byte, 32> buffer;
   auto length = hmac_.digest(buffer);
   assert(length == std::size(buffer));
-  auto signature = core::binascii::Base64::encode(buffer, false);
+  std::string signature;
+  core::binascii::Base64::encode(signature, buffer, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"
@@ -75,10 +78,11 @@ std::string Hasher::create_headers_v2(
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   hmac_.clear();
   hmac_.update(tmp);
-  std::array<char, 32> buffer;
+  std::array<std::byte, 32> buffer;
   auto length = hmac_.digest(buffer);
   assert(length == std::size(buffer));
-  auto signature = core::binascii::Base64::encode(buffer, false);
+  std::string signature;
+  core::binascii::Base64::encode(signature, buffer, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"
