@@ -17,18 +17,12 @@ namespace tools {
 // === HELPERS ===
 
 namespace {
-auto create_hmac(auto const &secret) {
-  return core::mac::HMAC_SHA256{secret};
-}
-
-auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
-  hmac.clear();
-  hmac.update(passphrase);
-  std::array<std::byte, 32> buffer;
-  auto length = hmac.digest(buffer);
-  assert(length == std::size(buffer));
+auto create_signed_passphrase(auto &mac, auto &digest_buffer, auto const &passphrase) {
+  mac.clear();
+  mac.update(passphrase);
+  auto digest = mac.final(digest_buffer);
   std::string result;
-  core::binascii::Base64::encode(result, buffer, false);
+  core::binascii::Base64::encode(result, digest, false);
   return result;
 }
 }  // namespace
@@ -36,8 +30,8 @@ auto create_signed_passphrase(auto &hmac, auto const &passphrase) {
 // === IMPLEMENTATION ===
 
 Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
-    : key_{key}, hmac_{create_hmac(secret)}, passphrase_{passphrase}, signed_passphrase_{
-                                                                          create_signed_passphrase(hmac_, passphrase)} {
+    : key_{key}, mac_{secret}, passphrase_{passphrase}, signed_passphrase_{
+                                                            create_signed_passphrase(mac_, digest_, passphrase)} {
 }
 
 std::string Hasher::create_headers_v1(
@@ -48,13 +42,11 @@ std::string Hasher::create_headers_v1(
     std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
-  hmac_.clear();
-  hmac_.update(tmp);
-  std::array<std::byte, 32> buffer;
-  auto length = hmac_.digest(buffer);
-  assert(length == std::size(buffer));
+  mac_.clear();
+  mac_.update(tmp);
+  auto digest = mac_.final(digest_);
   std::string signature;
-  core::binascii::Base64::encode(signature, buffer, false);
+  core::binascii::Base64::encode(signature, digest, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"
@@ -76,13 +68,11 @@ std::string Hasher::create_headers_v2(
     std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
-  hmac_.clear();
-  hmac_.update(tmp);
-  std::array<std::byte, 32> buffer;
-  auto length = hmac_.digest(buffer);
-  assert(length == std::size(buffer));
+  mac_.clear();
+  mac_.update(tmp);
+  auto digest = mac_.final(digest_);
   std::string signature;
-  core::binascii::Base64::encode(signature, buffer, false);
+  core::binascii::Base64::encode(signature, digest, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"

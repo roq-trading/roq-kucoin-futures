@@ -2,13 +2,14 @@
 
 #pragma once
 
+#include <array>
 #include <chrono>
 #include <string>
 #include <string_view>
 
 #include "roq/web/http/method.hpp"
 
-#include "roq/core/mac/hmac_sha256.hpp"
+#include "roq/core/mac/hmac.hpp"
 
 namespace roq {
 namespace kucoin_futures {
@@ -36,10 +37,14 @@ class Hasher final {
       std::chrono::milliseconds now);
 
  private:
-  const std::string key_;
-  core::mac::HMAC_SHA256 hmac_;
-  const std::string passphrase_;
-  const std::string signed_passphrase_;
+  using MAC = core::mac::HMAC<core::hash::SHA256>;
+  using Digest = std::array<std::byte, MAC::DIGEST_LENGTH>;
+
+  std::string const key_;
+  MAC mac_;
+  Digest digest_;
+  std::string const passphrase_;
+  std::string const signed_passphrase_;
 };
 
 }  // namespace tools
