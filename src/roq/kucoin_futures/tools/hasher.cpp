@@ -6,7 +6,7 @@
 
 #include <array>
 
-#include "roq/core/binascii/base64.hpp"
+#include "roq/core/codec/base64.hpp"
 
 using namespace std::literals;
 
@@ -22,7 +22,7 @@ auto create_signed_passphrase(auto &mac, auto &digest_buffer, auto const &passph
   mac.update(passphrase);
   auto digest = mac.final(digest_buffer);
   std::string result;
-  core::binascii::Base64::encode(result, digest, false, false);
+  core::codec::Base64::encode(result, digest, false, false);
   return result;
 }
 }  // namespace
@@ -46,7 +46,7 @@ std::string Hasher::create_headers_v1(
   mac_.update(tmp);
   auto digest = mac_.final(digest_);
   std::string signature;
-  core::binascii::Base64::encode(signature, digest, false, false);
+  core::codec::Base64::encode(signature, digest, false, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"
@@ -72,7 +72,7 @@ std::string Hasher::create_headers_v2(
   mac_.update(tmp);
   auto digest = mac_.final(digest_);
   std::string signature;
-  core::binascii::Base64::encode(signature, digest, false, false);
+  core::codec::Base64::encode(signature, digest, false, false);
   auto result = fmt::format(
       "KC-API-KEY: {}\r\n"
       "KC-API-SIGN: {}\r\n"
