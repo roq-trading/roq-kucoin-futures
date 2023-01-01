@@ -85,7 +85,6 @@ MarketData::MarketData(
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index},
       ping_frequency_{ping_frequency}, connection_{create_connection(*this, context, uri, query)},
       decode_buffer_{Flags::decode_buffer_size()},
-      request_id_{static_cast<uint64_t>(stream_id_) * 1000000},  // scale (debugging)
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
           .total_bytes_received = create_metrics(name_, "total_bytes_received"sv),
@@ -568,7 +567,6 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           if (Flags::ws_mbp_request_max_retries() && Flags::ws_mbp_request_max_retries() < retries) {
             log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
           }
-          auto now = trace_info.source_receive_time;
           shared_.depth_request_queue.emplace_back(symbol);
         };
         collector(
@@ -584,7 +582,6 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
         // XXX HANS publish stale
         collector.clear();
-        auto now = trace_info.source_receive_time;
         shared_.depth_request_queue.emplace_back(symbol);
       }
     } else {
@@ -640,7 +637,6 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           if (Flags::ws_mbp_request_max_retries() && Flags::ws_mbp_request_max_retries() < retries) {
             log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
           }
-          auto now = trace_info.source_receive_time;
           shared_.depth_request_queue.emplace_back(symbol);
         };
         collector(
@@ -656,7 +652,6 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
         // XXX HANS publish stale
         collector.clear();
-        auto now = trace_info.source_receive_time;
         shared_.depth_request_queue.emplace_back(symbol);
       }
     }

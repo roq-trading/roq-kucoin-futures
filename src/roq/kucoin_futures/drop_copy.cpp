@@ -69,7 +69,6 @@ DropCopy::DropCopy(
     io::Context &context,
     uint16_t stream_id,
     Security &security,
-    Shared &shared,
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
@@ -90,7 +89,7 @@ DropCopy::DropCopy(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      security_{security}, shared_{shared}, download_{{}, [this](auto state) { return download(state); }} {
+      security_{security}, download_{{}, [this](auto state) { return download(state); }} {
 }
 
 bool DropCopy::ready() const {

@@ -19,7 +19,6 @@
 
 #include "roq/kucoin_futures/drop_copy_state.hpp"
 #include "roq/kucoin_futures/security.hpp"
-#include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
 
@@ -39,7 +38,6 @@ class DropCopy final : public web::socket::Client::Handler, public json::Parser:
       io::Context &,
       uint16_t stream_id,
       Security &,
-      Shared &,
       std::string_view const &uri,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
@@ -123,8 +121,6 @@ class DropCopy final : public web::socket::Client::Handler, public json::Parser:
   } latency_;
   // security
   Security &security_;
-  // cache
-  Shared &shared_;
   // state
   bool welcome_ = false;
   bool ready_ = false;

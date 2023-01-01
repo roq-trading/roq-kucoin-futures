@@ -188,7 +188,6 @@ void Gateway::operator()(OrderEntry::PrivateToken const &private_token) {
         context_,
         ++stream_id_,
         *security_[account],
-        shared_,
         private_token.uri,
         private_token.query,
         private_token.ping_frequency);
