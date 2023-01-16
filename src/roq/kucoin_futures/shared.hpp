@@ -17,7 +17,7 @@
 
 #include "roq/core/limit/rate_limiter.hpp"
 
-#include "roq/core/market/mbp_sequencer.hpp"
+#include "roq/core/mbp/sequencer.hpp"
 
 #include "roq/kucoin_futures/api.hpp"
 
@@ -46,7 +46,7 @@ struct Shared final {
   const API api;
   std::vector<MBPUpdate> bids, asks, final_bids, final_asks;
 
-  absl::node_hash_map<Symbol, core::market::MBP_Sequencer> mbp_collector;
+  absl::node_hash_map<Symbol, core::mbp::Sequencer> mbp_collector;
 
  private:
   server::Dispatcher &dispatcher_;
