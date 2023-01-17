@@ -31,8 +31,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-class Rest final : public web::rest::Client::Handler {
- public:
+struct Rest final : public web::rest::Client::Handler {
   struct PublicToken final {
     std::string_view uri;
     std::string_view query;

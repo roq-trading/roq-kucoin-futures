@@ -15,8 +15,7 @@ namespace roq {
 namespace kucoin_futures {
 namespace tools {
 
-class Hasher final {
- public:
+struct Hasher final {
   Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase);
 
   Hasher(Hasher &&) = delete;
