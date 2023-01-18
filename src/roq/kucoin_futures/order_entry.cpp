@@ -44,7 +44,7 @@ auto create_name(auto stream_id, auto const &account) {
 
 auto create_connection(auto &handler, auto &context) {
   auto uri = Flags::rest_uri();
-  web::rest::Client::Config config{
+  auto config = web::rest::Client::Config{
       .decode_buffer_size = Flags::decode_buffer_size(),
       .encode_buffer_size = Flags::encode_buffer_size(),
       .validate_certificate = server::Flags::net_tls_validate_certificate(),
@@ -183,7 +183,7 @@ void OrderEntry::operator()(web::rest::Client::Disconnected const &) {
 
 void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
   TraceInfo trace_info;
-  ExternalLatency external_latency{
+  auto external_latency = ExternalLatency{
       .stream_id = stream_id_,
       .account = security_.get_account(),
       .latency = latency.sample,
@@ -195,7 +195,7 @@ void OrderEntry::operator()(web::rest::Client::Latency const &latency) {
 void OrderEntry::operator()(ConnectionStatus status) {
   if (utils::update(status_, status)) {
     TraceInfo trace_info;
-    StreamStatus stream_status{
+    auto stream_status = StreamStatus{
         .stream_id = stream_id_,
         .account = security_.get_account(),
         .supports = SUPPORTS,
@@ -246,7 +246,7 @@ void OrderEntry::get_private_token() {
     auto method = web::http::Method::POST;
     auto path = "/api/v1/bullet-private"sv;
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = method,
         .path = path,
         .query = {},
@@ -298,7 +298,7 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
     log::fatal("Unexpected: no instance servers"sv);
   auto &instance_server = token.data.instance_servers[0];
   auto query = fmt::format("?token={}"sv, token.data.token);
-  PrivateToken const private_token{
+  auto private_token = PrivateToken{
       .account = security_.get_account(),
       .uri = instance_server.endpoint,
       .query = query,
@@ -316,7 +316,7 @@ void OrderEntry::get_account() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_account_overview;
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = method,
         .path = path,
         .query = {},
@@ -370,7 +370,7 @@ void OrderEntry::get_positions() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_all_position;
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = method,
         .path = path,
         .query = {},
@@ -425,7 +425,7 @@ void OrderEntry::get_orders() {
     auto path = shared_.api.get_orders_all_active;
     auto query = shared_.api.version == 1 ? "?status=active"sv : ""sv;
     auto headers = security_.create_signature_api_v2(method, path, query, {});
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = method,
         .path = path,
         .query = query,
@@ -480,7 +480,7 @@ void OrderEntry::get_fills() {
     auto path = shared_.api.get_orders_historical_trades;
     // XXX HANS for v2 we ned SYMBOL !!!
     auto headers = security_.create_signature_api_v2(method, path, {}, {});
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = method,
         .path = path,
         .query = {},
@@ -564,7 +564,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, oms::Order const 
         create_order.quantity,
         time_in_force);
     log::debug(R"(body="{}")"sv, body);
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = web::http::Method::POST,
         .path = shared_.api.post_order,
         .query = {},
@@ -591,7 +591,7 @@ void OrderEntry::create_order_ack(
     auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
-      oms::Response response{
+      auto response = oms::Response{
           .type = RequestType::CREATE_ORDER,
           .origin = origin,
           .status = status,
@@ -624,7 +624,7 @@ void OrderEntry::cancel_order(
     auto real_path =
         std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
-    web::rest::Request request{
+    auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
         .path = real_path,
         .query = {},
@@ -651,7 +651,7 @@ void OrderEntry::cancel_order_ack(
     auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
-      oms::Response response{
+      auto response = oms::Response{
           .type = RequestType::CANCEL_ORDER,
           .origin = origin,
           .status = status,
@@ -675,7 +675,7 @@ void OrderEntry::cancel_all_orders(
     Event<CancelAllOrders> const &event, [[maybe_unused]] std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
     if (ready()) {
-      web::rest::Request request{
+      auto request = web::rest::Request{
           .method = web::http::Method::DELETE,
           .path = shared_.api.delete_orders,
           .query = {},

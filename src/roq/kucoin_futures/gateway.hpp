@@ -99,6 +99,8 @@ struct Gateway final : public server::Handler,
   std::string public_ws_query_;
   std::chrono::nanoseconds public_ws_ping_frequency_;
   std::string private_ws_uri_;  // XXX HANS this is BY ACCOUNT !!!
+  // cache
+  std::vector<MBPUpdate> bids_, asks_;
 };
 
 }  // namespace kucoin_futures
