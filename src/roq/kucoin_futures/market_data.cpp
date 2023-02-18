@@ -184,7 +184,7 @@ void MarketData::operator()(web::socket::Client::Disconnected const &) {
   logon_timeout_ = {};
   next_ping_ = {};
   // experimental
-  shared_.mbp_collector.clear();  // XXX HANS this is SHARED !!!
+  shared_.mbp_sequencer.clear();  // XXX HANS this is SHARED !!!
 }
 
 void MarketData::operator()(web::socket::Client::Ready const &) {
@@ -520,7 +520,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
       auto first_sequence = data.sequence;
       auto last_sequence = data.sequence;
       auto previous_sequence = data.sequence - 1;
-      auto &collector = shared_.mbp_collector[symbol];
+      auto &sequencer = shared_.mbp_sequencer[symbol];
       auto [side, price, quantity] = tools::split(data.change);
       auto mbp_update = MBPUpdate{
           .price = price,
@@ -557,9 +557,9 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         };
         auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence) {
           log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, collector.last_sequence());
+          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
           Trace event{trace_info, market_by_price_update};
-          shared_(event, true, [&](auto &market_by_price) { collector.apply(market_by_price, sequence, false); });
+          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
         };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
@@ -568,7 +568,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           }
           shared_.depth_request_queue.emplace_back(symbol);
         };
-        collector(
+        sequencer(
             bids,
             asks,
             first_sequence,
@@ -580,16 +580,15 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
       } catch (BadState &) {
         log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
         // XXX HANS publish stale
-        collector.clear();
+        sequencer.clear();
         shared_.depth_request_queue.emplace_back(symbol);
       }
     } else {
       auto first_sequence = data.start + 1;
       auto last_sequence = data.end;
       auto previous_sequence = data.start;
-      auto &collector = shared_.mbp_collector[symbol];
-      shared_.bids.clear();
-      shared_.asks.clear();
+      auto &sequencer = shared_.mbp_sequencer[symbol];
+      auto &mbp = shared_.get_mbp();
       auto emplace_back = [](auto &result, auto &value) {
         auto mbp_update = MBPUpdate{
             .price = value.price,
@@ -602,9 +601,9 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         result.emplace_back(std::move(mbp_update));
       };
       for (auto &item : data.bids)
-        emplace_back(shared_.bids, item);
+        emplace_back(mbp.bids, item);
       for (auto &item : data.asks)
-        emplace_back(shared_.asks, item);
+        emplace_back(mbp.asks, item);
       try {
         // log::debug("sequence=({}, {})"sv, first_sequence, last_sequence);
         auto create_update =
@@ -630,9 +629,9 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         };
         auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence) {
           log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, collector.last_sequence());
+          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
           Trace event{trace_info, market_by_price_update};
-          shared_(event, true, [&](auto &market_by_price) { collector.apply(market_by_price, sequence, false); });
+          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
         };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
@@ -641,9 +640,9 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           }
           shared_.depth_request_queue.emplace_back(symbol);
         };
-        collector(
-            shared_.bids,
-            shared_.asks,
+        sequencer(
+            mbp.bids,
+            mbp.asks,
             first_sequence,
             last_sequence,
             previous_sequence,
@@ -653,7 +652,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
       } catch (BadState &) {
         log::warn(R"(RESUBSCRIBE symbol="{}")"sv, symbol);
         // XXX HANS publish stale
-        collector.clear();
+        sequencer.clear();
         shared_.depth_request_queue.emplace_back(symbol);
       }
     }
