@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2023, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/tools/hasher.hpp"
+#include "roq/kucoin_futures/tools/crypto.hpp"
 
 #include <fmt/format.h>
 
@@ -29,12 +29,12 @@ auto create_signed_passphrase(auto &mac, auto &digest_buffer, auto const &passph
 
 // === IMPLEMENTATION ===
 
-Hasher::Hasher(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
+Crypto::Crypto(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
     : key_{key}, mac_{secret}, passphrase_{passphrase}, signed_passphrase_{
                                                             create_signed_passphrase(mac_, digest_, passphrase)} {
 }
 
-std::string Hasher::create_headers_v1(
+std::string Crypto::create_headers_v1(
     web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
@@ -60,7 +60,7 @@ std::string Hasher::create_headers_v1(
   return result;
 }
 
-std::string Hasher::create_headers_v2(
+std::string Crypto::create_headers_v2(
     web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,

@@ -13,12 +13,12 @@
 
 #include "roq/io/context.hpp"
 
+#include "roq/kucoin_futures/authenticator.hpp"
 #include "roq/kucoin_futures/config.hpp"
 #include "roq/kucoin_futures/drop_copy.hpp"
 #include "roq/kucoin_futures/market_data.hpp"
 #include "roq/kucoin_futures/order_entry.hpp"
 #include "roq/kucoin_futures/rest.hpp"
-#include "roq/kucoin_futures/security.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 namespace roq {
@@ -81,8 +81,8 @@ struct Gateway final : public server::Handler,
   server::Dispatcher &dispatcher_;
   // config
   const std::string master_account_;
-  // security
-  absl::flat_hash_map<Account, std::unique_ptr<Security>> security_;
+  // authenticator
+  absl::flat_hash_map<Account, std::unique_ptr<Authenticator>> authenticator_;
   // io
   io::Context &context_;
   // shared

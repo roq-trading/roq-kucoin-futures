@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2023, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/security.hpp"
+#include "roq/kucoin_futures/authenticator.hpp"
 
 #include "roq/utils/safe_cast.hpp"
 
@@ -11,29 +11,29 @@ namespace kucoin_futures {
 
 // === IMPLEMENTATION ===
 
-Security::Security(Config const &config, std::string_view const &account)
-    : account_{account}, hasher_{
+Authenticator::Authenticator(Config const &config, std::string_view const &account)
+    : account_{account}, crypto_{
                              config.get_api_key(account_),
                              config.get_secret(account_),
                              config.get_passphrase(account_)} {
 }
 
-std::string Security::create_signature_api_v1(
+std::string Authenticator::create_signature_api_v1(
     web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body) {
   auto now = clock::get_realtime();
-  return hasher_.create_headers_v1(method, path, query, body, utils::safe_cast(now));
+  return crypto_.create_headers_v1(method, path, query, body, utils::safe_cast(now));
 }
 
-std::string Security::create_signature_api_v2(
+std::string Authenticator::create_signature_api_v2(
     web::http::Method method,
     std::string_view const &path,
     std::string_view const &query,
     std::string_view const &body) {
   auto now = clock::get_realtime();
-  return hasher_.create_headers_v2(method, path, query, body, utils::safe_cast(now));
+  return crypto_.create_headers_v2(method, path, query, body, utils::safe_cast(now));
 }
 
 }  // namespace kucoin_futures

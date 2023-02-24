@@ -68,7 +68,7 @@ DropCopy::DropCopy(
     Handler &handler,
     io::Context &context,
     uint16_t stream_id,
-    Security &security,
+    Authenticator &authenticator,
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
@@ -89,7 +89,7 @@ DropCopy::DropCopy(
           .ping = create_metrics(name_, "ping"sv),
           .heartbeat = create_metrics(name_, "heartbeat"sv),
       },
-      security_{security}, download_{{}, [this](auto state) { return download(state); }} {
+      authenticator_{authenticator}, download_{{}, [this](auto state) { return download(state); }} {
 }
 
 bool DropCopy::ready() const {
@@ -161,7 +161,7 @@ void DropCopy::operator()(web::socket::Client::Latency const &latency) {
   TraceInfo trace_info;
   auto external_latency = ExternalLatency{
       .stream_id = stream_id_,
-      .account = security_.get_account(),
+      .account = authenticator_.get_account(),
       .latency = latency.sample,
   };
   create_trace_and_dispatch(handler_, trace_info, external_latency);
@@ -181,7 +181,7 @@ void DropCopy::operator()(ConnectionStatus status) {
     TraceInfo trace_info;
     auto stream_status = StreamStatus{
         .stream_id = stream_id_,
-        .account = security_.get_account(),
+        .account = authenticator_.get_account(),
         .supports = SUPPORTS,
         .transport = Transport::TCP,
         .protocol = Protocol::WS,
