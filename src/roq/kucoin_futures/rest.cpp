@@ -436,6 +436,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
           .update_type = UpdateType::SNAPSHOT,
           .exchange_time_utc = data.ts,
           .exchange_sequence = sequencer.last_sequence(),
+          .sending_time_utc = data.ts,
           .price_decimals = {},
           .quantity_decimals = {},
           .checksum = {},

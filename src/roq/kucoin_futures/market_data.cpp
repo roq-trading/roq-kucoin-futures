@@ -365,8 +365,9 @@ void MarketData::operator()(Trace<json::Ticker> const &event) {
             .ask_quantity = data.best_ask_size,
         },
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.ts * ts_factor),
+        .exchange_time_utc = data.ts * ts_factor,
         .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
   });
@@ -390,8 +391,9 @@ void MarketData::operator()(Trace<json::TickerV2> const &event) {
             .ask_quantity = data.best_ask_size,
         },
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.ts),
+        .exchange_time_utc = data.ts,
         .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
   });
@@ -418,6 +420,7 @@ void MarketData::operator()(Trace<json::Match> const &event) {
         .trades = {&trade, 1},
         .exchange_time_utc = utils::safe_cast(data.ts),
         .exchange_sequence = data.sequence,
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
@@ -443,8 +446,9 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
         .exchange = Flags::exchange(),
         .symbol = data.symbol,
         .trades = {&trade, 1},
-        .exchange_time_utc = utils::safe_cast(data.ts),
-        .exchange_sequence = {},
+        .exchange_time_utc = data.ts,
+        .exchange_sequence = execution.sn,
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
@@ -477,7 +481,9 @@ void MarketData::operator()(Trace<json::MarkIndexPrice> const &event) {
         .symbol = symbol,
         .statistics = statistics,
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.timestamp),
+        .exchange_time_utc = data.timestamp,
+        .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
@@ -502,7 +508,9 @@ void MarketData::operator()(Trace<json::FundingRate> const &event) {
         .symbol = symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.timestamp),
+        .exchange_time_utc = data.timestamp,
+        .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
@@ -545,6 +553,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .update_type = update_type,
               .exchange_time_utc = {},
               .exchange_sequence = exchange_sequence,
+              .sending_time_utc = {},
               .price_decimals = {},
               .quantity_decimals = {},
               .checksum = {},
@@ -617,6 +626,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .update_type = update_type,
               .exchange_time_utc = data.ts,
               .exchange_sequence = exchange_sequence,
+              .sending_time_utc = {},
               .price_decimals = {},
               .quantity_decimals = {},
               .checksum = {},
@@ -677,7 +687,9 @@ void MarketData::operator()(Trace<json::FundingBegin> const &event) {
         .symbol = data.symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.timestamp),
+        .exchange_time_utc = data.timestamp,
+        .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
@@ -711,7 +723,9 @@ void MarketData::operator()(Trace<json::Snapshot24h> const &event) {
         .symbol = symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,
-        .exchange_time_utc = utils::safe_cast(data.ts),
+        .exchange_time_utc = data.ts,
+        .exchange_sequence = {},
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, statistics_update, true);
   });
