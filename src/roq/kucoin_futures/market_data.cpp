@@ -52,17 +52,23 @@ auto create_name(auto stream_id) {
 auto create_connection(auto &handler, auto &context, auto const &uri, auto const &query) {
   io::web::URI uri_{uri};
   auto config = web::socket::Client::Config{
-      .always_reconnect = true,
+      // connection
+      .interface = {},
+      .uris = {&uri_, 1},
+      .validate_certificate = server::Flags::net_tls_validate_certificate(),
+      // connection manager
       .connection_timeout = server::Flags::net_connection_timeout(),
       .disconnect_on_idle_timeout = server::Flags::net_disconnect_on_idle_timeout(),
-      .validate_certificate = server::Flags::net_tls_validate_certificate(),
-      .interface = {},
+      .always_reconnect = true,
+      // proxy
       .proxy = {},
-      .uris = {&uri_, 1},
+      // http
       .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
+      .request_timeout = {},
       .ping_frequency = Flags::ws_ping_freq(),
-      .read_buffer_size = Flags::decode_buffer_size(),
+      // implementation
+      .decode_buffer_size = Flags::decode_buffer_size(),
       .encode_buffer_size = Flags::encode_buffer_size(),
   };
   return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
