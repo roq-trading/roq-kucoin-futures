@@ -19,12 +19,12 @@ bool Parser::dispatch(
   json::Message message_(root, buffer);
   switch (message_.type) {
     using enum json::Type::type_t;
-    case UNDEFINED:
-    case UNKNOWN:
+    case UNDEFINED__:
+    case UNKNOWN__:
       switch (message_.subject) {
         using enum json::Subject::type_t;
-        case UNDEFINED:
-        case UNKNOWN:
+        case UNDEFINED__:
+        case UNKNOWN__:
           log::fatal("Unexpected"sv);
           break;
         case TICKER:
@@ -108,8 +108,8 @@ bool Parser::dispatch(
     case MESSAGE:
       switch (message_.subject) {
         using enum json::Subject::type_t;
-        case UNDEFINED:
-        case UNKNOWN:
+        case UNDEFINED__:
+        case UNKNOWN__:
           log::fatal("Unexpected"sv);
           break;
         case TICKER: {

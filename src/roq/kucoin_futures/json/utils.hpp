@@ -61,9 +61,8 @@ inline std::string_view strip_symbol_from_topic(std::string_view const &topic) {
 inline roq::Side map(json::Side value) {
   switch (value) {
     using enum json::Side::type_t;
-    case UNDEFINED:
-      break;
-    case UNKNOWN:
+    case UNDEFINED__:
+    case UNKNOWN__:
       break;
     case BUY:
       return roq::Side::BUY;
