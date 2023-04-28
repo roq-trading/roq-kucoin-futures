@@ -77,9 +77,8 @@ struct create_metrics final : public core::metrics::Factory {
 
 // === IMPLEMENTATION ===
 
-OrderEntry::OrderEntry(
-    Handler &handler, io::Context &context, uint16_t stream_id, Authenticator &authenticator, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, authenticator.get_account())},
+OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.get_name())},
       connection_{create_connection(*this, context)}, decode_buffer_{Flags::decode_buffer_size()},
       counter_{
           .disconnect = create_metrics(name_, "disconnect"sv),
@@ -105,7 +104,7 @@ OrderEntry::OrderEntry(
       latency_{
           .ping = create_metrics(name_, "ping"sv),
       },
-      authenticator_{authenticator}, shared_{shared},
+      account_{account}, shared_{shared},
       download_{Flags::rest_request_timeout(), [this](auto state) { return download(state); }} {
 }
 
@@ -194,7 +193,7 @@ void OrderEntry::operator()(Trace<web::rest::Client::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
       .stream_id = stream_id_,
-      .account = authenticator_.get_account(),
+      .account = account_.get_name(),
       .latency = latency.sample,
   };
   create_trace_and_dispatch(handler_, trace_info, external_latency);
@@ -210,7 +209,7 @@ void OrderEntry::operator()(ConnectionStatus status) {
     TraceInfo trace_info;
     auto stream_status = StreamStatus{
         .stream_id = stream_id_,
-        .account = authenticator_.get_account(),
+        .account = account_.get_name(),
         .supports = SUPPORTS,
         .transport = Transport::TCP,
         .protocol = Protocol::HTTP,
@@ -262,7 +261,7 @@ void OrderEntry::get_private_token() {
   profile_.private_token([&]() {
     auto method = web::http::Method::POST;
     auto path = "/api/v1/bullet-private"sv;
-    auto headers = authenticator_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -316,7 +315,7 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
   auto &instance_server = token.data.instance_servers[0];
   auto query = fmt::format("?token={}"sv, token.data.token);
   auto private_token = PrivateToken{
-      .account = authenticator_.get_account(),
+      .account = account_.get_name(),
       .uri = instance_server.endpoint,
       .query = query,
       .ping_frequency = instance_server.ping_interval,
@@ -332,7 +331,7 @@ void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_account_overview;
-    auto headers = authenticator_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -386,7 +385,7 @@ void OrderEntry::get_positions() {
   profile_.positions([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_all_position;
-    auto headers = authenticator_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -441,7 +440,7 @@ void OrderEntry::get_orders() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_orders_all_active;
     auto query = shared_.api.version == 1 ? "?status=active"sv : ""sv;
-    auto headers = authenticator_.create_signature_api_v2(method, path, query, {});
+    auto headers = account_.create_signature_api_v2(method, path, query, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -496,7 +495,7 @@ void OrderEntry::get_fills() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.get_orders_historical_trades;
     // XXX HANS for v2 we ned SYMBOL !!!
-    auto headers = authenticator_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,

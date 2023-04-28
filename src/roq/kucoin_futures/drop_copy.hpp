@@ -17,7 +17,7 @@
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/authenticator.hpp"
+#include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/drop_copy_state.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
@@ -36,7 +36,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
       Handler &,
       io::Context &,
       uint16_t stream_id,
-      Authenticator &,
+      Account &,
       std::string_view const &uri,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
@@ -100,11 +100,11 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
  private:
   Handler &handler_;
   // config
-  const uint16_t stream_id_;
-  const std::string name_;
+  uint16_t const stream_id_;
+  std::string const name_;
   // web socket
-  std::unique_ptr<web::socket::Client> connection_;
-  const std::chrono::nanoseconds ping_frequency_;
+  std::unique_ptr<web::socket::Client> const connection_;
+  std::chrono::nanoseconds const ping_frequency_;
   // buffers
   core::Buffer decode_buffer_;
   // metrics
@@ -118,8 +118,8 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   struct {
     core::metrics::Latency ping, heartbeat;
   } latency_;
-  // authenticator
-  Authenticator &authenticator_;
+  // account
+  Account &account_;
   // state
   bool welcome_ = false;
   bool ready_ = false;
