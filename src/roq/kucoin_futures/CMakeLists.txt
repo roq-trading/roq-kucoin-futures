@@ -13,6 +13,7 @@ set(SOURCES
     market_data.cpp
     order_entry.cpp
     rest.cpp
+    settings.cpp
     shared.cpp
     main.cpp)
 
