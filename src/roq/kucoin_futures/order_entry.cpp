@@ -42,13 +42,13 @@ auto create_name(auto stream_id, auto const &account) {
   return fmt::format("{}:{}:{}"sv, stream_id, NAME, account);
 }
 
-auto create_connection(auto &handler, auto &context) {
+auto create_connection(auto &handler, auto &settings, auto &context) {
   auto uri = Flags::rest_uri();
   auto config = web::rest::Client::Config{
       // connection
       .interface = {},
       .uris = {&uri, 1},
-      .validate_certificate = server::Flags::net_tls_validate_certificate(),
+      .validate_certificate = settings.net.tls_validate_certificate,
       // connection manager
       .connection_timeout = {},
       .disconnect_on_idle_timeout = {},
@@ -70,8 +70,8 @@ auto create_connection(auto &handler, auto &context) {
 }
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(auto const &group, auto const &function)
-      : core::metrics::Factory(server::Flags::name(), group, function) {}
+  explicit create_metrics(auto &settings, auto const &group, auto const &function)
+      : core::metrics::Factory(settings.app.name, group, function) {}
 };
 }  // namespace
 
@@ -79,30 +79,30 @@ struct create_metrics final : public core::metrics::Factory {
 
 OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.get_name())},
-      connection_{create_connection(*this, context)}, decode_buffer_{Flags::decode_buffer_size()},
+      connection_{create_connection(*this, shared.settings, context)}, decode_buffer_{Flags::decode_buffer_size()},
       counter_{
-          .disconnect = create_metrics(name_, "disconnect"sv),
+          .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
       profile_{
-          .private_token = create_metrics(name_, "private_token"sv),
-          .private_token_ack = create_metrics(name_, "private_token_ack"sv),
-          .account = create_metrics(name_, "account"sv),
-          .account_ack = create_metrics(name_, "account_ack"sv),
-          .positions = create_metrics(name_, "positions"sv),
-          .positions_ack = create_metrics(name_, "positions_ack"sv),
-          .orders = create_metrics(name_, "orders"sv),
-          .orders_ack = create_metrics(name_, "orders_ack"sv),
-          .fills = create_metrics(name_, "fills"sv),
-          .fills_ack = create_metrics(name_, "fills_ack"sv),
-          .create_order = create_metrics(name_, "create_order"sv),
-          .create_order_ack = create_metrics(name_, "create_order_ack"sv),
-          .cancel_order = create_metrics(name_, "cancel_order"sv),
-          .cancel_order_ack = create_metrics(name_, "cancel_order_ack"sv),
-          .cancel_all_orders = create_metrics(name_, "cancel_all_orders"sv),
-          .cancel_all_orders_ack = create_metrics(name_, "cancel_all_orders_ack"sv),
+          .private_token = create_metrics(shared.settings, name_, "private_token"sv),
+          .private_token_ack = create_metrics(shared.settings, name_, "private_token_ack"sv),
+          .account = create_metrics(shared.settings, name_, "account"sv),
+          .account_ack = create_metrics(shared.settings, name_, "account_ack"sv),
+          .positions = create_metrics(shared.settings, name_, "positions"sv),
+          .positions_ack = create_metrics(shared.settings, name_, "positions_ack"sv),
+          .orders = create_metrics(shared.settings, name_, "orders"sv),
+          .orders_ack = create_metrics(shared.settings, name_, "orders_ack"sv),
+          .fills = create_metrics(shared.settings, name_, "fills"sv),
+          .fills_ack = create_metrics(shared.settings, name_, "fills_ack"sv),
+          .create_order = create_metrics(shared.settings, name_, "create_order"sv),
+          .create_order_ack = create_metrics(shared.settings, name_, "create_order_ack"sv),
+          .cancel_order = create_metrics(shared.settings, name_, "cancel_order"sv),
+          .cancel_order_ack = create_metrics(shared.settings, name_, "cancel_order_ack"sv),
+          .cancel_all_orders = create_metrics(shared.settings, name_, "cancel_all_orders"sv),
+          .cancel_all_orders_ack = create_metrics(shared.settings, name_, "cancel_all_orders_ack"sv),
       },
       latency_{
-          .ping = create_metrics(name_, "ping"sv),
+          .ping = create_metrics(shared.settings, name_, "ping"sv),
       },
       account_{account}, shared_{shared},
       download_{Flags::rest_request_timeout(), [this](auto state) { return download(state); }} {

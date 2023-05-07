@@ -19,6 +19,7 @@
 
 #include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/drop_copy_state.hpp"
+#include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
 
@@ -37,6 +38,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
       io::Context &,
       uint16_t stream_id,
       Account &,
+      Shared &,
       std::string_view const &uri,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);

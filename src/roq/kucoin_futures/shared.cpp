@@ -13,8 +13,8 @@ namespace kucoin_futures {
 
 // === IMPLEMENTATION ===
 
-Shared::Shared(server::Dispatcher &dispatcher)
-    : api{API::create()}, dispatcher_{dispatcher},
+Shared::Shared(server::Dispatcher &dispatcher, Settings const &settings)
+    : api{API::create()}, dispatcher_{dispatcher}, settings{settings},
       rate_limiter{Flags::request_limit(), Flags::request_limit_interval()},
       symbols{Flags::ws_max_subscriptions_per_stream()}, depth_request_queue{Flags::ws_mbp_request_delay()} {
 }

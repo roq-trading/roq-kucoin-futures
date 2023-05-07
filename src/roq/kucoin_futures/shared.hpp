@@ -20,12 +20,13 @@
 #include "roq/core/mbp/sequencer.hpp"
 
 #include "roq/kucoin_futures/api.hpp"
+#include "roq/kucoin_futures/settings.hpp"
 
 namespace roq {
 namespace kucoin_futures {
 
 struct Shared final {
-  explicit Shared(server::Dispatcher &);
+  Shared(server::Dispatcher &, Settings const &);
 
   Shared(Shared &&) = default;
   Shared(Shared const &) = delete;
@@ -65,6 +66,7 @@ struct Shared final {
   server::Dispatcher &dispatcher_;
 
  public:
+  Settings const &settings;
   core::limit::RateLimiter rate_limiter;
   core::Symbols symbols;
   core::TimerQueue<std::string> depth_request_queue;
