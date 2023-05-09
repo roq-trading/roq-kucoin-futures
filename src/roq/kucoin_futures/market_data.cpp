@@ -17,8 +17,6 @@
 
 #include "roq/web/socket/client_factory.hpp"
 
-#include "roq/kucoin_futures/flags.hpp"
-
 #include "roq/kucoin_futures/json/utils.hpp"
 
 #include "roq/kucoin_futures/tools/splitter.hpp"
@@ -66,10 +64,10 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto const 
       .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
       .request_timeout = {},
-      .ping_frequency = Flags::ws_ping_freq(),
+      .ping_frequency = settings.ws.ping_freq,
       // implementation
-      .decode_buffer_size = Flags::decode_buffer_size(),
-      .encode_buffer_size = Flags::encode_buffer_size(),
+      .decode_buffer_size = settings.common.decode_buffer_size,
+      .encode_buffer_size = settings.common.encode_buffer_size,
   };
   return web::socket::ClientFactory::create(handler, context, config, []() { return std::string(); });
 }
@@ -93,7 +91,7 @@ MarketData::MarketData(
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index},
       ping_frequency_{ping_frequency}, connection_{create_connection(*this, shared.settings, context, uri, query)},
-      decode_buffer_{Flags::decode_buffer_size()},
+      decode_buffer_{shared.settings.common.decode_buffer_size},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),
@@ -183,7 +181,7 @@ void MarketData::subscribe(size_t start_from) {
 void MarketData::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();
-  logon_timeout_ = now + Flags::ws_request_timeout();
+  logon_timeout_ = now + shared_.settings.ws.request_timeout;
 }
 
 void MarketData::operator()(web::socket::Client::Disconnected const &) {
@@ -254,7 +252,7 @@ void MarketData::subscribe(std::span<Symbol const> const &symbols) {
   switch (shared_.api.version) {
     case 1: {
       subscribe("/contract/instrument"sv, symbols);  // replaced with mark price + funding rate
-      if (Flags::ws_subscribe_ticker_v2())
+      if (shared_.settings.ws.subscribe_ticker_v2)
         subscribe(shared_.api.ticker, symbols);
       else
         subscribe("/contractMarket/ticker"sv, symbols);
@@ -369,7 +367,7 @@ void MarketData::operator()(Trace<json::Ticker> const &event) {
     auto ts_factor = shared_.api.version == 1 ? 1 : 1000000;
     auto top_of_book = TopOfBook{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .layer{
             .bid_price = data.best_bid_price,
@@ -395,7 +393,7 @@ void MarketData::operator()(Trace<json::TickerV2> const &event) {
     auto symbol = data.symbol;
     auto top_of_book = TopOfBook{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .layer{
             .bid_price = data.best_bid_price,
@@ -428,7 +426,7 @@ void MarketData::operator()(Trace<json::Match> const &event) {
     };
     auto trade_summary = TradeSummary{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .trades = {&trade, 1},
         .exchange_time_utc = utils::safe_cast(data.ts),
@@ -456,7 +454,7 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
     };
     auto trade_summary = TradeSummary{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .trades = {&trade, 1},
         .exchange_time_utc = data.ts,
@@ -490,7 +488,7 @@ void MarketData::operator()(Trace<json::MarkIndexPrice> const &event) {
     }};
     auto statistics_update = StatisticsUpdate{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .statistics = statistics,
         .update_type = UpdateType::INCREMENTAL,
@@ -517,7 +515,7 @@ void MarketData::operator()(Trace<json::FundingRate> const &event) {
     };
     auto statistics_update = StatisticsUpdate{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,
@@ -559,7 +557,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
             [&](auto &bids, auto &asks, auto update_type, auto exchange_sequence) -> MarketByPriceUpdate {
           return {
               .stream_id = stream_id_,
-              .exchange = Flags::exchange(),
+              .exchange = shared_.settings.exchange,
               .symbol = symbol,
               .bids = bids,
               .asks = asks,
@@ -585,7 +583,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
-          if (Flags::ws_mbp_request_max_retries() && Flags::ws_mbp_request_max_retries() < retries) {
+          if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
             log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
           }
           shared_.depth_request_queue.emplace_back(symbol);
@@ -632,7 +630,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
             [&](auto &bids, auto &asks, auto update_type, auto exchange_sequence) -> MarketByPriceUpdate {
           return {
               .stream_id = stream_id_,
-              .exchange = Flags::exchange(),
+              .exchange = shared_.settings.exchange,
               .symbol = symbol,
               .bids = bids,
               .asks = asks,
@@ -658,7 +656,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
         };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
-          if (Flags::ws_mbp_request_max_retries() && Flags::ws_mbp_request_max_retries() < retries) {
+          if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
             log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
           }
           shared_.depth_request_queue.emplace_back(symbol);
@@ -696,7 +694,7 @@ void MarketData::operator()(Trace<json::FundingBegin> const &event) {
     };
     auto statistics_update = StatisticsUpdate{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,
@@ -732,7 +730,7 @@ void MarketData::operator()(Trace<json::Snapshot24h> const &event) {
     };
     auto statistics_update = StatisticsUpdate{
         .stream_id = stream_id_,
-        .exchange = Flags::exchange(),
+        .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .statistics = {&statistics, 1u},
         .update_type = UpdateType::INCREMENTAL,

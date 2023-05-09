@@ -122,6 +122,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   } latency_;
   // account
   Account &account_;
+  Shared &shared_;
   // state
   bool welcome_ = false;
   bool ready_ = false;

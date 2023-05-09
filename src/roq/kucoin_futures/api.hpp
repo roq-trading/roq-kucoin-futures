@@ -4,6 +4,8 @@
 
 #include <string_view>
 
+#include "roq/kucoin_futures/settings.hpp"
+
 namespace roq {
 namespace kucoin_futures {
 
@@ -36,7 +38,7 @@ struct API final {
   std::string_view all_open_orders;
   std::string_view countdown_cancel_all;
   // factory
-  static API create();
+  static API create(Settings const &);
 };
 
 }  // namespace kucoin_futures

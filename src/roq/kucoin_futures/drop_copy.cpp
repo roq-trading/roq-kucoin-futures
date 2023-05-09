@@ -11,8 +11,6 @@
 
 #include "roq/web/socket/client_factory.hpp"
 
-#include "roq/kucoin_futures/flags.hpp"
-
 #include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;
@@ -57,10 +55,10 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto const 
       .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
       .request_timeout = {},
-      .ping_frequency = Flags::ws_ping_freq(),
+      .ping_frequency = settings.ws.ping_freq,
       // implementation
-      .decode_buffer_size = Flags::decode_buffer_size(),
-      .encode_buffer_size = Flags::encode_buffer_size(),
+      .decode_buffer_size = settings.common.decode_buffer_size,
+      .encode_buffer_size = settings.common.encode_buffer_size,
   };
   return web::socket::ClientFactory::create(handler, context, config, []() -> std::string { return {}; });
 }
@@ -84,7 +82,7 @@ DropCopy::DropCopy(
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)},
       connection_{create_connection(*this, shared.settings, context, uri, query)}, ping_frequency_{ping_frequency},
-      decode_buffer_{Flags::decode_buffer_size()},
+      decode_buffer_{shared.settings.common.decode_buffer_size},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -99,7 +97,7 @@ DropCopy::DropCopy(
           .ping = create_metrics(shared.settings, name_, "ping"sv),
           .heartbeat = create_metrics(shared.settings, name_, "heartbeat"sv),
       },
-      account_{account}, download_{{}, [this](auto state) { return download(state); }} {
+      account_{account}, shared_{shared}, download_{{}, [this](auto state) { return download(state); }} {
 }
 
 bool DropCopy::ready() const {
@@ -147,7 +145,7 @@ void DropCopy::operator()(metrics::Writer &writer) {
 void DropCopy::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();
-  logon_timeout_ = now + Flags::ws_request_timeout();
+  logon_timeout_ = now + shared_.settings.ws.request_timeout;
 }
 
 void DropCopy::operator()(web::socket::Client::Disconnected const &) {

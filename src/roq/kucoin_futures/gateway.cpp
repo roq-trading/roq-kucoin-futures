@@ -12,8 +12,6 @@
 #include "roq/core/charconv.hpp"
 #include "roq/core/utils.hpp"
 
-#include "roq/kucoin_futures/flags.hpp"
-
 #include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;

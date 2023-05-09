@@ -4,8 +4,6 @@
 
 #include "roq/exceptions.hpp"
 
-#include "roq/kucoin_futures/flags.hpp"
-
 using namespace std::literals;
 
 namespace roq {
@@ -13,8 +11,8 @@ namespace kucoin_futures {
 
 // === IMPLEMENTATION ===
 
-API API::create() {
-  auto api = Flags::api();
+API API::create(Settings const &settings) {
+  auto api = settings.app.api;
   if (api.compare("v1"sv) == 0) {
     return {
         .version = 1,
