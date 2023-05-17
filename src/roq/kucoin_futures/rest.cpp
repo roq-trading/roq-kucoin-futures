@@ -443,8 +443,8 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
           .stream_id = stream_id_,
           .exchange = shared_.settings.exchange,
           .symbol = symbol,
-          .bids = bids,
-          .asks = asks,
+          .bids = {const_cast<MBPUpdate *>(std::data(bids)), std::size(bids)},  // FIXME
+          .asks = {const_cast<MBPUpdate *>(std::data(asks)), std::size(asks)},  // FIXME
           .update_type = UpdateType::SNAPSHOT,
           .exchange_time_utc = data.ts,
           .exchange_sequence = sequencer.last_sequence(),
