@@ -34,12 +34,12 @@
     },
     {
       "name": "asks",
-      "type": "std::span<Level2DataItem>",
+      "type": "std::span<Level2DataItem const>",
       "comment": "v2"
     },
     {
       "name": "bids",
-      "type": "std::span<Level2DataItem>",
+      "type": "std::span<Level2DataItem const>",
       "comment": "v2"
     }
   ]

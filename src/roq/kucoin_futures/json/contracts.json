@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "std::span<Contract>"
+      "type": "std::span<Contract const>"
     }
   ]
 }

@@ -12,11 +12,11 @@
     },
     {
       "name": "asks",
-      "type": "std::span<OrderBookDataItem>"
+      "type": "std::span<OrderBookDataItem const>"
     },
     {
       "name": "bids",
-      "type": "std::span<OrderBookDataItem>"
+      "type": "std::span<OrderBookDataItem const>"
     },
     {
       "name": "ts",

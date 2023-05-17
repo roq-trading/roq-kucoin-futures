@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "instanceServers",
-      "type": "std::span<InstanceServer>"
+      "type": "std::span<InstanceServer const>"
     },
     {
       "name": "token",

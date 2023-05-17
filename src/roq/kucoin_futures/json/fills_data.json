@@ -20,7 +20,7 @@
     },
     {
       "name": "items",
-      "type": "std::span<FillsDataItem>"
+      "type": "std::span<FillsDataItem const>"
     }
   ]
 }

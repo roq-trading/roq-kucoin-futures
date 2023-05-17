@@ -20,7 +20,7 @@
     },
     {
       "name": "items",
-      "type": "std::span<OrdersDataItem>"
+      "type": "std::span<OrdersDataItem const>"
     }
   ]
 }
