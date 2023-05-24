@@ -6,8 +6,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/position_settlement.hpp"
 
 using namespace roq;
@@ -33,9 +31,8 @@ TEST_CASE("json_position_settlement_example", "[json_position_settlement]") {
                        R"("settleCurrency": "XBT")"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::PositionSettlement>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::PositionSettlement::create(message, buffer);
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
   CHECK(obj.subject == json::Subject::POSITION_SETTLEMENT);

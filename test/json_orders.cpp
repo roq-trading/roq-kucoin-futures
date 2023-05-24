@@ -6,8 +6,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/orders.hpp"
 
 using namespace roq;
@@ -28,9 +26,8 @@ TEST_CASE("json_orders_simple", "[json_orders]") {
                        R"("items":[])"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::Orders>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::Orders::create(message, buffer);
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(data.current_page == 1);

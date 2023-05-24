@@ -6,8 +6,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/order_change.hpp"
 
 using namespace roq;
@@ -46,9 +44,8 @@ TEST_CASE("json_order_change_example", "[json_order_change]") {
                        R"("ts": 1545914149935808589)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::OrderChange>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::OrderChange::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
   CHECK(obj.subject == json::Subject::ORDER_CHANGE);

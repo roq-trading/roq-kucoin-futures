@@ -6,8 +6,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/token.hpp"
 
 using namespace roq;
@@ -34,9 +32,8 @@ TEST_CASE("json_token_simple", "[json_token]") {
       R"(])"
       R"(})"
       R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::Token>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::Token::create(message, buffer);
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(

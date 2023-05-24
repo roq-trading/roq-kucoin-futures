@@ -4,8 +4,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/execution.hpp"
 
 using namespace roq;
@@ -31,9 +29,8 @@ TEST_CASE("json_v2_execution_simple", "[json_execution]") {
                        R"("ts":1656667043469)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::Execution>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::Execution::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/execution:BTCUSDM"sv);
   CHECK(obj.subject == json::Subject::EXECUTION);

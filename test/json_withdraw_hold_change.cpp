@@ -6,8 +6,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/withdraw_hold_change.hpp"
 
 using namespace roq;
@@ -29,9 +27,8 @@ TEST_CASE("json_withdraw_hold_change_example", "[json_withdraw_hold_change]") {
                        R"("timestamp": 1553842862614)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::WithdrawHoldChange>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::WithdrawHoldChange::create(message, buffer);
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);
   CHECK(obj.subject == json::Subject::WITHDRAW_HOLD_CHANGE);

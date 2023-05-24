@@ -80,7 +80,7 @@ struct create_metrics final : public core::metrics::Factory {
 Rest::Rest(Handler &handler, io::Context &context, uint16_t stream_id, Shared &shared)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)},
       connection_{create_connection(*this, shared.settings, context)},
-      decode_buffer_{shared.settings.common.decode_buffer_size},
+      decode_buffer_(shared.settings.common.decode_buffer_size),
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -231,7 +231,7 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Token token{body, decode_buffer_};
+        auto token = json::Token::create(body, decode_buffer_);
         Trace event_2{event, token};
         (*this)(event_2);
         download_.check(STATE);
@@ -290,7 +290,7 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Contracts contracts{body, decode_buffer_};
+        auto contracts = json::Contracts::create(body, decode_buffer_);
         Trace event_2{event, contracts};
         (*this)(event_2);
         download_.check(STATE);
@@ -400,7 +400,7 @@ void Rest::get_order_book_ack(
     Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
   profile_.order_book_ack([&]() {
     auto handle_success = [&](auto &body) {
-      json::OrderBook order_book{body, decode_buffer_};
+      auto order_book = json::OrderBook::create(body, decode_buffer_);
       Trace event_2{event, order_book};
       (*this)(event_2);
     };

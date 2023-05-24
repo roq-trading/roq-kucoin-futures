@@ -4,8 +4,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/funding_rate.hpp"
 
 using namespace roq;
@@ -27,9 +25,8 @@ TEST_CASE("json_v2_funding_rate", "[json_funding_rate]") {
                        R"("timestamp":1656678420000)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::FundingRate>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::FundingRate::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresContract/fundingRate:BTCUSDTM"sv);
   CHECK(obj.subject == json::Subject::FUNDING_RATE);
@@ -50,9 +47,8 @@ TEST_CASE("json_v1_funding_rate", "[json_funding_rate]") {
                        R"("timestamp":1656678720000)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::FundingRate>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::FundingRate::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/contract/instrument:ETHUSDTM"sv);
   CHECK(obj.subject == json::Subject::FUNDING_RATE);

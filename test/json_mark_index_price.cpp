@@ -4,8 +4,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/mark_index_price.hpp"
 
 using namespace roq;
@@ -29,9 +27,8 @@ TEST_CASE("json_v2_mark_index_price", "[json_mark_price]") {
                        R"("timestamp":1656668191000)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::MarkIndexPrice>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::MarkIndexPrice::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresContract/markPrice"sv);
   CHECK(obj.subject == json::Subject::MARK_INDEX_PRICE);

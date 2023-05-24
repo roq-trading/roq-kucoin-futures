@@ -4,8 +4,6 @@
 
 #include "roq/core/datetime.hpp"
 
-#include "roq/core/json/parser.hpp"
-
 #include "roq/kucoin_futures/json/ticker.hpp"
 
 using namespace roq;
@@ -31,9 +29,8 @@ TEST_CASE("json_v2_ticker", "[json_ticker]") {
                        R"("ts":1656676964760)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::Ticker>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::Ticker::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/ticker:BTCUSDTM"sv);
   CHECK(obj.subject == json::Subject::TICKER);
@@ -68,9 +65,8 @@ TEST_CASE("json_v1_ticker", "[json_ticker]") {
                        R"("bestAskSize":4892)"
                        R"(})"
                        R"(})";
-  core::Buffer buffer(8192);
-  core::json::Buffer buffer_(buffer);
-  auto obj = core::json::Parser::create<json::Ticker>(message, buffer_);
+  std::vector<std::byte> buffer(8192);
+  auto obj = json::Ticker::create(message, buffer);
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/contractMarket/ticker:ETHUSDTM"sv);
   CHECK(obj.subject == json::Subject::TICKER);

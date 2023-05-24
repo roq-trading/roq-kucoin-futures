@@ -12,9 +12,24 @@ namespace roq {
 namespace kucoin_futures {
 namespace json {
 
+// === HELPERS ===
+
+namespace {
+template <typename T>
+void dispatch_helper(auto &handler, auto &message, auto &buffer, auto &trace_info) {
+  auto obj = T::create(message, buffer);
+  create_trace_and_dispatch(handler, trace_info, obj);
+}
+}  // namespace
+
+// === IMPLEMENTATION ===
+
 bool Parser::dispatch(
-    Handler &handler, std::string_view const &message, core::json::Buffer &buffer, TraceInfo const &trace_info) {
-  Message message_{message, buffer};
+    Handler &handler,
+    std::string_view const &message,
+    std::span<std::byte> const &buffer,
+    TraceInfo const &trace_info) {
+  auto message_ = Message::create(message, buffer);
   switch (message_.type) {
     using enum json::Type::type_t;
     case UNDEFINED__:
@@ -38,53 +53,35 @@ bool Parser::dispatch(
         case ORDER_CHANGE:
           log::fatal("Unexpected"sv);
           break;
-        case ORDER_MARGIN_CHANGE: {
-          OrderMarginChange order_margin_change{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, order_margin_change);
+        case ORDER_MARGIN_CHANGE:
+          dispatch_helper<OrderMarginChange>(handler, message, buffer, trace_info);
           break;
-        }
-        case AVAILABLE_BALANCE_CHANGE: {
-          AvailableBalanceChange available_balance_change{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, available_balance_change);
+        case AVAILABLE_BALANCE_CHANGE:
+          dispatch_helper<AvailableBalanceChange>(handler, message, buffer, trace_info);
           break;
-        }
-        case WITHDRAW_HOLD_CHANGE: {
-          WithdrawHoldChange withdraw_hold_change{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, withdraw_hold_change);
+        case WITHDRAW_HOLD_CHANGE:
+          dispatch_helper<WithdrawHoldChange>(handler, message, buffer, trace_info);
           break;
-        }
-        case POSITION_CHANGE: {
-          PositionChange position_change{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, position_change);
+        case POSITION_CHANGE:
+          dispatch_helper<PositionChange>(handler, message, buffer, trace_info);
           break;
-        }
-        case POSITION_SETTLEMENT: {
-          PositionSettlement position_settlement{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, position_settlement);
+        case POSITION_SETTLEMENT:
+          dispatch_helper<PositionSettlement>(handler, message, buffer, trace_info);
           break;
-        }
       }
       break;
-    case WELCOME: {
-      Welcome welcome{message, buffer};
-      create_trace_and_dispatch(handler, trace_info, welcome);
+    case WELCOME:
+      dispatch_helper<Welcome>(handler, message, buffer, trace_info);
       break;
-    }
-    case ERROR: {
-      Error error{message, buffer};
-      create_trace_and_dispatch(handler, trace_info, error);
+    case ERROR:
+      dispatch_helper<Error>(handler, message, buffer, trace_info);
       break;
-    }
-    case PONG: {
-      Pong pong{message, buffer};
-      create_trace_and_dispatch(handler, trace_info, pong);
+    case PONG:
+      dispatch_helper<Pong>(handler, message, buffer, trace_info);
       break;
-    }
-    case ACK: {
-      Ack ack{message, buffer};
-      create_trace_and_dispatch(handler, trace_info, ack);
+    case ACK:
+      dispatch_helper<Ack>(handler, message, buffer, trace_info);
       break;
-    }
     case MESSAGE:
       switch (message_.subject) {
         using enum json::Subject::type_t;
@@ -92,61 +89,39 @@ bool Parser::dispatch(
         case UNKNOWN__:
           log::fatal("Unexpected"sv);
           break;
-        case TICKER: {
-          Ticker ticker{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, ticker);
+        case TICKER:
+          dispatch_helper<Ticker>(handler, message, buffer, trace_info);
           break;
-        }
-        case TICKER_V2: {
-          TickerV2 ticker_v2{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, ticker_v2);
+        case TICKER_V2:
+          dispatch_helper<TickerV2>(handler, message, buffer, trace_info);
           break;
-        }
-        case MATCH: {
-          Match match{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, match);
+        case MATCH:
+          dispatch_helper<Match>(handler, message, buffer, trace_info);
           break;
-        }
-        case EXECUTION: {
-          Execution execution{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, execution);
+        case EXECUTION:
+          dispatch_helper<Execution>(handler, message, buffer, trace_info);
           break;
-        }
-        case MARK_INDEX_PRICE: {
-          MarkIndexPrice mark_index_price{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, mark_index_price);
+        case MARK_INDEX_PRICE:
+          dispatch_helper<MarkIndexPrice>(handler, message, buffer, trace_info);
           break;
-        }
-        case FUNDING_RATE: {
-          FundingRate funding_rate{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, funding_rate);
+        case FUNDING_RATE:
+          dispatch_helper<FundingRate>(handler, message, buffer, trace_info);
           break;
-        }
-        case LEVEL2: {
-          Level2 level2{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, level2);
+        case LEVEL2:
+          dispatch_helper<Level2>(handler, message, buffer, trace_info);
           break;
-        }
-        case FUNDING_BEGIN: {
-          FundingBegin funding_begin{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, funding_begin);
+        case FUNDING_BEGIN:
+          dispatch_helper<FundingBegin>(handler, message, buffer, trace_info);
           break;
-        }
-        case FUNDING_END: {
-          FundingEnd funding_end{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, funding_end);
+        case FUNDING_END:
+          dispatch_helper<FundingEnd>(handler, message, buffer, trace_info);
           break;
-        }
-        case SNAPSHOT_24H: {
-          Snapshot24h snapshot_24h{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, snapshot_24h);
+        case SNAPSHOT_24H:
+          dispatch_helper<Snapshot24h>(handler, message, buffer, trace_info);
           break;
-        }
-        case ORDER_CHANGE: {
-          OrderChange order_change{message, buffer};
-          create_trace_and_dispatch(handler, trace_info, order_change);
+        case ORDER_CHANGE:
+          dispatch_helper<OrderChange>(handler, message, buffer, trace_info);
           break;
-        }
         case ORDER_MARGIN_CHANGE:
         case AVAILABLE_BALANCE_CHANGE:
         case WITHDRAW_HOLD_CHANGE:
