@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-CWD="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
-
 if [ "$1" == "debug" ]; then
   PREFIX="gdb --args"
 else
@@ -10,7 +8,9 @@ fi
 
 NAME="kucoin-futures"
 
-CONFIG_FILE="$CWD/config/$NAME-test.toml"
+CONFIG="${CONFIG:-$NAME-test}"
+
+CONFIG_FILE="$ROQ_CONFIG_PATH/roq-kucoin-futures/$CONFIG.toml"
 
 URI="api-v2-futures.kucoin.com"
 
