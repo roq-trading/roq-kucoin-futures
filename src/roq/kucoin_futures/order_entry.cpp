@@ -686,39 +686,82 @@ void OrderEntry::cancel_order_ack(
 
 // cancel-all-orders
 
-void OrderEntry::cancel_all_orders(
-    Event<CancelAllOrders> const &event, [[maybe_unused]] std::string_view const &request_id) {
+void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
-    if (ready()) {
-      auto request = web::rest::Request{
-          .method = web::http::Method::DELETE,
-          .path = shared_.api.delete_orders,
-          .query = {},
-          .accept = web::http::Accept::APPLICATION_JSON,
-          .content_type = {},
-          .headers = {},
-          .body = {},
-          .quality_of_service = io::QualityOfService::IMMEDIATE,
+    if (!ready()) [[unlikely]]
+      throw oms::NotReady{"not ready"sv};
+    auto &cancel_all_orders = event.value;
+    auto send_ack = [&]() {
+      auto cancel_all_orders_ack = CancelAllOrdersAck{
+          .stream_id = stream_id_,
+          .account = account_.get_name(),
+          .order_id = cancel_all_orders.order_id,
+          .exchange = cancel_all_orders.exchange,
+          .symbol = cancel_all_orders.symbol,
+          .side = cancel_all_orders.side,
+          .origin = Origin::GATEWAY,
+          .status = RequestStatus::FORWARDED,
+          .error = {},
+          .text = {},
+          .request_id = request_id,
+          .external_account = {},
+          .number_of_affected_orders = {},
+          .round_trip_latency = {},
+          .user = {},
+          .strategy_id = cancel_all_orders.strategy_id,
       };
-      auto callback = [this]([[maybe_unused]] auto &request_id, auto &response) {
-        TraceInfo trace_info;
-        Trace event{trace_info, response};
-        cancel_all_orders_ack(event);
-      };
-      (*connection_)(request_id, request, callback);
-    } else {
-      auto &[message_info, cancel_all_orders] = event;
-      log::warn(R"(*** NOT CONNECTED! UNABLE TO CANCEL ALL ORDERS FOR ACCOUNT="{}")"sv, cancel_all_orders.account);
-    }
+      TraceInfo trace_info{event};
+      Trace event_2{trace_info, cancel_all_orders_ack};
+      shared_(event_2);
+    };
+    auto request = web::rest::Request{
+        .method = web::http::Method::DELETE,
+        .path = shared_.api.delete_orders,
+        .query = {},
+        .accept = web::http::Accept::APPLICATION_JSON,
+        .content_type = {},
+        .headers = {},
+        .body = {},
+        .quality_of_service = io::QualityOfService::IMMEDIATE,
+    };
+    auto callback = [this](auto &request_id, auto &response) {
+      TraceInfo trace_info;
+      Trace event{trace_info, response};
+      cancel_all_orders_ack(event, request_id);
+    };
+    (*connection_)(request_id, request, callback);
+    send_ack();
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event) {
+void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders_ack([&]() {
+    auto send_ack = [&](auto origin, auto status, Error error, std::string_view const &text) {
+      auto cancel_all_orders_ack = CancelAllOrdersAck{
+          .stream_id = stream_id_,
+          .account = account_.get_name(),
+          .order_id = {},
+          .exchange = {},
+          .symbol = {},
+          .side = {},
+          .origin = Origin::GATEWAY,
+          .status = RequestStatus::FORWARDED,
+          .error = {},
+          .text = {},
+          .request_id = request_id,
+          .external_account = {},
+          .number_of_affected_orders = {},
+          .round_trip_latency = {},
+          .user = {},
+          .strategy_id = {},
+      };
+      Trace event_2{event, cancel_all_orders_ack};
+      shared_(event_2);
+    };
     auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
-    auto handle_error = [&]([[maybe_unused]] auto origin, [[maybe_unused]] auto status, auto error, auto text) {
+    auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
-      // note! no response required
+      send_ack(origin, status, error, text);
     };
     process_response(event, handle_success, handle_error);
   });
