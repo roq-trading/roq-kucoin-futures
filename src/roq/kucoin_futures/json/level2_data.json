@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "sequence",
-      "type": "int64_t",
+      "type": "uint64_t",
       "comment": "v1"
     },
     {
@@ -19,12 +19,12 @@
     },
     {
       "name": "start",
-      "type": "int64_t",
+      "type": "uint64_t",
       "comment": "v2"
     },
     {
       "name": "end",
-      "type": "int64_t",
+      "type": "uint64_t",
       "comment": "v2"
     },
     {
