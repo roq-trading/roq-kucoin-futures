@@ -607,9 +607,9 @@ void OrderEntry::create_order_ack(
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       auto response = oms::Response{
-          .type = RequestType::CREATE_ORDER,
+          .request_type = RequestType::CREATE_ORDER,
           .origin = origin,
-          .status = status,
+          .request_status = status,
           .error = error,
           .text = text,
           .version = version,
@@ -667,9 +667,9 @@ void OrderEntry::cancel_order_ack(
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       auto response = oms::Response{
-          .type = RequestType::CANCEL_ORDER,
+          .request_type = RequestType::CANCEL_ORDER,
           .origin = origin,
-          .status = status,
+          .request_status = status,
           .error = error,
           .text = text,
           .version = version,
