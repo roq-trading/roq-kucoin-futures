@@ -6,8 +6,11 @@
 #include <utility>
 
 #include "roq/mask.hpp"
+
 #include "roq/utils/safe_cast.hpp"
 #include "roq/utils/update.hpp"
+
+#include "roq/utils/metrics/const.hpp"
 
 #include "roq/core/charconv.hpp"
 
@@ -150,27 +153,27 @@ void MarketData::operator()(Event<Timer> const &event) {
 void MarketData::operator()(metrics::Writer &writer) {
   writer
       // counter
-      .write(counter_.disconnect, metrics::COUNTER)
-      .write(counter_.total_bytes_received, metrics::COUNTER)
+      .write(counter_.disconnect, utils::metrics::COUNTER)
+      .write(counter_.total_bytes_received, utils::metrics::COUNTER)
       // profile
-      .write(profile_.parse, metrics::PROFILE)
-      .write(profile_.welcome, metrics::PROFILE)
-      .write(profile_.error, metrics::PROFILE)
-      .write(profile_.pong, metrics::PROFILE)
-      .write(profile_.ack, metrics::PROFILE)
-      .write(profile_.ticker_v2, metrics::PROFILE)
-      .write(profile_.ticker, metrics::PROFILE)
-      .write(profile_.match, metrics::PROFILE)
-      .write(profile_.execution, metrics::PROFILE)
-      .write(profile_.mark_index_price, metrics::PROFILE)
-      .write(profile_.funding_rate, metrics::PROFILE)
-      .write(profile_.level2, metrics::PROFILE)
-      .write(profile_.funding_begin, metrics::PROFILE)
-      .write(profile_.funding_end, metrics::PROFILE)
-      .write(profile_.snapshot_24h, metrics::PROFILE)
+      .write(profile_.parse, utils::metrics::PROFILE)
+      .write(profile_.welcome, utils::metrics::PROFILE)
+      .write(profile_.error, utils::metrics::PROFILE)
+      .write(profile_.pong, utils::metrics::PROFILE)
+      .write(profile_.ack, utils::metrics::PROFILE)
+      .write(profile_.ticker_v2, utils::metrics::PROFILE)
+      .write(profile_.ticker, utils::metrics::PROFILE)
+      .write(profile_.match, utils::metrics::PROFILE)
+      .write(profile_.execution, utils::metrics::PROFILE)
+      .write(profile_.mark_index_price, utils::metrics::PROFILE)
+      .write(profile_.funding_rate, utils::metrics::PROFILE)
+      .write(profile_.level2, utils::metrics::PROFILE)
+      .write(profile_.funding_begin, utils::metrics::PROFILE)
+      .write(profile_.funding_end, utils::metrics::PROFILE)
+      .write(profile_.snapshot_24h, utils::metrics::PROFILE)
       // latency
-      .write(latency_.ping, metrics::LATENCY)
-      .write(latency_.heartbeat, metrics::LATENCY);
+      .write(latency_.ping, utils::metrics::LATENCY)
+      .write(latency_.heartbeat, utils::metrics::LATENCY);
 }
 
 void MarketData::subscribe(size_t start_from) {
