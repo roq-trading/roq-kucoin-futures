@@ -8,8 +8,6 @@
 
 #include "roq/utils/update.hpp"
 
-#include "roq/utils/metrics/const.hpp"
-
 #include "roq/core/metrics/factory.hpp"
 
 #include "roq/web/rest/client_factory.hpp"
@@ -125,26 +123,26 @@ void OrderEntry::operator()(Event<Timer> const &event) {
 void OrderEntry::operator()(metrics::Writer &writer) {
   writer
       // counter
-      .write(counter_.disconnect, utils::metrics::COUNTER)
+      .write(counter_.disconnect, metrics::Type::COUNTER)
       // profile
-      .write(profile_.private_token, utils::metrics::PROFILE)
-      .write(profile_.private_token_ack, utils::metrics::PROFILE)
-      .write(profile_.account, utils::metrics::PROFILE)
-      .write(profile_.account_ack, utils::metrics::PROFILE)
-      .write(profile_.positions, utils::metrics::PROFILE)
-      .write(profile_.positions_ack, utils::metrics::PROFILE)
-      .write(profile_.orders, utils::metrics::PROFILE)
-      .write(profile_.orders_ack, utils::metrics::PROFILE)
-      .write(profile_.fills, utils::metrics::PROFILE)
-      .write(profile_.fills_ack, utils::metrics::PROFILE)
-      .write(profile_.create_order, utils::metrics::PROFILE)
-      .write(profile_.create_order_ack, utils::metrics::PROFILE)
-      .write(profile_.cancel_order, utils::metrics::PROFILE)
-      .write(profile_.cancel_order_ack, utils::metrics::PROFILE)
-      .write(profile_.cancel_all_orders, utils::metrics::PROFILE)
-      .write(profile_.cancel_all_orders_ack, utils::metrics::PROFILE)
+      .write(profile_.private_token, metrics::Type::PROFILE)
+      .write(profile_.private_token_ack, metrics::Type::PROFILE)
+      .write(profile_.account, metrics::Type::PROFILE)
+      .write(profile_.account_ack, metrics::Type::PROFILE)
+      .write(profile_.positions, metrics::Type::PROFILE)
+      .write(profile_.positions_ack, metrics::Type::PROFILE)
+      .write(profile_.orders, metrics::Type::PROFILE)
+      .write(profile_.orders_ack, metrics::Type::PROFILE)
+      .write(profile_.fills, metrics::Type::PROFILE)
+      .write(profile_.fills_ack, metrics::Type::PROFILE)
+      .write(profile_.create_order, metrics::Type::PROFILE)
+      .write(profile_.create_order_ack, metrics::Type::PROFILE)
+      .write(profile_.cancel_order, metrics::Type::PROFILE)
+      .write(profile_.cancel_order_ack, metrics::Type::PROFILE)
+      .write(profile_.cancel_all_orders, metrics::Type::PROFILE)
+      .write(profile_.cancel_all_orders_ack, metrics::Type::PROFILE)
       // latency
-      .write(latency_.ping, utils::metrics::LATENCY);
+      .write(latency_.ping, metrics::Type::LATENCY);
 }
 
 uint16_t OrderEntry::operator()(
