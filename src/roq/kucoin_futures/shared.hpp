@@ -17,7 +17,7 @@
 
 #include "roq/core/limit/rate_limiter.hpp"
 
-#include "roq/utils/mbp/sequencer.hpp"
+#include "roq/market/mbp/sequencer.hpp"
 
 #include "roq/kucoin_futures/api.hpp"
 #include "roq/kucoin_futures/settings.hpp"
@@ -60,7 +60,7 @@ struct Shared final {
  public:
   auto &get_mbp() { return mbp.clear(); }
 
-  absl::node_hash_map<Symbol, utils::mbp::Sequencer> mbp_sequencer;
+  absl::node_hash_map<Symbol, market::mbp::Sequencer> mbp_sequencer;
 
  private:
   server::Dispatcher &dispatcher_;
