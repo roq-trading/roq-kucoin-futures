@@ -444,7 +444,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   for (auto &item : data.asks)
     emplace_back(mbp.asks, item);
   try {
-    auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence) {
+    auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
       log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
       auto market_by_price_update = MarketByPriceUpdate{
           .stream_id = stream_id_,

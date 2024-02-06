@@ -575,7 +575,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           auto market_by_price_update = create_update(bids, asks, UpdateType::INCREMENTAL, last_sequence);
           create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);
         };
-        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence) {
+        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
           log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
           auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
           Trace event{trace_info, market_by_price_update};
@@ -648,7 +648,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           auto market_by_price_update = create_update(bids, asks, UpdateType::INCREMENTAL, last_sequence);
           create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);
         };
-        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence) {
+        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
           log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
           auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
           Trace event{trace_info, market_by_price_update};
