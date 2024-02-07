@@ -559,8 +559,8 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .stream_id = stream_id_,
               .exchange = shared_.settings.exchange,
               .symbol = symbol,
-              .bids = {const_cast<MBPUpdate *>(std::data(bids)), std::size(bids)},  // FIXME
-              .asks = {const_cast<MBPUpdate *>(std::data(asks)), std::size(asks)},  // FIXME
+              .bids = bids,
+              .asks = asks,
               .update_type = update_type,
               .exchange_time_utc = {},
               .exchange_sequence = exchange_sequence,
@@ -575,12 +575,13 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           auto market_by_price_update = create_update(bids, asks, UpdateType::INCREMENTAL, last_sequence);
           create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);
         };
-        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
-          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
-          Trace event{trace_info, market_by_price_update};
-          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
-        };
+        auto publish_snapshot =
+            [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
+              log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
+              auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
+              Trace event{trace_info, market_by_price_update};
+              shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
+            };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
           if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
@@ -632,8 +633,8 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .stream_id = stream_id_,
               .exchange = shared_.settings.exchange,
               .symbol = symbol,
-              .bids = {const_cast<MBPUpdate *>(std::data(bids)), std::size(bids)},  // FIXME
-              .asks = {const_cast<MBPUpdate *>(std::data(asks)), std::size(asks)},  // FIXME
+              .bids = bids,
+              .asks = asks,
               .update_type = update_type,
               .exchange_time_utc = data.ts,
               .exchange_sequence = exchange_sequence,
@@ -648,12 +649,13 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
           auto market_by_price_update = create_update(bids, asks, UpdateType::INCREMENTAL, last_sequence);
           create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);
         };
-        auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
-          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
-          Trace event{trace_info, market_by_price_update};
-          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
-        };
+        auto publish_snapshot =
+            [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
+              log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
+              auto market_by_price_update = create_update(bids, asks, UpdateType::SNAPSHOT, sequencer.last_sequence());
+              Trace event{trace_info, market_by_price_update};
+              shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
+            };
         auto request_snapshot = [&](auto retries) {
           log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
           if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {

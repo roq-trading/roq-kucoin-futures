@@ -440,25 +440,26 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   for (auto &item : data.asks)
     emplace_back(mbp.asks, item);
   try {
-    auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, auto retries, auto delay) {
-      log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-      auto market_by_price_update = MarketByPriceUpdate{
-          .stream_id = stream_id_,
-          .exchange = shared_.settings.exchange,
-          .symbol = symbol,
-          .bids = {const_cast<MBPUpdate *>(std::data(bids)), std::size(bids)},  // FIXME
-          .asks = {const_cast<MBPUpdate *>(std::data(asks)), std::size(asks)},  // FIXME
-          .update_type = UpdateType::SNAPSHOT,
-          .exchange_time_utc = data.ts,
-          .exchange_sequence = sequencer.last_sequence(),
-          .sending_time_utc = data.ts,
-          .price_decimals = {},
-          .quantity_decimals = {},
-          .checksum = {},
-      };
-      Trace event{trace_info, market_by_price_update};
-      shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
-    };
+    auto publish_snapshot =
+        [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
+          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
+          auto market_by_price_update = MarketByPriceUpdate{
+              .stream_id = stream_id_,
+              .exchange = shared_.settings.exchange,
+              .symbol = symbol,
+              .bids = bids,
+              .asks = asks,
+              .update_type = UpdateType::SNAPSHOT,
+              .exchange_time_utc = data.ts,
+              .exchange_sequence = sequencer.last_sequence(),
+              .sending_time_utc = data.ts,
+              .price_decimals = {},
+              .quantity_decimals = {},
+              .checksum = {},
+          };
+          Trace event{trace_info, market_by_price_update};
+          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
+        };
     auto request_snapshot = [&](auto retries) {
       log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
       if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
