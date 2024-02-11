@@ -29,7 +29,7 @@ TEST_CASE("json_available_balance_change_example", "[json_available_balance_chan
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::AvailableBalanceChange::create(message, buffer);
+  json::AvailableBalanceChange obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);
   CHECK(obj.subject == json::Subject::AVAILABLE_BALANCE_CHANGE);

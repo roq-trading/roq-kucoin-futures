@@ -45,7 +45,7 @@ TEST_CASE("json_order_change_example", "[json_order_change]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::OrderChange::create(message, buffer);
+  json::OrderChange obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
   CHECK(obj.subject == json::Subject::ORDER_CHANGE);

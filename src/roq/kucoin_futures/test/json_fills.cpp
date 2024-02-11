@@ -27,7 +27,7 @@ TEST_CASE("json_fills_simple", "[json_fills]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Fills::create(message, buffer);
+  json::Fills obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(data.current_page == 1);

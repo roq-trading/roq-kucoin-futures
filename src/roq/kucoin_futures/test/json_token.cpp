@@ -33,7 +33,7 @@ TEST_CASE("json_token_simple", "[json_token]") {
       R"(})"
       R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Token::create(message, buffer);
+  json::Token obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(

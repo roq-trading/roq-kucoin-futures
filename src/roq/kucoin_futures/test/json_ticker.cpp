@@ -30,7 +30,7 @@ TEST_CASE("json_v2_ticker", "[json_ticker]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Ticker::create(message, buffer);
+  json::Ticker obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/ticker:BTCUSDTM"sv);
   CHECK(obj.subject == json::Subject::TICKER);
@@ -66,7 +66,7 @@ TEST_CASE("json_v1_ticker", "[json_ticker]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Ticker::create(message, buffer);
+  json::Ticker obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/contractMarket/ticker:ETHUSDTM"sv);
   CHECK(obj.subject == json::Subject::TICKER);

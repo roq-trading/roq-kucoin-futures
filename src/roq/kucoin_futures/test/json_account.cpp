@@ -30,7 +30,7 @@ TEST_CASE("json_account_simple", "[json_account]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Account::create(message, buffer);
+  json::Account obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(data.account_equity == 0.0_a);

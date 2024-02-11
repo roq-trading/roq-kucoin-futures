@@ -46,7 +46,7 @@ TEST_CASE("json_v2_level2", "[json_level2]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Level2::create(message, buffer);
+  json::Level2 obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/level2:YFIUSDTM"sv);
   CHECK(obj.subject == json::Subject::LEVEL2);

@@ -87,7 +87,7 @@ TEST_CASE("json_v2_order_book", "[json_order_book]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::OrderBook::create(message, buffer);
+  json::OrderBook obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(data.contract_id == 4);

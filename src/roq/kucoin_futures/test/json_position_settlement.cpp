@@ -32,7 +32,7 @@ TEST_CASE("json_position_settlement_example", "[json_position_settlement]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::PositionSettlement::create(message, buffer);
+  json::PositionSettlement obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
   CHECK(obj.subject == json::Subject::POSITION_SETTLEMENT);

@@ -28,7 +28,7 @@ TEST_CASE("json_withdraw_hold_change_example", "[json_withdraw_hold_change]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::WithdrawHoldChange::create(message, buffer);
+  json::WithdrawHoldChange obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);
   CHECK(obj.subject == json::Subject::WITHDRAW_HOLD_CHANGE);

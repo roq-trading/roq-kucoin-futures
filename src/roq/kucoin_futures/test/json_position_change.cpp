@@ -58,7 +58,7 @@ TEST_CASE("json_position_change_example_1", "[json_position_change]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::PositionChange::create(message, buffer);
+  json::PositionChange obj{message, buffer};
   CHECK(obj.user_id == "5c32d69203aa676ce4b543c7"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
   CHECK(obj.subject == json::Subject::POSITION_CHANGE);
@@ -117,7 +117,7 @@ TEST_CASE("json_position_change_example_2", "[json_position_change]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::PositionChange::create(message, buffer);
+  json::PositionChange obj{message, buffer};
   CHECK(obj.user_id == "5cd3f1a7b7ebc19ae9558591"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
   CHECK(obj.subject == json::Subject::POSITION_CHANGE);

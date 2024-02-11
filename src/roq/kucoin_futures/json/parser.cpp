@@ -17,7 +17,7 @@ namespace json {
 namespace {
 template <typename T>
 void dispatch_helper(auto &handler, auto &message, auto &buffer, auto &trace_info) {
-  auto obj = T::create(message, buffer);
+  T obj{message, buffer};
   create_trace_and_dispatch(handler, trace_info, obj);
 }
 }  // namespace
@@ -29,7 +29,7 @@ bool Parser::dispatch(
     std::string_view const &message,
     std::span<std::byte> const &buffer,
     TraceInfo const &trace_info) {
-  auto message_ = Message::create(message, buffer);
+  Message message_{message, buffer};
   switch (message_.type) {
     using enum json::Type::type_t;
     case UNDEFINED__:

@@ -6,6 +6,8 @@
 
 #include "roq/mask.hpp"
 
+#include "roq/oms/exceptions.hpp"
+
 #include "roq/utils/update.hpp"
 
 #include "roq/core/metrics/factory.hpp"
@@ -284,7 +286,7 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, 
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        auto token = json::Token::create(body, decode_buffer_);
+        json::Token token{body, decode_buffer_};
         if (token.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, token};
           (*this)(event_2);
@@ -354,7 +356,7 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        auto account = json::Account::create(body, decode_buffer_);
+        json::Account account{body, decode_buffer_};
         if (account.code != SYSTEM_CODE_SUCCESS)
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, account.code, account.msg);
         Trace event_2{event, account};
@@ -408,7 +410,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        auto positions = json::Positions::create(body, decode_buffer_);
+        json::Positions positions{body, decode_buffer_};
         if (positions.code != SYSTEM_CODE_SUCCESS)
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, positions.code, positions.msg);
         Trace event_2{event, positions};
@@ -463,7 +465,7 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        auto orders = json::Orders::create(body, decode_buffer_);
+        json::Orders orders{body, decode_buffer_};
         if (orders.code != SYSTEM_CODE_SUCCESS)
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, orders.code, orders.msg);
         Trace event_2{event, orders};
@@ -518,7 +520,7 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        auto fills = json::Fills::create(body, decode_buffer_);
+        json::Fills fills{body, decode_buffer_};
         if (fills.code != SYSTEM_CODE_SUCCESS)
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, fills.code, fills.msg);
         Trace event_2{event, fills};

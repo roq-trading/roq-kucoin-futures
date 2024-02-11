@@ -30,7 +30,7 @@ TEST_CASE("json_v2_execution_simple", "[json_execution]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Execution::create(message, buffer);
+  json::Execution obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/execution:BTCUSDM"sv);
   CHECK(obj.subject == json::Subject::EXECUTION);

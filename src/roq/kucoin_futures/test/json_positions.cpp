@@ -95,7 +95,7 @@ TEST_CASE("json_positions_simple", "[json_positions]") {
                        R"(])"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Positions::create(message, buffer);
+  json::Positions obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   REQUIRE(std::size(data) == 2);

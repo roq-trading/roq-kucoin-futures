@@ -28,7 +28,7 @@ TEST_CASE("json_order_margin_change_example", "[json_order_margin_change]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::OrderMarginChange::create(message, buffer);
+  json::OrderMarginChange obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);
   CHECK(obj.subject == json::Subject::ORDER_MARGIN_CHANGE);

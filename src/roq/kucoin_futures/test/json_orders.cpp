@@ -27,7 +27,7 @@ TEST_CASE("json_orders_simple", "[json_orders]") {
                        R"(})"
                        R"(})";
   std::vector<std::byte> buffer(8192);
-  auto obj = json::Orders::create(message, buffer);
+  json::Orders obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;
   CHECK(data.current_page == 1);
