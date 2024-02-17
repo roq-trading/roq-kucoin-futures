@@ -27,7 +27,7 @@ R create_accounts(auto const &config) {
   using result_type = std::remove_cvref<R>::type;
   result_type result;
   for (auto &[_, account] : config.accounts)
-    result.try_emplace(account.name, std::make_unique<Account>(config, account.name));
+    result.try_emplace(static_cast<std::string_view>(account.name), std::make_unique<Account>(config, account.name));
   return result;
 }
 
@@ -36,7 +36,9 @@ R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &accoun
   using result_type = std::remove_cvref<R>::type;
   result_type result;
   for (auto &[name, account] : account_by_account)
-    result.try_emplace(name, std::make_unique<OrderEntry>(gateway, context, ++stream_id, *account, shared));
+    result.try_emplace(
+        static_cast<std::string_view>(name),
+        std::make_unique<OrderEntry>(gateway, context, ++stream_id, *account, shared));
   return result;
 }
 
@@ -45,7 +47,7 @@ R create_drop_copy(auto &account_by_account) {
   using result_type = std::remove_cvref<R>::type;
   result_type result;
   for (auto &[name, account] : account_by_account)
-    result.try_emplace(name, nullptr);
+    result.try_emplace(static_cast<std::string_view>(name), nullptr);
   return result;
 }
 }  // namespace
