@@ -565,8 +565,8 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .exchange_time_utc = {},
               .exchange_sequence = exchange_sequence,
               .sending_time_utc = {},
-              .price_decimals = {},
-              .quantity_decimals = {},
+              .price_precision = {},
+              .quantity_precision = {},
               .checksum = {},
           };
         };
@@ -639,8 +639,8 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
               .exchange_time_utc = data.ts,
               .exchange_sequence = exchange_sequence,
               .sending_time_utc = {},
-              .price_decimals = {},
-              .quantity_decimals = {},
+              .price_precision = {},
+              .quantity_precision = {},
               .checksum = {},
           };
         };
