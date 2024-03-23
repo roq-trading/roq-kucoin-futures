@@ -68,8 +68,8 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto const 
       .request_timeout = {},
       .ping_frequency = settings.ws.ping_freq,
       // implementation
-      .decode_buffer_size = settings.common.decode_buffer_size,
-      .encode_buffer_size = settings.common.encode_buffer_size,
+      .decode_buffer_size = settings.misc.decode_buffer_size,
+      .encode_buffer_size = settings.misc.encode_buffer_size,
   };
   return web::socket::Client::create(handler, context, config, []() { return std::string(); });
 }
@@ -93,7 +93,7 @@ MarketData::MarketData(
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index},
       ping_frequency_{ping_frequency}, connection_{create_connection(*this, shared.settings, context, uri, query)},
-      decode_buffer_(shared.settings.common.decode_buffer_size),
+      decode_buffer_(shared.settings.misc.decode_buffer_size),
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),

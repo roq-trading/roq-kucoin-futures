@@ -6,8 +6,10 @@
 
 #include "roq/server/flags/settings.hpp"
 
-#include "roq/kucoin_futures/flags/common.hpp"
 #include "roq/kucoin_futures/flags/flags.hpp"
+#include "roq/kucoin_futures/flags/mbp.hpp"
+#include "roq/kucoin_futures/flags/misc.hpp"
+#include "roq/kucoin_futures/flags/request.hpp"
 #include "roq/kucoin_futures/flags/rest.hpp"
 #include "roq/kucoin_futures/flags/ws.hpp"
 
@@ -19,9 +21,11 @@ struct Settings final : public server::flags::Settings {
 
   std::string_view exchange;
 
-  flags::Common common;
+  flags::Misc misc;
   flags::REST rest;
   flags::WS ws;
+  flags::MBP mbp;
+  flags::Request request;
 
  private:
   Settings(args::Parser const &, flags::Flags const &);
@@ -39,15 +43,19 @@ struct fmt::formatter<roq::kucoin_futures::Settings> {
         context.out(),
         R"({{)"
         R"(exchange="{}", )"
-        R"(common={}, )"
+        R"(misc={}, )"
         R"(rest={}, )"
         R"(ws={}, )"
+        R"(mbp={}, )"
+        R"(request={}, )"
         R"(server={})"
         R"(}})"sv,
         value.exchange,
-        value.common,
+        value.misc,
         value.rest,
         value.ws,
+        value.mbp,
+        value.request,
         static_cast<roq::server::Settings const &>(value));
   }
 };

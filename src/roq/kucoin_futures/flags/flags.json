@@ -7,14 +7,14 @@
       "type": "std::string",
       "required": true,
       "default": "kucoin-futures",
-      "description": "exchange identifier (string)"
+      "description": "Exchange identifier"
     },
     {
       "name": "api",
       "type": "std::string",
       "required": true,
       "default": "v1",
-      "description": "what api to use (v1, v2)"
+      "description": "API (:code:`v1` or :code:`v2`)"
     }
   ]
 }

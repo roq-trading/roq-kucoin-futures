@@ -4,7 +4,7 @@ include(RoqAutogen)
 
 set(NAMESPACE "roq/kucoin_futures/flags")
 
-set(AUTOGEN_SCHEMAS common.json rest.json ws.json flags.json)
+set(AUTOGEN_SCHEMAS mbp.json misc.json request.json rest.json ws.json flags.json)
 
 if(BUILD_DOCS)
 
