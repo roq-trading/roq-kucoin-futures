@@ -67,7 +67,7 @@ Supports
         - |checkmark|
       * - Cancel All
         - |checkmark|
-      * - Auto Cancellation
+      * - Auto-Cancel
         -
 
   .. grid-item-card::  Account Management
@@ -121,7 +121,7 @@ Flags
 -----
 
 * :ref:`Using Flags <abseil-cpp>`
-* :ref:`Common Flags <gateway-flags>`
+* :ref:`Gateway Flags <gateway-flags>`
 
 .. code-block:: shell
 
