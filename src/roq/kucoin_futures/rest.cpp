@@ -195,10 +195,10 @@ uint32_t Rest::download(RestState state) {
       return 1;
     case DONE:
       (*this)(ConnectionStatus::READY);
-      return {};
+      return 0;
   }
   assert(false);
-  return {};
+  return 0;
 }
 
 // public-token
@@ -207,7 +207,7 @@ void Rest::get_public_token() {
   profile_.public_token([&]() {
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
-        .path = "/api/v1/bullet-public"sv,
+        .path = shared_.api.rest_public.bullet_public,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -220,7 +220,7 @@ void Rest::get_public_token() {
       Trace event{trace_info, response};
       get_public_token_ack(event, sequence);
     };
-    (*connection_)("public_token"sv, request, callback);
+    (*connection_)("bullet-public"sv, request, callback);
   });
 }
 
@@ -266,7 +266,7 @@ void Rest::get_contracts() {
   profile_.contracts([&]() {
     auto request = web::rest::Request{
         .method = web::http::Method::GET,
-        .path = shared_.api.get_contracts_active,
+        .path = shared_.api.rest_public.contracts_active,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -279,7 +279,7 @@ void Rest::get_contracts() {
       Trace event{trace_info, response};
       get_contracts_ack(event, sequence);
     };
-    (*connection_)("contracts"sv, request, callback);
+    (*connection_)("contracts-active"sv, request, callback);
   });
 }
 
@@ -385,7 +385,7 @@ void Rest::get_order_book(std::string_view const &symbol) {
     auto query = fmt::format("?symbol={}"sv, symbol);
     auto request = web::rest::Request{
         .method = web::http::Method::GET,
-        .path = shared_.api.get_order_book,
+        .path = shared_.api.rest_public.level2_snapshot,
         .query = query,
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -421,7 +421,7 @@ void Rest::get_order_book_ack(
 void Rest::operator()(Trace<json::OrderBook> const &event) {
   auto &trace_info = event.trace_info;
   auto &order_book = event.value;
-  log::info<4>("event={{order_book={}, trace_info={}}}"sv, order_book, trace_info);
+  log::info<4>("order_book={}"sv, order_book);
   auto &data = order_book.data;
   auto sequence = data.sequence;
   auto symbol = data.symbol;
@@ -445,7 +445,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   try {
     auto publish_snapshot =
         [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
-          log::debug(R"(PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
+          log::info(R"(DEBUG PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
           auto market_by_price_update = MarketByPriceUpdate{
               .stream_id = stream_id_,
               .exchange = shared_.settings.exchange,
@@ -464,7 +464,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
           shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
         };
     auto request_snapshot = [&](auto retries) {
-      log::debug(R"(REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
+      log::info(R"(DEBUG REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
       if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
         log::fatal(R"(Unexpected: symbol="{}", retries={})"sv, symbol, retries);
       }
@@ -483,7 +483,7 @@ void Rest::check_request_queue(std::chrono::nanoseconds now) {
   shared_.depth_request_queue.dispatch(
       [&](auto now) { return shared_.rate_limiter.can_request(now); },
       [&](auto &symbol) {
-        log::debug(R"(Requesting order book snapshot symbol="{}")"sv, symbol);
+        log::info(R"(DEBUG Requesting order book snapshot symbol="{}")"sv, symbol);
         get_order_book(symbol);
       },
       now);
@@ -494,7 +494,6 @@ void Rest::process_response(
     web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
   try {
     auto [status, category, body] = response.result();
-    log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
     switch (category) {
       using enum web::http::Category;
       case SUCCESS:  // 2xx

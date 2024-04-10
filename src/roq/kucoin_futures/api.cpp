@@ -16,18 +16,20 @@ API API::create(Settings const &settings) {
   if (api.compare("v1"sv) == 0) {
     return {
         .version = 1,
-        // rest
-        // -- public
-        .get_contracts_active = "/api/v1/contracts/active"sv,
-        .get_order_book = "/api/v1/level2/snapshot"sv,
-        // -- account
-        .get_account_overview = "/api/v1/account-overview"sv,
-        .get_all_position = "/api/v1/positions"sv,
-        .get_orders_all_active = "/api/v1/orders"sv,  // note! query params
-        .get_orders_historical_trades = "/api/v1/fills"sv,
-        .post_order = "/api/v1/orders"sv,
-        .delete_order = "/api/v1/orders"sv,  // note! append order id
-        .delete_orders = "/api/v1/orders"sv,
+        .rest_public{
+            .bullet_public = "/api/v1/bullet-public"sv,
+            .contracts_active = "/api/v1/contracts/active"sv,
+            .level2_snapshot = "/api/v1/level2/snapshot"sv,
+        },
+        .rest_private{
+            .bullet_private = "/api/v1/bullet-private"sv,
+            .account_overview = "/api/v1/account-overview"sv,
+            .all_position = "/api/v1/positions"sv,
+            .orders_all_active = "/api/v1/orders"sv,  // note! query params
+            .orders_historical_trades = "/api/v1/fills"sv,
+            .order = {},                   // only v2
+            .orders = "/api/v1/orders"sv,  // note! append order id
+        },
         // ws
         // -- public
         .ticker = "/contractMarket/tickerV2"sv,
@@ -47,18 +49,20 @@ API API::create(Settings const &settings) {
   if (api.compare("v2"sv) == 0) {
     return {
         .version = 2,
-        // rest
-        // -- public
-        .get_contracts_active = "/api/v2/contracts/active"sv,
-        .get_order_book = "/api/v2/order-book"sv,
-        // -- account
-        .get_account_overview = "/api/v2/account-overview"sv,
-        .get_all_position = "/api/v2/all-position"sv,
-        .get_orders_all_active = "/api/v2/orders/all-active"sv,
-        .get_orders_historical_trades = "/api/v2/orders/historical-trades"sv,
-        .post_order = "/api/v2/order"sv,
-        .delete_order = "/api/v2/order"sv,
-        .delete_orders = "/api/v2/orders"sv,
+        .rest_public{
+            .bullet_public = "/api/v1/bullet-public"sv,
+            .contracts_active = "/api/v2/contracts/active"sv,
+            .level2_snapshot = "/api/v2/order-book"sv,
+        },
+        .rest_private{
+            .bullet_private = "/api/v1/bullet-private"sv,
+            .account_overview = "/api/v2/account-overview"sv,
+            .all_position = "/api/v2/all-position"sv,
+            .orders_all_active = "/api/v2/orders/all-active"sv,
+            .orders_historical_trades = "/api/v2/orders/historical-trades"sv,
+            .order = "/api/v2/order"sv,
+            .orders = "/api/v2/orders"sv,
+        },
         // ws
         // -- public
         .ticker = "/futuresMarket/ticker"sv,

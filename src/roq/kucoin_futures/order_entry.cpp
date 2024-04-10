@@ -39,7 +39,7 @@ auto const SYSTEM_CODE_SUCCESS = int32_t{200000};
 // === HELPERS ===
 
 namespace {
-auto create_name(auto stream_id, auto const &account) {
+auto create_name(auto stream_id, auto &account) {
   return fmt::format("{}:{}:{}"sv, stream_id, NAME, account);
 }
 
@@ -82,7 +82,7 @@ struct create_metrics final : public core::metrics::Factory {
 // === IMPLEMENTATION ===
 
 OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.get_name())},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.name)},
       connection_{create_connection(*this, shared.settings, context)},
       decode_buffer_(shared.settings.misc.decode_buffer_size),
       counter_{
@@ -198,7 +198,7 @@ void OrderEntry::operator()(Trace<web::rest::Client::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
       .stream_id = stream_id_,
-      .account = account_.get_name(),
+      .account = account_.name,
       .latency = latency.sample,
   };
   create_trace_and_dispatch(handler_, trace_info, external_latency);
@@ -210,7 +210,7 @@ void OrderEntry::operator()(ConnectionStatus status) {
     TraceInfo trace_info;
     auto stream_status = StreamStatus{
         .stream_id = stream_id_,
-        .account = account_.get_name(),
+        .account = account_.name,
         .supports = SUPPORTS,
         .transport = Transport::TCP,
         .protocol = Protocol::HTTP,
@@ -250,10 +250,10 @@ uint32_t OrderEntry::download(OrderEntryState state) {
       return 1;
     case DONE:
       (*this)(ConnectionStatus::READY);
-      return {};
+      return 0;
   }
   assert(false);
-  return {};
+  return 0;
 }
 
 // private-token
@@ -261,7 +261,7 @@ uint32_t OrderEntry::download(OrderEntryState state) {
 void OrderEntry::get_private_token() {
   profile_.private_token([&]() {
     auto method = web::http::Method::POST;
-    auto path = "/api/v1/bullet-private"sv;
+    auto path = shared_.api.rest_private.bullet_private;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -278,7 +278,7 @@ void OrderEntry::get_private_token() {
       Trace event{trace_info, response};
       get_private_token_ack(event, sequence);
     };
-    (*connection_)("private_token", request, callback);
+    (*connection_)("bullet-private", request, callback);
   });
 }
 
@@ -316,7 +316,7 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
   auto &instance_server = token.data.instance_servers[0];
   auto query = fmt::format("?token={}"sv, token.data.token);
   auto private_token = PrivateToken{
-      .account = account_.get_name(),
+      .account = account_.name,
       .uri = instance_server.endpoint,
       .query = query,
       .ping_frequency = instance_server.ping_interval,
@@ -331,7 +331,7 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
 void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.get_account_overview;
+    auto path = shared_.api.rest_private.account_overview;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -348,7 +348,7 @@ void OrderEntry::get_account() {
       Trace event{trace_info, response};
       get_account_ack(event, sequence);
     };
-    (*connection_)("account", request, callback);
+    (*connection_)("account-overview", request, callback);
   });
 }
 
@@ -385,7 +385,7 @@ void OrderEntry::operator()(Trace<json::Account> const &event) {
 void OrderEntry::get_positions() {
   profile_.positions([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.get_all_position;
+    auto path = shared_.api.rest_private.all_position;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -402,7 +402,7 @@ void OrderEntry::get_positions() {
       Trace event{trace_info, response};
       get_positions_ack(event, sequence);
     };
-    (*connection_)("positions", request, callback);
+    (*connection_)("all-positions", request, callback);
   });
 }
 
@@ -439,7 +439,7 @@ void OrderEntry::operator()(Trace<json::Positions> const &event) {
 void OrderEntry::get_orders() {
   profile_.orders([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.get_orders_all_active;
+    auto path = shared_.api.rest_private.orders_all_active;
     auto query = shared_.api.version == 1 ? "?status=active"sv : ""sv;
     auto headers = account_.create_signature_api_v2(method, path, query, {});
     auto request = web::rest::Request{
@@ -457,7 +457,7 @@ void OrderEntry::get_orders() {
       Trace event{trace_info, response};
       get_orders_ack(event, sequence);
     };
-    (*connection_)("orders", request, callback);
+    (*connection_)("orders-all-active", request, callback);
   });
 }
 
@@ -494,7 +494,7 @@ void OrderEntry::operator()(Trace<json::Orders> const &event) {
 void OrderEntry::get_fills() {
   profile_.fills([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.get_orders_historical_trades;
+    auto path = shared_.api.rest_private.orders_historical_trades;
     // XXX HANS for v2 we ned SYMBOL !!!
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
@@ -512,7 +512,7 @@ void OrderEntry::get_fills() {
       Trace event{trace_info, response};
       get_fills_ack(event, sequence);
     };
-    (*connection_)("fills", request, callback);
+    (*connection_)("orders-historical-trades", request, callback);
   });
 }
 
@@ -584,7 +584,7 @@ void OrderEntry::create_order(
     log::debug(R"(body="{}")"sv, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
-        .path = shared_.api.post_order,
+        .path = shared_.api.rest_private.order,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
@@ -638,7 +638,7 @@ void OrderEntry::cancel_order(
     if (!ready())
       throw server::oms::NotReady{"not ready"sv};
     auto &[message_info, cancel_order] = event;
-    auto path = shared_.api.delete_order;
+    auto path = shared_.api.rest_private.order;
     auto real_path =
         std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
@@ -697,7 +697,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
     auto send_ack = [&]() {
       auto cancel_all_orders_ack = CancelAllOrdersAck{
           .stream_id = stream_id_,
-          .account = account_.get_name(),
+          .account = account_.name,
           .order_id = cancel_all_orders.order_id,
           .exchange = cancel_all_orders.exchange,
           .symbol = cancel_all_orders.symbol,
@@ -719,7 +719,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
     };
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
-        .path = shared_.api.delete_orders,
+        .path = shared_.api.rest_private.orders,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -742,7 +742,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
     auto send_ack = [&](auto origin, auto status, Error error, std::string_view const &text) {
       auto cancel_all_orders_ack = CancelAllOrdersAck{
           .stream_id = stream_id_,
-          .account = account_.get_name(),
+          .account = account_.name,
           .order_id = {},
           .exchange = {},
           .symbol = {},

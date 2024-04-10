@@ -12,7 +12,7 @@ namespace kucoin_futures {
 // === IMPLEMENTATION ===
 
 Account::Account(Config const &config, std::string_view const &name)
-    : name_{name}, crypto_{config.get_api_key(name_), config.get_secret(name_), config.get_passphrase(name_)} {
+    : name{name}, crypto_{config.get_api_key(name), config.get_secret(name), config.get_passphrase(name)} {
 }
 
 std::string Account::create_signature_api_v1(
