@@ -4,16 +4,17 @@
   "values": [
     {
       "name": "code",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "msg",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
       "name": "data",
-      "type": "std::span<Contract const>"
+      "type": "Contract",
+      "array": "std/span"
     }
   ]
 }

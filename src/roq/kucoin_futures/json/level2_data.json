@@ -4,42 +4,44 @@
   "values": [
     {
       "name": "sequence",
-      "type": "uint64_t",
+      "type": "std/uint64",
       "comment": "v1"
     },
     {
       "name": "change",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "comment": "v1"
     },
     {
       "name": "timestamp",
-      "type": "std::chrono::milliseconds",
+      "type": "std/milliseconds",
       "comment": "v1"
     },
     {
       "name": "start",
-      "type": "uint64_t",
+      "type": "std/uint64",
       "comment": "v2"
     },
     {
       "name": "end",
-      "type": "uint64_t",
+      "type": "std/uint64",
       "comment": "v2"
     },
     {
       "name": "ts",
-      "type": "std::chrono::milliseconds",
+      "type": "std/milliseconds",
       "comment": "v2"
     },
     {
       "name": "asks",
-      "type": "std::span<Level2DataItem const>",
+      "type": "Level2DataItem",
+      "array": "std/span",
       "comment": "v2"
     },
     {
       "name": "bids",
-      "type": "std::span<Level2DataItem const>",
+      "type": "Level2DataItem",
+      "array": "std/span",
       "comment": "v2"
     }
   ]

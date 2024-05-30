@@ -4,31 +4,31 @@
   "values": [
     {
       "name": "symbol",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "sequence",
-      "type": "uint64_t"
+      "type": "std/uint64"
     },
     {
       "name": "bestBidSize",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "bestBidPrice",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "bestAskSize",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "bestAskPrice",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     }
   ]
 }

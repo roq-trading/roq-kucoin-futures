@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "userId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "subject",
@@ -12,7 +12,7 @@
     },
     {
       "name": "topic",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "data",

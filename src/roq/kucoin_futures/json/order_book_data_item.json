@@ -4,11 +4,11 @@
   "values": [
     {
       "name": "price",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "size",
-      "type": "double"
+      "type": "std/double"
     }
   ]
 }

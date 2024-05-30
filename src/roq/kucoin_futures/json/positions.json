@@ -4,16 +4,17 @@
   "values": [
     {
       "name": "code",
-      "type": "int32_t"
+      "type": "std/int32"
     },
     {
       "name": "msg",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
       "name": "data",
-      "type": "std::span<Position const>"
+      "type": "Position",
+      "array": "std/span"
     }
   ]
 }

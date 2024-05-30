@@ -4,23 +4,23 @@
   "values": [
     {
       "name": "volume",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "turnover",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "lastPrice",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "priceChgPct",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     }
   ]
 }

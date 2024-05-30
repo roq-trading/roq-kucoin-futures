@@ -4,15 +4,15 @@
   "values": [
     {
       "name": "makerUserId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "symbol",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "sequence",
-      "type": "uint64_t"
+      "type": "std/uint64"
     },
     {
       "name": "side",
@@ -20,31 +20,31 @@
     },
     {
       "name": "size",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "price",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "takerOrderId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "makerOrderId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "takerUserId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "tradeId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     }
   ]
 }

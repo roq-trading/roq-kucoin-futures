@@ -4,19 +4,19 @@
   "values": [
     {
       "name": "availableBalance",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "holdBalance",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "currency",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "timestamp",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     }
   ]
 }

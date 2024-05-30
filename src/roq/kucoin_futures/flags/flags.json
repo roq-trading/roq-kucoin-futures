@@ -4,14 +4,14 @@
   "values": [
     {
       "name": "exchange",
-      "type": "std::string",
+      "type": "std/string",
       "required": true,
       "default": "kucoin-futures",
       "description": "Exchange identifier"
     },
     {
       "name": "api",
-      "type": "std::string",
+      "type": "std/string",
       "required": true,
       "default": "v1",
       "description": "API (:code:`v1` or :code:`v2`)"

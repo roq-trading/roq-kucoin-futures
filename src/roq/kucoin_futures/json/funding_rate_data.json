@@ -4,15 +4,15 @@
   "values": [
     {
       "name": "granularity",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "fundingRate",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "timestamp",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     }
   ]
 }

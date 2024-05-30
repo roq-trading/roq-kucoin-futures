@@ -4,31 +4,31 @@
   "values": [
     {
       "name": "fundingTime",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     },
     {
       "name": "qty",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "markPrice",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "fundingRate",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "fundingFee",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "ts",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     },
     {
       "name": "settleCurrency",
-      "type": "std::string_view"
+      "type": "std/string_view"
     }
   ]
 }

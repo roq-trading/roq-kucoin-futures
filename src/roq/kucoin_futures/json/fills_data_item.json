@@ -4,75 +4,75 @@
   "values": [
     {
       "name": "symbol",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "tradeId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "orderId",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "side",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "liquidity",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "price",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "size",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "value",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "feeRate",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "fixFee",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "feeCurrency",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "stop",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "fee",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "orderType",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "tradeType",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "createdAt",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     },
     {
       "name": "settleCurrency",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "tradeTime",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     }
   ]
 }

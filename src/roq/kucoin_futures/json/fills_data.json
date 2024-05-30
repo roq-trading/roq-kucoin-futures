@@ -4,23 +4,24 @@
   "values": [
     {
       "name": "currentPage",
-      "type": "int32_t"
+      "type": "std/int32"
     },
     {
       "name": "pageSize",
-      "type": "int32_t"
+      "type": "std/int32"
     },
     {
       "name": "totalNum",
-      "type": "int32_t"
+      "type": "std/int32"
     },
     {
       "name": "totalPage",
-      "type": "int32_t"
+      "type": "std/int32"
     },
     {
       "name": "items",
-      "type": "std::span<FillsDataItem const>"
+      "type": "FillsDataItem",
+      "array": "std/span"
     }
   ]
 }

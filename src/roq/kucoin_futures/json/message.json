@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "code",
-      "type": "int32_t",
+      "type": "std/int32",
       "optional": true
     },
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "topic",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
@@ -26,32 +26,32 @@
     },
     {
       "name": "privateChannel",
-      "type": "bool",
+      "type": "std/bool",
       "optional": true
     },
     {
       "name": "response",
-      "type": "bool",
+      "type": "std/bool",
       "optional": true
     },
     {
       "name": "id",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
       "name": "sequence",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
       "name": "userId",
-      "type": "std::string_view",
+      "type": "std/string_view",
       "optional": true
     },
     {
       "name": "sn",
-      "type": "int64_t",
+      "type": "std/int64",
       "optional": true,
       "comment": "v2"
     }

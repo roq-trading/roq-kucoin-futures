@@ -4,127 +4,127 @@
   "values": [
     {
       "name": "id",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "symbol",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "type",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "side",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "price",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "size",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "value",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "filledValue",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "filledSize",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "stp",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "stop",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "stopPriceType",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "stopTriggered",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "stopPrice",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "timeInForce",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "postOnly",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "hidden",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "iceberg",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "leverage",
-      "type": "double"
+      "type": "std/double"
     },
     {
       "name": "forceHold",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "closeOrder",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "reduceOnly",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "clientOid",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "remark",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "isActive",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "cancelExist",
-      "type": "bool"
+      "type": "std/bool"
     },
     {
       "name": "createdAt",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     },
     {
       "name": "settleCurrency",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "status",
-      "type": "std::string_view"
+      "type": "std/string_view"
     },
     {
       "name": "updatedAt",
-      "type": "std::chrono::milliseconds"
+      "type": "std/milliseconds"
     },
     {
       "name": "orderTime",
-      "type": "std::chrono::nanoseconds"
+      "type": "std/nanoseconds"
     }
   ]
 }
