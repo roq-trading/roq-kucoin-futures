@@ -1,5 +1,5 @@
 {
-  "name": "Positions",
+  "name": "roq/kucoin_futures/json/Positions",
   "type": "comp",
   "values": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "Position",
+      "type": "roq/kucoin_futures/json/Position",
       "array": "std/span"
     }
   ]

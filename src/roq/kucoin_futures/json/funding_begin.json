@@ -1,14 +1,14 @@
 {
-  "name": "FundingBegin",
+  "name": "roq/kucoin_futures/json/FundingBegin",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -16,7 +16,7 @@
     },
     {
       "name": "data",
-      "type": "FundingBeginData"
+      "type": "roq/kucoin_futures/json/FundingBeginData"
     }
   ]
 }

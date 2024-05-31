@@ -1,5 +1,5 @@
 {
-  "name": "Contracts",
+  "name": "roq/kucoin_futures/json/Contracts",
   "type": "comp",
   "values": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "Contract",
+      "type": "roq/kucoin_futures/json/Contract",
       "array": "std/span"
     }
   ]

@@ -1,10 +1,10 @@
 {
-  "name": "Welcome",
+  "name": "roq/kucoin_futures/json/Welcome",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "id",

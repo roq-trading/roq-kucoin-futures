@@ -1,14 +1,14 @@
 {
-  "name": "Snapshot24h",
+  "name": "roq/kucoin_futures/json/Snapshot24h",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -16,7 +16,7 @@
     },
     {
       "name": "data",
-      "type": "Snapshot24hData"
+      "type": "roq/kucoin_futures/json/Snapshot24hData"
     }
   ]
 }

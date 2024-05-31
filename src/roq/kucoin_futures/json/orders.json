@@ -1,5 +1,5 @@
 {
-  "name": "Orders",
+  "name": "roq/kucoin_futures/json/Orders",
   "type": "comp",
   "values": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "OrdersData"
+      "type": "roq/kucoin_futures/json/OrdersData"
     }
   ]
 }

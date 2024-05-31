@@ -1,5 +1,5 @@
 {
-  "name": "OrderBookData",
+  "name": "roq/kucoin_futures/json/OrderBookData",
   "type": "comp",
   "values": [
     {
@@ -12,12 +12,12 @@
     },
     {
       "name": "asks",
-      "type": "OrderBookDataItem",
+      "type": "roq/kucoin_futures/json/OrderBookDataItem",
       "array": "std/span"
     },
     {
       "name": "bids",
-      "type": "OrderBookDataItem",
+      "type": "roq/kucoin_futures/json/OrderBookDataItem",
       "array": "std/span"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "name": "PositionChangeData",
+  "name": "roq/kucoin_futures/json/PositionChangeData",
   "type": "comp",
   "values": [
     {

@@ -1,5 +1,5 @@
 {
-  "name": "Error",
+  "name": "roq/kucoin_futures/json/Error",
   "type": "comp",
   "values": [
     {
@@ -9,7 +9,7 @@
     },
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "data",

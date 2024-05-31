@@ -1,5 +1,5 @@
 {
-  "name": "MatchData",
+  "name": "roq/kucoin_futures/json/MatchData",
   "type": "comp",
   "values": [
     {
@@ -16,7 +16,7 @@
     },
     {
       "name": "side",
-      "type": "Side"
+      "type": "roq/kucoin_futures/json/Side"
     },
     {
       "name": "size",

@@ -1,5 +1,5 @@
 {
-  "name": "MarkIndexPriceData",
+  "name": "roq/kucoin_futures/json/MarkIndexPriceData",
   "type": "comp",
   "values": [
     {

@@ -1,5 +1,5 @@
 {
-  "name": "ExecutionData",
+  "name": "roq/kucoin_futures/json/ExecutionData",
   "type": "comp",
   "values": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "name": "matchSide",
-      "type": "Side"
+      "type": "roq/kucoin_futures/json/Side"
     },
     {
       "name": "size",

@@ -1,5 +1,5 @@
 {
-  "name": "Message",
+  "name": "roq/kucoin_futures/json/Message",
   "type": "comp",
   "values": [
     {
@@ -9,7 +9,7 @@
     },
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "topic",
@@ -21,7 +21,7 @@
     },
     {
       "name": "subject",
-      "type": "Subject",
+      "type": "roq/kucoin_futures/json/Subject",
       "optional": true
     },
     {

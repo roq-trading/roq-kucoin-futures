@@ -1,5 +1,5 @@
 {
-  "name": "Account",
+  "name": "roq/kucoin_futures/json/Account",
   "type": "comp",
   "values": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "AccountData"
+      "type": "roq/kucoin_futures/json/AccountData"
     }
   ]
 }

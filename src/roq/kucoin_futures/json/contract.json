@@ -1,5 +1,5 @@
 {
-  "name": "Contract",
+  "name": "roq/kucoin_futures/json/Contract",
   "type": "item",
   "values": [
     {
@@ -116,11 +116,11 @@
     },
     {
       "name": "markMethod",
-      "type": "MarkMethod"
+      "type": "roq/kucoin_futures/json/MarkMethod"
     },
     {
       "name": "fairMethod",
-      "type": "FairMethod"
+      "type": "roq/kucoin_futures/json/FairMethod"
     },
     {
       "name": "fundingBaseSymbol",
@@ -140,7 +140,7 @@
     },
     {
       "name": "status",
-      "type": "Status"
+      "type": "roq/kucoin_futures/json/Status"
     },
     {
       "name": "fundingFeeRate",

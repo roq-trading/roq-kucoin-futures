@@ -1,10 +1,10 @@
 {
-  "name": "OrderChange",
+  "name": "roq/kucoin_futures/json/OrderChange",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "userId",
@@ -12,7 +12,7 @@
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -24,7 +24,7 @@
     },
     {
       "name": "data",
-      "type": "OrderChangeData"
+      "type": "roq/kucoin_futures/json/OrderChangeData"
     }
   ]
 }

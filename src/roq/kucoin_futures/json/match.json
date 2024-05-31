@@ -1,14 +1,14 @@
 {
-  "name": "Match",
+  "name": "roq/kucoin_futures/json/Match",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -16,7 +16,7 @@
     },
     {
       "name": "data",
-      "type": "MatchData"
+      "type": "roq/kucoin_futures/json/MatchData"
     }
   ]
 }

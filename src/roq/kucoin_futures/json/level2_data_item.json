@@ -1,5 +1,5 @@
 {
-  "name": "Level2DataItem",
+  "name": "roq/kucoin_futures/json/Level2DataItem",
   "type": "array_item",
   "values": [
     {

@@ -1,5 +1,5 @@
 {
-  "name": "MarkMethod",
+  "name": "roq/kucoin_futures/json/MarkMethod",
   "type": "enum",
   "values": [
     {

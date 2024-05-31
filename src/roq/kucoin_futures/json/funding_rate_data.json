@@ -1,5 +1,5 @@
 {
-  "name": "FundingRateData",
+  "name": "roq/kucoin_futures/json/FundingRateData",
   "type": "comp",
   "values": [
     {

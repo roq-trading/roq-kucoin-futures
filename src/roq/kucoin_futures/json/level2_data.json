@@ -1,5 +1,5 @@
 {
-  "name": "Level2Data",
+  "name": "roq/kucoin_futures/json/Level2Data",
   "type": "comp",
   "values": [
     {
@@ -34,13 +34,13 @@
     },
     {
       "name": "asks",
-      "type": "Level2DataItem",
+      "type": "roq/kucoin_futures/json/Level2DataItem",
       "array": "std/span",
       "comment": "v2"
     },
     {
       "name": "bids",
-      "type": "Level2DataItem",
+      "type": "roq/kucoin_futures/json/Level2DataItem",
       "array": "std/span",
       "comment": "v2"
     }

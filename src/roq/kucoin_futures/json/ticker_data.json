@@ -1,5 +1,5 @@
 {
-  "name": "TickerData",
+  "name": "roq/kucoin_futures/json/TickerData",
   "type": "comp",
   "values": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "name": "side",
-      "type": "Side"
+      "type": "roq/kucoin_futures/json/Side"
     },
     {
       "name": "size",

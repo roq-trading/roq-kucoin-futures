@@ -1,5 +1,5 @@
 {
-  "name": "Request",
+  "name": "roq/kucoin_futures/flags/Request",
   "type": "flags",
   "prefix": "request_",
   "values": [

@@ -1,5 +1,5 @@
 {
-  "name": "OrderChangeData",
+  "name": "roq/kucoin_futures/json/OrderChangeData",
   "type": "comp",
   "values": [
     {

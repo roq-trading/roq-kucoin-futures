@@ -1,5 +1,5 @@
 {
-  "name": "OrderEntryState",
+  "name": "roq/kucoin_futures/OrderEntryState",
   "type": "enum",
   "values": [
     {

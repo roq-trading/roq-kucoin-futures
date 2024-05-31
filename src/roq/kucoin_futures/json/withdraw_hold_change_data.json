@@ -1,5 +1,5 @@
 {
-  "name": "WithdrawHoldChangeData",
+  "name": "roq/kucoin_futures/json/WithdrawHoldChangeData",
   "type": "comp",
   "values": [
     {

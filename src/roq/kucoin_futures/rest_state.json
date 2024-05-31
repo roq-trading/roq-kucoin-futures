@@ -1,5 +1,5 @@
 {
-  "name": "RestState",
+  "name": "roq/kucoin_futures/RestState",
   "type": "enum",
   "values": [
     {

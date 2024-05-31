@@ -1,5 +1,5 @@
 {
-  "name": "PositionSettlement",
+  "name": "roq/kucoin_futures/json/PositionSettlement",
   "type": "comp",
   "values": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -16,7 +16,7 @@
     },
     {
       "name": "data",
-      "type": "PositionSettlementData"
+      "type": "roq/kucoin_futures/json/PositionSettlementData"
     }
   ]
 }

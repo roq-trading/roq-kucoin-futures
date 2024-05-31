@@ -1,10 +1,10 @@
 {
-  "name": "TokenData",
+  "name": "roq/kucoin_futures/json/TokenData",
   "type": "comp",
   "values": [
     {
       "name": "instanceServers",
-      "type": "InstanceServer",
+      "type": "roq/kucoin_futures/json/InstanceServer",
       "array": "std/span"
     },
     {

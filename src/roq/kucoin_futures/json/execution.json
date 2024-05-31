@@ -1,14 +1,14 @@
 {
-  "name": "Execution",
+  "name": "roq/kucoin_futures/json/Execution",
   "type": "comp",
   "values": [
     {
       "name": "type",
-      "type": "Type"
+      "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -20,7 +20,7 @@
     },
     {
       "name": "data",
-      "type": "ExecutionData"
+      "type": "roq/kucoin_futures/json/ExecutionData"
     }
   ]
 }

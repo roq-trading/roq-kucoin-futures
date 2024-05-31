@@ -1,5 +1,5 @@
 {
-  "name": "OrderMarginChange",
+  "name": "roq/kucoin_futures/json/OrderMarginChange",
   "type": "comp",
   "values": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "name": "subject",
-      "type": "Subject"
+      "type": "roq/kucoin_futures/json/Subject"
     },
     {
       "name": "topic",
@@ -16,7 +16,7 @@
     },
     {
       "name": "data",
-      "type": "OrderMarginChangeData"
+      "type": "roq/kucoin_futures/json/OrderMarginChangeData"
     }
   ]
 }

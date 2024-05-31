@@ -1,5 +1,5 @@
 {
-  "name": "FillsData",
+  "name": "roq/kucoin_futures/json/FillsData",
   "type": "comp",
   "values": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "name": "items",
-      "type": "FillsDataItem",
+      "type": "roq/kucoin_futures/json/FillsDataItem",
       "array": "std/span"
     }
   ]
