@@ -12,8 +12,7 @@ namespace kucoin_futures {
 // === IMPLEMENTATION ===
 
 Shared::Shared(server::Dispatcher &dispatcher, Settings const &settings)
-    : api{API::create(settings)}, dispatcher_{dispatcher}, settings{settings},
-      rate_limiter{settings.request.limit, settings.request.limit_interval},
+    : api{API::create(settings)}, dispatcher_{dispatcher}, settings{settings}, rate_limiter{settings.request.limit, settings.request.limit_interval},
       symbols{settings.ws.max_subscriptions_per_stream}, depth_request_queue{settings.ws.mbp_request_delay} {
 }
 

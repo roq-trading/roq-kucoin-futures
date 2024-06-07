@@ -24,11 +24,7 @@ void dispatch_helper(auto &handler, auto &message, auto &buffer, auto &trace_inf
 
 // === IMPLEMENTATION ===
 
-bool Parser::dispatch(
-    Handler &handler,
-    std::string_view const &message,
-    std::span<std::byte> const &buffer,
-    TraceInfo const &trace_info) {
+bool Parser::dispatch(Handler &handler, std::string_view const &message, std::span<std::byte> const &buffer, TraceInfo const &trace_info) {
   Message message_{message, buffer};
   switch (message_.type) {
     using enum json::Type::type_t;

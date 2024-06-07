@@ -74,16 +74,14 @@ auto create_connection(auto &handler, auto &settings, auto &context) {
 }
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(auto &settings, auto const &group, auto const &function)
-      : core::metrics::Factory(settings.app.name, group, function) {}
+  explicit create_metrics(auto &settings, auto const &group, auto const &function) : core::metrics::Factory(settings.app.name, group, function) {}
 };
 }  // namespace
 
 // === IMPLEMENTATION ===
 
 Rest::Rest(Handler &handler, io::Context &context, uint16_t stream_id, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)},
-      connection_{create_connection(*this, shared.settings, context)},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, connection_{create_connection(*this, shared.settings, context)},
       decode_buffer_(shared.settings.misc.decode_buffer_size),
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
@@ -402,8 +400,7 @@ void Rest::get_order_book(std::string_view const &symbol) {
   });
 }
 
-void Rest::get_order_book_ack(
-    Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
+void Rest::get_order_book_ack(Trace<web::rest::Response> const &event, [[maybe_unused]] std::string_view const &symbol) {
   profile_.order_book_ack([&]() {
     auto handle_success = [&](auto &body) {
       json::OrderBook order_book{body, decode_buffer_};
@@ -443,26 +440,25 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
   for (auto &item : data.asks)
     emplace_back(mbp.asks, item);
   try {
-    auto publish_snapshot =
-        [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
-          log::info(R"(DEBUG PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
-          auto market_by_price_update = MarketByPriceUpdate{
-              .stream_id = stream_id_,
-              .exchange = shared_.settings.exchange,
-              .symbol = symbol,
-              .bids = bids,
-              .asks = asks,
-              .update_type = UpdateType::SNAPSHOT,
-              .exchange_time_utc = data.ts,
-              .exchange_sequence = sequencer.last_sequence(),
-              .sending_time_utc = data.ts,
-              .price_precision = {},
-              .quantity_precision = {},
-              .checksum = {},
-          };
-          Trace event{trace_info, market_by_price_update};
-          shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
-        };
+    auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
+      log::info(R"(DEBUG PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);
+      auto market_by_price_update = MarketByPriceUpdate{
+          .stream_id = stream_id_,
+          .exchange = shared_.settings.exchange,
+          .symbol = symbol,
+          .bids = bids,
+          .asks = asks,
+          .update_type = UpdateType::SNAPSHOT,
+          .exchange_time_utc = data.ts,
+          .exchange_sequence = sequencer.last_sequence(),
+          .sending_time_utc = data.ts,
+          .price_precision = {},
+          .quantity_precision = {},
+          .checksum = {},
+      };
+      Trace event{trace_info, market_by_price_update};
+      shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
+    };
     auto request_snapshot = [&](auto retries) {
       log::info(R"(DEBUG REQUEST symbol="{}" (retries={}))"sv, symbol, retries);
       if (shared_.settings.ws.mbp_request_max_retries && shared_.settings.ws.mbp_request_max_retries < retries) {
@@ -490,8 +486,7 @@ void Rest::check_request_queue(std::chrono::nanoseconds now) {
 }
 
 template <typename SuccessHandler, typename ErrorHandler>
-void Rest::process_response(
-    web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
+void Rest::process_response(web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
   try {
     auto [status, category, body] = response.result();
     switch (category) {

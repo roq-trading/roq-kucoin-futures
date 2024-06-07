@@ -25,11 +25,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-struct Gateway final : public server::Handler,
-                       public Rest::Handler,
-                       public OrderEntry::Handler,
-                       public DropCopy::Handler,
-                       public MarketData::Handler {
+struct Gateway final : public server::Handler, public Rest::Handler, public OrderEntry::Handler, public DropCopy::Handler, public MarketData::Handler {
   Gateway(server::Dispatcher &, Settings const &, Config const &, io::Context &);
 
  protected:
@@ -39,18 +35,11 @@ struct Gateway final : public server::Handler,
   void operator()(Event<Connected> const &) override;
   void operator()(Event<Disconnected> const &) override;
 
+  uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id) override;
   uint16_t operator()(
-      Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id) override;
+      Event<ModifyOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
   uint16_t operator()(
-      Event<ModifyOrder> const &,
-      server::oms::Order const &,
-      std::string_view const &request_id,
-      std::string_view const &previous_request_id) override;
-  uint16_t operator()(
-      Event<CancelOrder> const &,
-      server::oms::Order const &,
-      std::string_view const &request_id,
-      std::string_view const &previous_request_id) override;
+      Event<CancelOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
 
   uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) override;
 

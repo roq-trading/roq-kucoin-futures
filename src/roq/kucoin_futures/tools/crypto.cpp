@@ -30,16 +30,11 @@ auto create_signed_passphrase(auto &mac, auto &digest_buffer, auto const &passph
 // === IMPLEMENTATION ===
 
 Crypto::Crypto(std::string_view const &key, std::string_view const &secret, std::string_view const &passphrase)
-    : key_{key}, mac_{secret}, passphrase_{passphrase},
-      signed_passphrase_{create_signed_passphrase(mac_, digest_, passphrase)} {
+    : key_{key}, mac_{secret}, passphrase_{passphrase}, signed_passphrase_{create_signed_passphrase(mac_, digest_, passphrase)} {
 }
 
 std::string Crypto::create_headers_v1(
-    web::http::Method method,
-    std::string_view const &path,
-    std::string_view const &query,
-    std::string_view const &body,
-    std::chrono::milliseconds timestamp) {
+    web::http::Method method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   mac_.clear();
@@ -61,11 +56,7 @@ std::string Crypto::create_headers_v1(
 }
 
 std::string Crypto::create_headers_v2(
-    web::http::Method method,
-    std::string_view const &path,
-    std::string_view const &query,
-    std::string_view const &body,
-    std::chrono::milliseconds timestamp) {
+    web::http::Method method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
   mac_.clear();

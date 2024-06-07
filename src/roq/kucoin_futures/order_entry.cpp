@@ -74,16 +74,14 @@ auto create_connection(auto &handler, auto &settings, auto &context) {
 }
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(auto &settings, auto const &group, auto const &function)
-      : core::metrics::Factory(settings.app.name, group, function) {}
+  explicit create_metrics(auto &settings, auto const &group, auto const &function) : core::metrics::Factory(settings.app.name, group, function) {}
 };
 }  // namespace
 
 // === IMPLEMENTATION ===
 
 OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.name)},
-      connection_{create_connection(*this, shared.settings, context)},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account.name)}, connection_{create_connection(*this, shared.settings, context)},
       decode_buffer_(shared.settings.misc.decode_buffer_size),
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
@@ -109,8 +107,7 @@ OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_i
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
       },
-      account_{account}, shared_{shared},
-      download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
+      account_{account}, shared_{shared}, download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
 }
 
 void OrderEntry::operator()(Event<Start> const &) {
@@ -150,8 +147,7 @@ void OrderEntry::operator()(metrics::Writer &writer) {
       .write(latency_.ping, metrics::Type::LATENCY);
 }
 
-uint16_t OrderEntry::operator()(
-    Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+uint16_t OrderEntry::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
   create_order(event, order, request_id);
   return stream_id_;
 }
@@ -165,10 +161,7 @@ uint16_t OrderEntry::operator()(
 }
 
 uint16_t OrderEntry::operator()(
-    Event<CancelOrder> const &event,
-    server::oms::Order const &order,
-    std::string_view const &request_id,
-    std::string_view const &previous_request_id) {
+    Event<CancelOrder> const &event, server::oms::Order const &order, std::string_view const &request_id, std::string_view const &previous_request_id) {
   cancel_order(event, order, request_id, previous_request_id);
   return stream_id_;
 }
@@ -546,8 +539,7 @@ void OrderEntry::operator()(Trace<json::Fills> const &event) {
 
 // create-order
 
-void OrderEntry::create_order(
-    Event<CreateOrder> const &event, server::oms::Order const &, std::string_view const &request_id) {
+void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Order const &, std::string_view const &request_id) {
   profile_.create_order([&]() {
     if (!ready())
       throw server::oms::NotReady{"not ready"sv};
@@ -592,8 +584,7 @@ void OrderEntry::create_order(
         .body = body,
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto callback = [this, user_id = message_info.source, order_id = create_order.order_id](
-                        [[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, user_id = message_info.source, order_id = create_order.order_id]([[maybe_unused]] auto &request_id, auto &response) {
       auto version = uint32_t{1};
       TraceInfo trace_info;
       Trace event{trace_info, response};
@@ -603,8 +594,7 @@ void OrderEntry::create_order(
   });
 }
 
-void OrderEntry::create_order_ack(
-    Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
     auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
@@ -639,8 +629,7 @@ void OrderEntry::cancel_order(
       throw server::oms::NotReady{"not ready"sv};
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.rest_private.order;
-    auto real_path =
-        std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
+    auto real_path = std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
@@ -652,19 +641,17 @@ void OrderEntry::cancel_order(
         .body = {},
         .quality_of_service = io::QualityOfService::IMMEDIATE,
     };
-    auto callback =
-        [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
-            [[maybe_unused]] auto &request_id, auto &response) {
-          TraceInfo trace_info;
-          Trace event{trace_info, response};
-          cancel_order_ack(event, user_id, order_id, version);
-        };
+    auto callback = [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
+                        [[maybe_unused]] auto &request_id, auto &response) {
+      TraceInfo trace_info;
+      Trace event{trace_info, response};
+      cancel_order_ack(event, user_id, order_id, version);
+    };
     (*connection_)(request_id, request, callback);
   });
 }
 
-void OrderEntry::cancel_order_ack(
-    Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
     auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
@@ -771,8 +758,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
 }
 
 template <typename SuccessHandler, typename ErrorHandler>
-void OrderEntry::process_response(
-    web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
+void OrderEntry::process_response(web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {
   try {
     auto [status, category, body] = response.result();
     log::debug(R"(status={}, category={}, body="{}")"sv, status, category, body);
@@ -805,17 +791,9 @@ void OrderEntry::process_response(
 }
 
 template <typename... Args>
-void OrderEntry::operator()(
-    Trace<server::oms::Response> const &event, uint8_t user_id, uint64_t order_id, Args &&...args) {
+void OrderEntry::operator()(Trace<server::oms::Response> const &event, uint8_t user_id, uint64_t order_id, Args &&...args) {
   auto &[trace_info, response] = event;
-  if (shared_.update_order(
-          user_id,
-          order_id,
-          stream_id_,
-          trace_info,
-          response,
-          std::forward<Args>(args)...,
-          []([[maybe_unused]] auto &order) {})) {
+  if (shared_.update_order(user_id, order_id, stream_id_, trace_info, response, std::forward<Args>(args)..., []([[maybe_unused]] auto &order) {})) {
   } else {
     log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
   }
@@ -823,8 +801,7 @@ void OrderEntry::operator()(
 
 void OrderEntry::operator()(Trace<server::oms::OrderUpdate> const &event, std::string_view const &client_order_id) {
   auto &[trace_info, order_update] = event;
-  if (shared_.update_order(
-          client_order_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
+  if (shared_.update_order(client_order_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
   } else {
     log::warn("*** EXTERNAL ORDER ***"sv);
   }

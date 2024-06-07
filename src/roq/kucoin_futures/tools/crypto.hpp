@@ -22,18 +22,10 @@ struct Crypto final {
   Crypto(Crypto const &) = delete;
 
   std::string create_headers_v1(
-      web::http::Method,
-      std::string_view const &path,
-      std::string_view const &query,
-      std::string_view const &body,
-      std::chrono::milliseconds now);
+      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds now);
 
   std::string create_headers_v2(
-      web::http::Method,
-      std::string_view const &path,
-      std::string_view const &query,
-      std::string_view const &body,
-      std::chrono::milliseconds now);
+      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds now);
 
  private:
   using MAC = utils::mac::HMAC<utils::hash::SHA256>;

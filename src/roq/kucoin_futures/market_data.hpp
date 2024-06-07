@@ -125,8 +125,8 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
     utils::metrics::Counter disconnect, total_bytes_received;
   } counter_;
   struct {
-    utils::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, execution, mark_index_price,
-        funding_rate, level2, funding_begin, funding_end, snapshot_24h;
+    utils::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, execution, mark_index_price, funding_rate, level2, funding_begin,
+        funding_end, snapshot_24h;
   } profile_;
   struct {
     utils::metrics::Latency ping, heartbeat;

@@ -20,10 +20,8 @@ struct Account final {
   Account(Account &&) = delete;
   Account(Account const &) = delete;
 
-  std::string create_signature_api_v1(
-      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
-  std::string create_signature_api_v2(
-      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
+  std::string create_signature_api_v1(web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
+  std::string create_signature_api_v2(web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
 
   std::string const name;
 

@@ -66,8 +66,7 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto &uri, 
 }
 
 struct create_metrics final : public core::metrics::Factory {
-  explicit create_metrics(auto &settings, auto const &group, auto const &function)
-      : core::metrics::Factory(settings.app.name, group, function) {}
+  explicit create_metrics(auto &settings, auto const &group, auto const &function) : core::metrics::Factory(settings.app.name, group, function) {}
 };
 }  // namespace
 
@@ -82,9 +81,8 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)},
-      connection_{create_connection(*this, shared.settings, context, uri, query)}, ping_frequency_{ping_frequency},
-      decode_buffer_(shared.settings.misc.decode_buffer_size),
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, connection_{create_connection(*this, shared.settings, context, uri, query)},
+      ping_frequency_{ping_frequency}, decode_buffer_(shared.settings.misc.decode_buffer_size),
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
