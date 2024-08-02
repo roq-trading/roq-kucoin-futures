@@ -43,7 +43,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
-  DropCopy(DropCopy &&) = delete;
+  DropCopy(DropCopy &&) = default;
   DropCopy(DropCopy const &) = delete;
 
   bool ready() const;
