@@ -28,7 +28,6 @@ namespace kucoin_futures {
 struct Gateway final : public server::Handler, public Rest::Handler, public OrderEntry::Handler, public DropCopy::Handler, public MarketData::Handler {
   Gateway(server::Dispatcher &, Settings const &, Config const &, io::Context &);
 
-  Gateway(Gateway &&) = default;
   Gateway(Gateway const &) = delete;
 
  protected:
