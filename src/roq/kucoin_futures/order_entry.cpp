@@ -14,6 +14,7 @@
 
 #include "roq/web/rest/client.hpp"
 
+#include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;
@@ -544,7 +545,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
     if (!ready())
       throw server::oms::NotReady{"not ready"sv};
     auto &[message_info, create_order] = event;
-    auto side = json::map(create_order.side).as_raw_text();
+    auto side = json::map<json::Side>(create_order.side).as_raw_text();
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
     auto remark = ""sv;

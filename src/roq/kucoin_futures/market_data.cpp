@@ -18,6 +18,7 @@
 
 #include "roq/web/socket/client.hpp"
 
+#include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
 #include "roq/kucoin_futures/tools/splitter.hpp"
@@ -415,7 +416,7 @@ void MarketData::operator()(Trace<json::Match> const &event) {
     (*connection_).touch(trace_info.source_receive_time);
     auto &data = match.data;
     auto trade = Trade{
-        .side = json::map(data.side),
+        .side = json::Map{data.side},
         .price = data.price,
         .quantity = data.size,
         .trade_id = data.trade_id,
@@ -443,7 +444,7 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
     auto &data = execution.data;
     auto trade_id = fmt::format("{}"sv, data.trade_id);  // alloc
     auto trade = Trade{
-        .side = json::map(data.match_side),
+        .side = json::Map{data.match_side},
         .price = data.price,
         .quantity = data.size,
         .trade_id = trade_id,

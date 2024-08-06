@@ -10,8 +10,6 @@
 
 #include "roq/core/charconv/datetime.hpp"
 
-#include "roq/kucoin_futures/json/side.hpp"
-
 namespace roq {
 namespace kucoin_futures {
 namespace json {
@@ -54,33 +52,6 @@ inline void update(std::chrono::nanoseconds &result, core::json::Value const &va
 inline std::string_view strip_symbol_from_topic(std::string_view const &topic) {
   auto pos = topic.find_last_of(':');
   return pos == topic.npos ? topic : topic.substr(pos + 1);
-}
-
-inline roq::Side map(json::Side value) {
-  switch (value) {
-    using enum json::Side::type_t;
-    case UNDEFINED__:
-    case UNKNOWN__:
-      break;
-    case BUY:
-      return roq::Side::BUY;
-    case SELL:
-      return roq::Side::SELL;
-  }
-  return {};
-}
-
-inline json::Side map(roq::Side value) {
-  switch (value) {
-    using enum roq::Side;
-    case UNDEFINED:
-      break;
-    case BUY:
-      return json::Side::BUY;
-    case SELL:
-      return json::Side::SELL;
-  }
-  return {};
 }
 
 }  // namespace json
