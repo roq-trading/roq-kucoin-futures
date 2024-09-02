@@ -2,7 +2,7 @@
 
 #include "roq/kucoin_futures/tools/splitter.hpp"
 
-#include "roq/core/charconv.hpp"
+#include "roq/utils/charconv/from_chars.hpp"
 
 using namespace std::literals;
 
@@ -25,9 +25,9 @@ std::tuple<Side, double, double> split(std::string_view const &change) {
   if (sep_1 != change.npos) {
     auto sep_2 = change.find_first_of(',', sep_1 + 1);
     if (sep_2 != change.npos) {
-      auto price = core::from_chars<double>(change.substr(0, sep_1));
+      auto price = utils::charconv::from_chars<double>(change.substr(0, sep_1));
       auto side = to_side(change.substr(sep_1 + 1, sep_2 - sep_1 - 1));
-      auto quantity = core::from_chars<double>(change.substr(sep_2 + 1));
+      auto quantity = utils::charconv::from_chars<double>(change.substr(sep_2 + 1));
       return {side, price, quantity};
     }
   }
