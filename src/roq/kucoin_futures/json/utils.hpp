@@ -6,9 +6,9 @@
 
 #include "roq/utils/patterns.hpp"
 
-#include "roq/core/json/parser.hpp"
+#include "roq/utils/charconv/from_chars.hpp"
 
-#include "roq/core/charconv/datetime.hpp"
+#include "roq/core/json/parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
@@ -27,7 +27,9 @@ inline void update(std::chrono::milliseconds &result, core::json::Value const &v
           [](bool) { throw std::bad_cast{}; },
           [&](int64_t value) { result = std::chrono::milliseconds{value}; },
           [&](double value) { result = std::chrono::milliseconds{static_cast<int64_t>(value)}; },
-          [&](std::string_view const &value) { result = core::charconv::datetime_from_string<std::remove_reference<decltype(result)>::type>(value); },
+          [&](std::string_view const &value) {
+            result = utils::charconv::from_chars<std::remove_reference<decltype(result)>::type>(value, utils::charconv::Format::DATETIME);
+          },
           [](core::json::Object const &) { throw std::bad_cast{}; },
           [](core::json::Array const &) { throw std::bad_cast{}; },
       },
@@ -42,7 +44,9 @@ inline void update(std::chrono::nanoseconds &result, core::json::Value const &va
           [](bool) { throw std::bad_cast{}; },
           [&](int64_t value) { result = std::chrono::nanoseconds{value}; },
           [&](double value) { result = std::chrono::nanoseconds{static_cast<int64_t>(value)}; },
-          [&](std::string_view const &value) { result = core::charconv::datetime_from_string<std::remove_reference<decltype(result)>::type>(value); },
+          [&](std::string_view const &value) {
+            result = utils::charconv::from_chars<std::remove_reference<decltype(result)>::type>(value, utils::charconv::Format::DATETIME);
+          },
           [](core::json::Object const &) { throw std::bad_cast{}; },
           [](core::json::Array const &) { throw std::bad_cast{}; },
       },
