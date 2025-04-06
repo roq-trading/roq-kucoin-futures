@@ -2,95 +2,73 @@
 
 #include "roq/kucoin_futures/json/map.hpp"
 
-#include "roq/logging.hpp"
-
 using namespace std::literals;
 
 namespace roq {
-namespace kucoin_futures {
-namespace json {
-
-// === HELPERS ===
 
 namespace {
-// note! constexpr helper for static testing
 template <typename... Args>
-struct Helper final {
-  explicit constexpr Helper(std::tuple<Args...> const &args) : args_{args} {}
-  explicit constexpr Helper(Args &&...args_) : args_{std::forward<Args>(args_)...} {}
+using Helper = detail::MapHelper<Args...>;
+}
 
-  template <typename R>
-  constexpr operator R();
+// kucoin_futures::json => roq
 
- private:
-  std::tuple<Args...> const args_;
-};
-
-// ==> roq
-
-// Side ==> roq::Side
+// kucoin_futures::json::Side => roq::Side
 
 template <>
 template <>
-constexpr Helper<Side>::operator roq::Side() {
+constexpr Helper<kucoin_futures::json::Side>::operator std::optional<roq::Side>() const {
   switch (std::get<0>(args_)) {
-    using enum Side::type_t;
+    using enum kucoin_futures::json::Side::type_t;
     case UNDEFINED__:
-      return {};
+      return roq::Side::UNDEFINED;
     case UNKNOWN__:
-      break;
+      return roq::Side::UNDEFINED;
     case BUY:
       return roq::Side::BUY;
     case SELL:
       return roq::Side::SELL;
   }
-  roq::log::fatal("Unexpected"sv);
+  return {};
 }
 
-static_assert(static_cast<roq::Side>(Helper{Side{Side::UNDEFINED__}}) == roq::Side::UNDEFINED);
-static_assert(static_cast<roq::Side>(Helper{Side{Side::BUY}}) == roq::Side::BUY);
-static_assert(static_cast<roq::Side>(Helper{Side{Side::SELL}}) == roq::Side::SELL);
-
-// roq ==>
-
-// Side ==> roq::Side
+static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::UNDEFINED__}} == roq::Side::UNDEFINED);
+static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::BUY}} == roq::Side::BUY);
+static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::SELL}} == roq::Side::SELL);
 
 template <>
 template <>
-constexpr Helper<roq::Side>::operator Side() {
+std::optional<roq::Side> Map<kucoin_futures::json::Side>::helper() const {
+  return Helper{args_};
+}
+
+// roq => kucoin_futures::json
+
+// roq::Side ==> kucoin_futures::json::Side
+
+template <>
+template <>
+constexpr Helper<roq::Side>::operator std::optional<kucoin_futures::json::Side>() const {
   switch (std::get<0>(args_)) {
     using enum roq::Side;
     case UNDEFINED:
-      return {};
+      return kucoin_futures::json::Side::UNDEFINED__;
     case BUY:
-      return Side::BUY;
+      return kucoin_futures::json::Side::BUY;
     case SELL:
-      return Side::SELL;
+      return kucoin_futures::json::Side::SELL;
   }
-  roq::log::fatal("Unexpected"sv);
+  return {};
 }
 
-static_assert(static_cast<Side>(Helper{roq::Side::UNDEFINED}) == Side{Side::UNDEFINED__});
-static_assert(static_cast<Side>(Helper{roq::Side::BUY}) == Side{Side::BUY});
-static_assert(static_cast<Side>(Helper{roq::Side::SELL}) == Side{Side::SELL});
-}  // namespace
-
-// === IMPLEMENTATION ===
-
-// ==> roq
+static_assert(Helper{roq::Side::UNDEFINED} == kucoin_futures::json::Side{kucoin_futures::json::Side::UNDEFINED__});
+static_assert(Helper{roq::Side::BUY} == kucoin_futures::json::Side{kucoin_futures::json::Side::BUY});
+static_assert(Helper{roq::Side::SELL} == kucoin_futures::json::Side{kucoin_futures::json::Side::SELL});
 
 template <>
 template <>
-Map<Side>::operator roq::Side() {
+std::optional<kucoin_futures::json::Side> Map<roq::Side>::helper() const {
   return Helper{args_};
 }
 
-template <>
-template <>
-Map<roq::Side>::operator Side() {
-  return Helper{args_};
-}
-
-}  // namespace json
-}  // namespace kucoin_futures
 }  // namespace roq

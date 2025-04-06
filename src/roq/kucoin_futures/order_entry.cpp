@@ -545,7 +545,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
     if (!ready())
       throw server::oms::NotReady{"not ready"sv};
     auto &[message_info, create_order] = event;
-    auto side = json::map<json::Side>(create_order.side).as_raw_text();
+    auto side = map(create_order.side).template get<json::Side>();
     auto type = "limit"sv;  // limit or market
     auto leverage = ""sv;
     auto remark = ""sv;
@@ -565,7 +565,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
         R"("timeInForce":"{}")"
         R"(}})"sv,
         request_id,
-        side,
+        side.as_raw_text(),
         create_order.symbol,
         type,
         leverage,

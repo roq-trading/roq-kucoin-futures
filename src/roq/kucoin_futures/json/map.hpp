@@ -2,35 +2,22 @@
 
 #pragma once
 
-#include <tuple>
-
-#include "roq/api.hpp"
-
 #include "roq/kucoin_futures/json/side.hpp"
 
+#include "roq/side.hpp"
+
+#include "roq/map.hpp"
+
 namespace roq {
-namespace kucoin_futures {
-namespace json {
 
-template <typename... Args>
-struct Map final {
-  explicit Map(Args &&...args) : args_{std::forward<Args>(args)...} {}
-  explicit Map(Args const &...args) : args_{args...} {}
+template <>
+template <>
+std::optional<Side> Map<kucoin_futures::json::Side>::helper() const;
 
-  Map(Map const &) = delete;
+// ===
 
-  template <typename R>
-  operator R();
+template <>
+template <>
+std::optional<kucoin_futures::json::Side> Map<Side>::helper() const;
 
- private:
-  std::tuple<Args...> const args_;
-};
-
-template <typename R, typename... Args>
-inline R map(Args &&...args) {
-  return static_cast<R>(Map{std::forward<Args>(args)...});
-}
-
-}  // namespace json
-}  // namespace kucoin_futures
 }  // namespace roq
