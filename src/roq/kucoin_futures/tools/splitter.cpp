@@ -12,10 +12,12 @@ namespace tools {
 
 namespace {
 Side to_side(std::string_view const &text) {
-  if (text.compare("buy"sv) == 0)
+  if (text.compare("buy"sv) == 0) {
     return Side::BUY;
-  if (text.compare("sell"sv) == 0)
+  }
+  if (text.compare("sell"sv) == 0) {
     return Side::SELL;
+  }
   return {};
 }
 }  // namespace

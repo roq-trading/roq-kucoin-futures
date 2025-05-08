@@ -89,13 +89,16 @@ std::string const &Config::get_secret(Account const &account) const {
 void Config::dispatch(server::config::Handler &handler) const {
   handler(exchange_);
   handler(symbols);
-  for (auto &iter : accounts)
+  for (auto &iter : accounts) {
     handler(iter.second);
-  for (auto &user : users)
+  }
+  for (auto &user : users) {
     handler(user);
+  }
   handler(gateway_settings_);
-  for (auto &iter : rate_limits)
+  for (auto &iter : rate_limits) {
     handler(iter.second);
+  }
 }
 
 void Config::operator()(server::config::Symbols &&symbols) {
@@ -103,8 +106,9 @@ void Config::operator()(server::config::Symbols &&symbols) {
 }
 
 void Config::operator()(server::config::Account &&account) {
-  if (account.master)
+  if (account.master) {
     master_account_ = account.name;
+  }
   accounts.emplace(account.name, std::move(account));
 }
 

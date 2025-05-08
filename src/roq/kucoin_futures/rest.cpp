@@ -109,8 +109,9 @@ void Rest::operator()(Event<Stop> const &) {
 void Rest::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
   (*connection_).refresh(now);
-  if (ready())
+  if (ready()) {
     check_request_queue(now);
+  }
 }
 
 void Rest::operator()(metrics::Writer &writer) {
@@ -162,8 +163,9 @@ void Rest::operator()(Trace<web::rest::Client::Connected> const &) {
 void Rest::operator()(Trace<web::rest::Client::Disconnected> const &) {
   ++counter_.disconnect;
   (*this)(ConnectionStatus::DISCONNECTED);
-  if (!download_.downloading())
+  if (!download_.downloading()) {
     download_.reset();
+  }
 }
 
 void Rest::operator()(Trace<web::rest::Client::Latency> const &event) {
@@ -244,8 +246,9 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
 void Rest::operator()(Trace<json::Token> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
-  if (std::empty(token.data.instance_servers))
+  if (std::empty(token.data.instance_servers)) {
     log::fatal("Unexpected: no instance servers"sv);
+  }
   auto &instance_server = token.data.instance_servers[0];
   auto query = fmt::format("?token={}"sv, token.data.token);
   auto public_token = PublicToken{
@@ -253,8 +256,9 @@ void Rest::operator()(Trace<json::Token> const &event) {
       .query = query,
       .ping_frequency = instance_server.ping_interval,
   };
-  if (public_token.ping_frequency.count() == 0)
+  if (public_token.ping_frequency.count() == 0) {
     log::fatal("Unexpected: ping_interval={}"sv, instance_server.ping_interval);
+  }
   handler_(public_token);
 }
 
@@ -346,10 +350,12 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
         .discard = discard,
     };
     create_trace_and_dispatch(handler_, trace_info, reference_data, true);
-    if (discard)
+    if (discard) {
       continue;
-    if (all_symbols_.emplace(symbol).second)  // only include new
+    }
+    if (all_symbols_.emplace(symbol).second) {  // only include new
       symbols.emplace_back(symbol);
+    }
     ++counter;
   }
   if (!std::empty(symbols)) {
@@ -358,13 +364,15 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
     };
     handler_(symbols_update);
   }
-  if (counter > 0)
+  if (counter > 0) {
     log::info("Contracts {} / {}"sv, counter, std::size(contracts.data));
+  }
   // market status
   for (auto &item : contracts.data) {
     auto &symbol = item.symbol;
-    if (all_symbols_.find(symbol) == std::end(all_symbols_))
+    if (all_symbols_.find(symbol) == std::end(all_symbols_)) {
       continue;
+    }
     auto trading_status = item.status == json::Status::OPEN ? TradingStatus::OPEN : TradingStatus::CLOSE;
     auto market_status = MarketStatus{
         .stream_id = stream_id_,
@@ -436,10 +444,12 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
     };
     result.emplace_back(std::move(mbp_update));
   };
-  for (auto &item : data.bids)
+  for (auto &item : data.bids) {
     emplace_back(mbp.bids, item);
-  for (auto &item : data.asks)
+  }
+  for (auto &item : data.asks) {
     emplace_back(mbp.asks, item);
+  }
   try {
     auto publish_snapshot = [&](auto &bids, auto &asks, auto sequence, [[maybe_unused]] auto retries, [[maybe_unused]] auto delay) {
       log::info(R"(DEBUG PUBLISH SNAPSHOT symbol="{}", sequence={})"sv, symbol, sequence);

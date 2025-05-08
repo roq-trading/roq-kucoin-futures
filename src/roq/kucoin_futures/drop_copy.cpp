@@ -117,8 +117,9 @@ void DropCopy::operator()(Event<Timer> const &event) {
   (*connection_).refresh(now);
   if ((*connection_).ready()) {
     if (welcome_) {
-      if (next_ping_ < now)
+      if (next_ping_ < now) {
         send_ping(now);
+      }
     }
   } else if (logon_timeout_.count() && logon_timeout_ < now) {
     assert(!welcome_);
@@ -257,8 +258,9 @@ void DropCopy::parse(std::string_view const &message) {
     auto log_message = [&]() { log::warn(R"(message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
-      if (!json::Parser::dispatch(*this, message, decode_buffer_, trace_info))
+      if (!json::Parser::dispatch(*this, message, decode_buffer_, trace_info)) {
         log_message();
+      }
     } catch (...) {
       log_message();
       utils::exceptions::Unhandled::terminate();

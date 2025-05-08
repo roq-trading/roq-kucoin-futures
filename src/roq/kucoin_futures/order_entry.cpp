@@ -184,8 +184,9 @@ void OrderEntry::operator()(Trace<web::rest::Client::Connected> const &) {
 void OrderEntry::operator()(Trace<web::rest::Client::Disconnected> const &) {
   ++counter_.disconnect;
   (*this)(ConnectionStatus::DISCONNECTED);
-  if (!download_.downloading())
+  if (!download_.downloading()) {
     download_.reset();
+  }
 }
 
 void OrderEntry::operator()(Trace<web::rest::Client::Latency> const &event) {
@@ -305,8 +306,9 @@ void OrderEntry::get_private_token_ack(Trace<web::rest::Response> const &event, 
 void OrderEntry::operator()(Trace<json::Token> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
-  if (std::empty(token.data.instance_servers))
+  if (std::empty(token.data.instance_servers)) {
     log::fatal("Unexpected: no instance servers"sv);
+  }
   auto &instance_server = token.data.instance_servers[0];
   auto query = fmt::format("?token={}"sv, token.data.token);
   auto private_token = PrivateToken{
@@ -315,8 +317,9 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
       .query = query,
       .ping_frequency = instance_server.ping_interval,
   };
-  if (private_token.ping_frequency.count() == 0)
+  if (private_token.ping_frequency.count() == 0) {
     log::fatal("Unexpected: ping_interval={}"sv, instance_server.ping_interval);
+  }
   handler_(private_token);
 }
 
@@ -354,8 +357,9 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         json::Account account{body, decode_buffer_};
-        if (account.code != SYSTEM_CODE_SUCCESS)
+        if (account.code != SYSTEM_CODE_SUCCESS) {
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, account.code, account.msg);
+        }
         Trace event_2{event, account};
         (*this)(event_2);
         download_.check(STATE);
@@ -408,8 +412,9 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         json::Positions positions{body, decode_buffer_};
-        if (positions.code != SYSTEM_CODE_SUCCESS)
+        if (positions.code != SYSTEM_CODE_SUCCESS) {
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, positions.code, positions.msg);
+        }
         Trace event_2{event, positions};
         (*this)(event_2);
         download_.check(STATE);
@@ -463,8 +468,9 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         json::Orders orders{body, decode_buffer_};
-        if (orders.code != SYSTEM_CODE_SUCCESS)
+        if (orders.code != SYSTEM_CODE_SUCCESS) {
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, orders.code, orders.msg);
+        }
         Trace event_2{event, orders};
         (*this)(event_2);
         download_.check(STATE);
@@ -518,8 +524,9 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         json::Fills fills{body, decode_buffer_};
-        if (fills.code != SYSTEM_CODE_SUCCESS)
+        if (fills.code != SYSTEM_CODE_SUCCESS) {
           log::fatal(R"(Unexpected: code={}, msg="{}")"sv, fills.code, fills.msg);
+        }
         Trace event_2{event, fills};
         (*this)(event_2);
         download_.check(STATE);
@@ -542,8 +549,9 @@ void OrderEntry::operator()(Trace<json::Fills> const &event) {
 
 void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Order const &, std::string_view const &request_id) {
   profile_.create_order([&]() {
-    if (!ready())
+    if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
+    }
     auto &[message_info, create_order] = event;
     auto side = map(create_order.side).template get<json::Side>();
     auto type = "limit"sv;  // limit or market
@@ -626,8 +634,9 @@ void OrderEntry::cancel_order(
     [[maybe_unused]] std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {
-    if (!ready())
+    if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
+    }
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.rest_private.order;
     auto real_path = std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
@@ -679,8 +688,9 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
 
 void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
-    if (!ready()) [[unlikely]]
+    if (!ready()) [[unlikely]] {
       throw server::oms::NotReady{"not ready"sv};
+    }
     auto &cancel_all_orders = event.value;
     auto send_ack = [&]() {
       auto cancel_all_orders_ack = CancelAllOrdersAck{
