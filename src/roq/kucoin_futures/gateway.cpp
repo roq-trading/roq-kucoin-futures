@@ -24,7 +24,7 @@ namespace kucoin_futures {
 namespace {
 template <typename R>
 R create_accounts(auto const &config) {
-  using result_type = std::remove_cvref<R>::type;
+  using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[_, account] : config.accounts) {
     result.try_emplace(static_cast<std::string_view>(account.name), std::make_unique<Account>(config, account.name));
@@ -34,7 +34,7 @@ R create_accounts(auto const &config) {
 
 template <typename R>
 R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &account_by_account, Shared &shared) {
-  using result_type = std::remove_cvref<R>::type;
+  using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[name, account] : account_by_account) {
     result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntry>(gateway, context, ++stream_id, *account, shared));
@@ -44,7 +44,7 @@ R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &accoun
 
 template <typename R>
 R create_drop_copy(auto &account_by_account) {
-  using result_type = std::remove_cvref<R>::type;
+  using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[name, account] : account_by_account) {
     result.try_emplace(static_cast<std::string_view>(name), nullptr);
