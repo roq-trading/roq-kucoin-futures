@@ -20,9 +20,9 @@ template <>
 constexpr Helper<kucoin_futures::json::Side>::operator std::optional<roq::Side>() const {
   switch (std::get<0>(args_)) {
     using enum kucoin_futures::json::Side::type_t;
-    case UNDEFINED__:
+    case _UNDEFINED:
       return roq::Side::UNDEFINED;
-    case UNKNOWN__:
+    case _UNKNOWN:
       return roq::Side::UNDEFINED;
     case BUY:
       return roq::Side::BUY;
@@ -32,7 +32,7 @@ constexpr Helper<kucoin_futures::json::Side>::operator std::optional<roq::Side>(
   return {};
 }
 
-static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::UNDEFINED__}} == roq::Side::UNDEFINED);
+static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::_UNDEFINED}} == roq::Side::UNDEFINED);
 static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::BUY}} == roq::Side::BUY);
 static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::SELL}} == roq::Side::SELL);
 
@@ -52,7 +52,7 @@ constexpr Helper<roq::Side>::operator std::optional<kucoin_futures::json::Side>(
   switch (std::get<0>(args_)) {
     using enum roq::Side;
     case UNDEFINED:
-      return kucoin_futures::json::Side::UNDEFINED__;
+      return kucoin_futures::json::Side::_UNDEFINED;
     case BUY:
       return kucoin_futures::json::Side::BUY;
     case SELL:
@@ -61,7 +61,7 @@ constexpr Helper<roq::Side>::operator std::optional<kucoin_futures::json::Side>(
   return {};
 }
 
-static_assert(Helper{roq::Side::UNDEFINED} == kucoin_futures::json::Side{kucoin_futures::json::Side::UNDEFINED__});
+static_assert(Helper{roq::Side::UNDEFINED} == kucoin_futures::json::Side{kucoin_futures::json::Side::_UNDEFINED});
 static_assert(Helper{roq::Side::BUY} == kucoin_futures::json::Side{kucoin_futures::json::Side::BUY});
 static_assert(Helper{roq::Side::SELL} == kucoin_futures::json::Side{kucoin_futures::json::Side::SELL});
 
