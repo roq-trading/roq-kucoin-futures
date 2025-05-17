@@ -28,12 +28,12 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
   Message message_{message, buffer};
   switch (message_.type) {
     using enum json::Type::type_t;
-    case _UNDEFINED:
-    case _UNKNOWN:
+    case UNDEFINED_INTERNAL:
+    case UNKNOWN_INTERNAL:
       switch (message_.subject) {
         using enum json::Subject::type_t;
-        case _UNDEFINED:
-        case _UNKNOWN:
+        case UNDEFINED_INTERNAL:
+        case UNKNOWN_INTERNAL:
           log::fatal("Unexpected"sv);
           break;
         case TICKER:
@@ -81,8 +81,8 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
     case MESSAGE:
       switch (message_.subject) {
         using enum json::Subject::type_t;
-        case _UNDEFINED:
-        case _UNKNOWN:
+        case UNDEFINED_INTERNAL:
+        case UNKNOWN_INTERNAL:
           log::fatal("Unexpected"sv);
           break;
         case TICKER:
