@@ -19,11 +19,11 @@
       "type": "std/double"
     },
     {
-      "name": "bestAskSize",
+      "name": "bestAskPrice",
       "type": "std/double"
     },
     {
-      "name": "bestAskPrice",
+      "name": "bestAskSize",
       "type": "std/double"
     },
     {

@@ -139,6 +139,10 @@
       "type": "std/string_view"
     },
     {
+      "name": "settlementSymbol",
+      "type": "std/string_view"
+    },
+    {
       "name": "status",
       "type": "roq/kucoin_futures/json/Status"
     },
@@ -149,6 +153,10 @@
     {
       "name": "predictedFundingFeeRate",
       "type": "std/double"
+    },
+    {
+      "name": "fundingRateGranularity",
+      "type": "std/uint32"
     },
     {
       "name": "openInterest",
@@ -183,33 +191,23 @@
       "type": "std/double"
     },
     {
-      "name": "settlementSymbol",
-      "type": "std/string_view",
-      "comment": "undoc"
-    },
-    {
-      "name": "sourceExchanges",
-      "comment": "undoc"
+      "name": "sourceExchanges"
     },
     {
       "name": "premiumsSymbol1M",
-      "type": "std/string_view",
-      "comment": "undoc"
+      "type": "std/string_view"
     },
     {
       "name": "premiumsSymbol8H",
-      "type": "std/string_view",
-      "comment": "undoc"
+      "type": "std/string_view"
     },
     {
       "name": "fundingBaseSymbol1M",
-      "type": "std/string_view",
-      "comment": "undoc"
+      "type": "std/string_view"
     },
     {
       "name": "fundingQuoteSymbol1M",
-      "type": "std/string_view",
-      "comment": "undoc"
+      "type": "std/string_view"
     },
     {
       "name": "lowPrice",
@@ -228,12 +226,72 @@
       "type": "std/double"
     },
     {
-      "name": "settlementFeeRate",
+      "name": "k",
       "type": "std/double"
     },
     {
-      "name": "fundingRateGranularity",
-      "type": "std/int32"
+      "name": "m",
+      "type": "std/double"
+    },
+    {
+      "name": "f",
+      "type": "std/double"
+    },
+    {
+      "name": "mmrLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "mmrLevConstant",
+      "type": "std/double"
+    },
+    {
+      "name": "supportCross",
+      "type": "std/bool"
+    },
+    {
+      "name": "buyLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "sellLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingRateCap",
+      "type": "std/double",
+      "comment": "undoc"
+    },
+    {
+      "name": "fundingRateFloor",
+      "type": "std/double"
+    },
+    {
+      "name": "period",
+      "type": "std/int32",
+      "comment": "undoc"
+    },
+    {
+      "name": "nextFundingRateDateTime",
+      "type": "std/milliseconds",
+      "comment": "undoc"
+    },
+    {
+      "name": "adjustK",
+      "comment": "undoc"
+    },
+    {
+      "name": "adjustM",
+      "comment": "undoc"
+    },
+    {
+      "name": "adjustActiveTime",
+      "comment": "undoc"
+    },
+    {
+      "name": "crossRiskLimit",
+      "type": "std/double",
+      "comment": "undoc"
     }
   ]
 }

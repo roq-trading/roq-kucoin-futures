@@ -4,45 +4,15 @@
   "values": [
     {
       "name": "sequence",
-      "type": "std/uint64",
-      "comment": "v1"
+      "type": "std/uint64"
     },
     {
       "name": "change",
-      "type": "std/string_view",
-      "comment": "v1"
+      "type": "std/string_view"
     },
     {
       "name": "timestamp",
-      "type": "std/milliseconds",
-      "comment": "v1"
-    },
-    {
-      "name": "start",
-      "type": "std/uint64",
-      "comment": "v2"
-    },
-    {
-      "name": "end",
-      "type": "std/uint64",
-      "comment": "v2"
-    },
-    {
-      "name": "ts",
-      "type": "std/milliseconds",
-      "comment": "v2"
-    },
-    {
-      "name": "asks",
-      "type": "roq/kucoin_futures/json/Level2DataItem",
-      "array": "std/span",
-      "comment": "v2"
-    },
-    {
-      "name": "bids",
-      "type": "roq/kucoin_futures/json/Level2DataItem",
-      "array": "std/span",
-      "comment": "v2"
+      "type": "std/milliseconds"
     }
   ]
 }

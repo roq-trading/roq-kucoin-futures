@@ -5,11 +5,15 @@ set(TARGET_NAME ${PROJECT_NAME}-test)
 set(SOURCES
     json_account.cpp
     json_available_balance_change.cpp
+    json_contracts.cpp
     json_execution.cpp
     json_fills.cpp
+    json_funding_begin.cpp
+    json_funding_end.cpp
     json_funding_rate.cpp
-    json_mark_index_price.cpp
     json_level2.cpp
+    json_mark_index_price.cpp
+    json_match.cpp
     json_order_book.cpp
     json_order_change.cpp
     json_order_margin_change.cpp
@@ -17,7 +21,8 @@ set(SOURCES
     json_position_change.cpp
     json_positions.cpp
     json_position_settlement.cpp
-    json_ticker.cpp
+    json_snapshot24h.cpp
+    json_ticker_v2.cpp
     json_token.cpp
     json_withdraw_hold_change.cpp
     main.cpp)

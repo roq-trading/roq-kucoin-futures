@@ -10,7 +10,6 @@ namespace roq {
 namespace kucoin_futures {
 
 struct API final {
-  int version = {};
   struct {
     std::string_view bullet_public;
     std::string_view contracts_active;
@@ -29,9 +28,10 @@ struct API final {
   // -- public
   std::string_view ticker;
   std::string_view execution;
+  std::string_view instrument;
+  std::string_view snapshot;
+  std::string_view announcement;
   std::string_view level2;
-  std::string_view mark_price;
-  std::string_view funding_rate;
   // -- account
   std::string_view get_balance;
   std::string_view get_account;

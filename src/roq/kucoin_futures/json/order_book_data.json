@@ -3,17 +3,12 @@
   "type": "comp",
   "values": [
     {
-      "name": "symbol",
-      "type": "std/string_view"
-    },
-    {
       "name": "sequence",
       "type": "std/uint64"
     },
     {
-      "name": "asks",
-      "type": "roq/kucoin_futures/json/OrderBookDataItem",
-      "array": "std/span"
+      "name": "symbol",
+      "type": "std/string_view"
     },
     {
       "name": "bids",
@@ -21,14 +16,14 @@
       "array": "std/span"
     },
     {
+      "name": "asks",
+      "type": "roq/kucoin_futures/json/OrderBookDataItem",
+      "array": "std/span"
+    },
+    {
       "name": "ts",
       "type": "std/milliseconds",
       "comment": "was ns (v1) but never used"
-    },
-    {
-      "name": "contractId",
-      "type": "std/int64",
-      "comment": "v2"
     }
   ]
 }

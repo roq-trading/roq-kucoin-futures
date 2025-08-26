@@ -309,36 +309,43 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
   log::info<4>("contracts={}"sv, contracts);
   // reference data
   std::vector<Symbol> symbols;
-  // symbols.reserve(std::size(symbols.data));
   size_t counter = 0;
-  for (size_t i = 0; i < std::size(contracts.data); ++i) {
-    auto &item = contracts.data[i];
+  for (auto &item : contracts.data) {
     log::info<2>("item={}"sv, item);
     auto &symbol = item.symbol;
+    auto security_type = [&]() -> SecurityType {
+      if (item.type == "FFWCSX"sv) {
+        return SecurityType::SWAP;
+      }
+      if (item.type == "FFWCSX"sv) {
+        return SecurityType::FUTURES;
+      }
+      return {};
+    }();
     auto discard = shared_.discard_symbol(symbol);
     auto reference_data = ReferenceData{
         .stream_id = stream_id_,
         .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .description = {},
-        .security_type = {},
-        .cfi_code = {},
+        .security_type = security_type,
+        .cfi_code = item.type,
         .base_currency = item.base_currency,
         .quote_currency = item.quote_currency,
-        .settlement_currency = {},
-        .margin_currency = item.settle_currency,  // correct? is_inverse
+        .settlement_currency = item.settle_currency,
+        .margin_currency = {},
         .commission_currency = {},
         .tick_size = item.tick_size,
         .tick_size_steps = {},
         .multiplier = item.multiplier,
         .min_notional = NaN,
-        .min_trade_vol = 1.0,
-        .max_trade_vol = NaN,
-        .trade_vol_step_size = 1.0,
+        .min_trade_vol = item.lot_size,
+        .max_trade_vol = item.max_order_qty,
+        .trade_vol_step_size = item.lot_size,
         .option_type = {},
         .strike_currency = {},
         .strike_price = NaN,
-        .underlying = {},
+        .underlying = item.root_symbol,
         .time_zone = {},
         .issue_date = utils::safe_cast(item.first_open_date),
         .settlement_date = utils::safe_cast(item.settle_date),
@@ -373,7 +380,17 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
     if (all_symbols_.find(symbol) == std::end(all_symbols_)) {
       continue;
     }
-    auto trading_status = item.status == json::Status::OPEN ? TradingStatus::OPEN : TradingStatus::CLOSE;
+    auto trading_status = [&]() -> TradingStatus {
+      switch (item.status) {
+        using enum json::Status::type_t;
+        case UNDEFINED_INTERNAL:
+        case UNKNOWN_INTERNAL:
+          break;
+        case OPEN:
+          return TradingStatus::OPEN;
+      }
+      return {};
+    }();
     auto market_status = MarketStatus{
         .stream_id = stream_id_,
         .exchange = shared_.settings.exchange,

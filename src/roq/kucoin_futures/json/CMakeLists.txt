@@ -57,8 +57,6 @@ set(AUTOGEN_SCHEMAS
     snapshot24h.json
     status.json
     subject.json
-    ticker_data.json
-    ticker.json
     ticker_v2_data.json
     ticker_v2.json
     token_data.json

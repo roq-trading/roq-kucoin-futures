@@ -302,9 +302,6 @@ void DropCopy::operator()(Trace<json::Ack> const &event) {
   });
 }
 
-void DropCopy::operator()(Trace<json::Ticker> const &) {
-}
-
 void DropCopy::operator()(Trace<json::TickerV2> const &) {
 }
 

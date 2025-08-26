@@ -19,7 +19,6 @@
 #include "roq/kucoin_futures/json/mark_index_price.hpp"
 #include "roq/kucoin_futures/json/match.hpp"
 #include "roq/kucoin_futures/json/snapshot24h.hpp"
-#include "roq/kucoin_futures/json/ticker.hpp"
 #include "roq/kucoin_futures/json/ticker_v2.hpp"
 
 #include "roq/kucoin_futures/json/available_balance_change.hpp"
@@ -40,7 +39,6 @@ struct Parser final {
     virtual void operator()(Trace<json::Pong> const &) = 0;
     virtual void operator()(Trace<json::Ack> const &) = 0;
 
-    virtual void operator()(Trace<json::Ticker> const &) = 0;
     virtual void operator()(Trace<json::TickerV2> const &) = 0;
     virtual void operator()(Trace<json::Match> const &) = 0;
     virtual void operator()(Trace<json::Execution> const &) = 0;

@@ -52,8 +52,6 @@ snapshot24h_data.hpp
 snapshot24h.hpp
 status.hpp
 subject.hpp
-ticker_data.hpp
-ticker.hpp
 ticker_v2_data.hpp
 ticker_v2.hpp
 token_data.hpp
@@ -114,8 +112,6 @@ snapshot24h_data.cpp
 snapshot24h.cpp
 status.cpp
 subject.cpp
-ticker_data.cpp
-ticker.cpp
 ticker_v2_data.cpp
 ticker_v2.cpp
 token_data.cpp

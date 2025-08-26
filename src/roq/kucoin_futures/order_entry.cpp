@@ -439,12 +439,11 @@ void OrderEntry::get_orders() {
   profile_.orders([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.rest_private.orders_all_active;
-    auto query = shared_.api.version == 1 ? "?status=active"sv : ""sv;
-    auto headers = account_.create_signature_api_v2(method, path, query, {});
+    auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = headers,
@@ -639,11 +638,10 @@ void OrderEntry::cancel_order(
     }
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.rest_private.order;
-    auto real_path = std::string{shared_.api.version == 1 ? fmt::format("{}/{}"sv, path, order.external_order_id) : path};
     // XXX HANS v2 requires SYMBOL
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
-        .path = real_path,
+        .path = path,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},

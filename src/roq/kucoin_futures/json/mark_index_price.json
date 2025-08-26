@@ -3,16 +3,16 @@
   "type": "comp",
   "values": [
     {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
       "name": "type",
       "type": "roq/kucoin_futures/json/Type"
     },
     {
       "name": "subject",
       "type": "roq/kucoin_futures/json/Subject"
-    },
-    {
-      "name": "topic",
-      "type": "std/string_view"
     },
     {
       "name": "data",

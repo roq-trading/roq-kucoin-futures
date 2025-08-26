@@ -12,16 +12,11 @@
     },
     {
       "name": "granularity",
-      "type": "std/double"
+      "type": "std/uint32"
     },
     {
       "name": "timestamp",
       "type": "std/milliseconds"
-    },
-    {
-      "name": "symbol",
-      "type": "std/string_view",
-      "comment": "v2"
     }
   ]
 }

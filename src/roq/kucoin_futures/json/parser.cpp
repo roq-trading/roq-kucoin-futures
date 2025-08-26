@@ -36,7 +36,6 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
         case UNKNOWN_INTERNAL:
           log::fatal("Unexpected"sv);
           break;
-        case TICKER:
         case TICKER_V2:
         case MATCH:
         case EXECUTION:
@@ -84,9 +83,6 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
         case UNDEFINED_INTERNAL:
         case UNKNOWN_INTERNAL:
           log::fatal("Unexpected"sv);
-          break;
-        case TICKER:
-          dispatch_helper<Ticker>(handler, message, buffer, trace_info);
           break;
         case TICKER_V2:
           dispatch_helper<TickerV2>(handler, message, buffer, trace_info);

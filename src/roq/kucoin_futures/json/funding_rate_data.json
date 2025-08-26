@@ -3,8 +3,12 @@
   "type": "comp",
   "values": [
     {
+      "name": "period",
+      "type": "std/uint32"
+    },
+    {
       "name": "granularity",
-      "type": "std/double"
+      "type": "std/uint32"
     },
     {
       "name": "fundingRate",

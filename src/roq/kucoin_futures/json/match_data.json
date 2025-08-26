@@ -3,10 +3,6 @@
   "type": "comp",
   "values": [
     {
-      "name": "makerUserId",
-      "type": "std/string_view"
-    },
-    {
       "name": "symbol",
       "type": "std/string_view"
     },
@@ -32,10 +28,6 @@
     },
     {
       "name": "makerOrderId",
-      "type": "std/string_view"
-    },
-    {
-      "name": "takerUserId",
       "type": "std/string_view"
     },
     {

@@ -80,7 +80,6 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   void operator()(Trace<json::Pong> const &) override;
   void operator()(Trace<json::Ack> const &) override;
 
-  void operator()(Trace<json::Ticker> const &) override;
   void operator()(Trace<json::TickerV2> const &) override;
   void operator()(Trace<json::Match> const &) override;
   void operator()(Trace<json::Execution> const &) override;

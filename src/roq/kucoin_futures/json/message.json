@@ -54,6 +54,11 @@
       "type": "std/int64",
       "optional": true,
       "comment": "v2"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/microseconds",
+      "optional": true
     }
   ]
 }

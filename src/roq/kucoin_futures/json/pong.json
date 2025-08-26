@@ -9,6 +9,10 @@
     {
       "name": "id",
       "type": "std/string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/microseconds"
     }
   ]
 }

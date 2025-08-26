@@ -76,7 +76,6 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
 
   void subscribe(std::span<Symbol const> const &symbols);
 
-  void subscribe(std::string_view const &topic);
   void subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols);
 
   void send_ping(std::chrono::nanoseconds now);
@@ -88,7 +87,6 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
   void operator()(Trace<json::Pong> const &) override;
   void operator()(Trace<json::Ack> const &) override;
 
-  void operator()(Trace<json::Ticker> const &) override;
   void operator()(Trace<json::TickerV2> const &) override;
   void operator()(Trace<json::Match> const &) override;
   void operator()(Trace<json::Execution> const &) override;

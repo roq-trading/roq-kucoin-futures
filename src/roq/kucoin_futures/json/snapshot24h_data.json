@@ -3,11 +3,7 @@
   "type": "comp",
   "values": [
     {
-      "name": "volume",
-      "type": "std/double"
-    },
-    {
-      "name": "turnover",
+      "name": "highPrice",
       "type": "std/double"
     },
     {
@@ -15,7 +11,31 @@
       "type": "std/double"
     },
     {
+      "name": "lowPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "price24HoursBefore",
+      "type": "std/double"
+    },
+    {
+      "name": "priceChg",
+      "type": "std/double"
+    },
+    {
       "name": "priceChgPct",
+      "type": "std/double"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "turnover",
+      "type": "std/double"
+    },
+    {
+      "name": "volume",
       "type": "std/double"
     },
     {
