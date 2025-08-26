@@ -482,6 +482,7 @@ void Rest::operator()(Trace<json::OrderBook> const &event) {
           .sending_time_utc = data.ts,
           .price_precision = {},
           .quantity_precision = {},
+          .max_depth = {},
           .checksum = {},
       };
       Trace event{trace_info, market_by_price_update};
