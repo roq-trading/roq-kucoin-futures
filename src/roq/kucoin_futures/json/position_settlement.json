@@ -4,15 +4,16 @@
   "values": [
     {
       "name": "userId",
+      "type": "std/string_view",
+      "comment": "DEPRECATED"
+    },
+    {
+      "name": "topic",
       "type": "std/string_view"
     },
     {
       "name": "subject",
       "type": "roq/kucoin_futures/json/Subject"
-    },
-    {
-      "name": "topic",
-      "type": "std/string_view"
     },
     {
       "name": "data",

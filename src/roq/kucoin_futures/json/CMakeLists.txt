@@ -8,16 +8,21 @@ set(AUTOGEN_SCHEMAS
     account_data.json
     account.json
     ack.json
+    add_order_ack_data.json
+    add_order_ack.json
     available_balance_change_data.json
     available_balance_change.json
-    contract.json
+    cancel_all_orders_ack_data.json
+    cancel_all_orders_ack.json
+    cancel_order_ack_data.json
+    cancel_order_ack.json
+    contracts_item.json
     contracts.json
     error.json
     execution_data.json
     execution.json
     fair_method.json
-    fills_data_item.json
-    fills_data.json
+    fills_item.json
     fills.json
     funding_begin_data.json
     funding_begin.json
@@ -46,9 +51,11 @@ set(AUTOGEN_SCHEMAS
     orders_data.json
     orders.json
     pong.json
+    position_adjust_risk_limit_data.json
+    position_adjust_risk_limit.json
     position_change_data.json
     position_change.json
-    position.json
+    positions_data.json
     position_settlement_data.json
     position_settlement.json
     positions.json
@@ -57,14 +64,17 @@ set(AUTOGEN_SCHEMAS
     snapshot24h.json
     status.json
     subject.json
+    symbol_order_change.json
     ticker_v2_data.json
     ticker_v2.json
     token_data.json
     token.json
     type.json
+    wallet_balance_change_data.json
+    wallet_balance_change.json
     welcome.json
-    withdraw_hold_change.json
-    withdraw_hold_change_data.json)
+    withdraw_hold_change_data.json
+    withdraw_hold_change.json)
 
 roq_autogen_hpp(
   OUTPUT

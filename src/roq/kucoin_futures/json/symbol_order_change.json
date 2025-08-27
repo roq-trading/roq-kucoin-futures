@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/OrderChange",
+  "name": "roq/kucoin_futures/json/SymbolOrderChange",
   "type": "comp",
   "values": [
     {

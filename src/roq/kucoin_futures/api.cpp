@@ -20,12 +20,13 @@ API API::create(Settings const &settings) {
       },
       .rest_private{
           .bullet_private = "/api/v1/bullet-private"sv,
-          .account_overview = "/api/v2/account-overview"sv,
-          .all_position = "/api/v2/all-position"sv,
-          .orders_all_active = "/api/v2/orders/all-active"sv,
-          .orders_historical_trades = "/api/v2/orders/historical-trades"sv,
-          .order = "/api/v2/order"sv,
-          .orders = "/api/v2/orders"sv,
+          .get_account_list = "/api/v1/account-overview"sv,
+          .get_position_list = "/api/v1/positions"sv,
+          .get_order_list = "/api/v1/orders"sv,
+          .get_recent_fills = "/api/v1/recentFills"sv,
+          .add_order = "/api/v1/orders"sv,
+          .cancel_order = "/api/v1/orders"sv,
+          .cancel_all_orders = "/api/v3/orders"sv,
       },
       // ws
       // -- public

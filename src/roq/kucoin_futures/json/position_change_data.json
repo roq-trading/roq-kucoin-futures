@@ -3,59 +3,15 @@
   "type": "comp",
   "values": [
     {
-      "name": "avgEntryPrice",
-      "type": "std/double"
-    },
-    {
-      "name": "bankruptPrice",
-      "type": "std/double"
+      "name": "marginMode",
+      "type": "std/string_view"
     },
     {
       "name": "crossMode",
       "type": "std/bool"
     },
     {
-      "name": "currentComm",
-      "type": "std/double"
-    },
-    {
-      "name": "currentCost",
-      "type": "std/double"
-    },
-    {
-      "name": "currentQty",
-      "type": "std/double"
-    },
-    {
-      "name": "currentTimestamp",
-      "type": "std/milliseconds"
-    },
-    {
       "name": "delevPercentage",
-      "type": "std/double"
-    },
-    {
-      "name": "isOpen",
-      "type": "std/bool"
-    },
-    {
-      "name": "liquidationPrice",
-      "type": "std/double"
-    },
-    {
-      "name": "maintMargin",
-      "type": "std/double"
-    },
-    {
-      "name": "maintMarginReq",
-      "type": "std/double"
-    },
-    {
-      "name": "markPrice",
-      "type": "std/double"
-    },
-    {
-      "name": "markValue",
       "type": "std/double"
     },
     {
@@ -63,35 +19,35 @@
       "type": "std/milliseconds"
     },
     {
-      "name": "posComm",
+      "name": "currentTimestamp",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "currentQty",
       "type": "std/double"
     },
     {
-      "name": "posCost",
+      "name": "currentCost",
       "type": "std/double"
     },
     {
-      "name": "posCross",
+      "name": "currentComm",
       "type": "std/double"
     },
     {
-      "name": "posInit",
+      "name": "unrealisedCost",
       "type": "std/double"
     },
     {
-      "name": "posLoss",
+      "name": "unrealisedPnl",
       "type": "std/double"
     },
     {
-      "name": "posMaint",
+      "name": "unrealisedPnlPcnt",
       "type": "std/double"
     },
     {
-      "name": "posMargin",
-      "type": "std/double"
-    },
-    {
-      "name": "realLeverage",
+      "name": "unrealisedRoePcnt",
       "type": "std/double"
     },
     {
@@ -111,7 +67,39 @@
       "type": "std/double"
     },
     {
-      "name": "riskLimit",
+      "name": "isOpen",
+      "type": "std/bool"
+    },
+    {
+      "name": "markPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "markValue",
+      "type": "std/double"
+    },
+    {
+      "name": "posCost",
+      "type": "std/double"
+    },
+    {
+      "name": "posInit",
+      "type": "std/double"
+    },
+    {
+      "name": "posMargin",
+      "type": "std/double"
+    },
+    {
+      "name": "avgEntryPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "liquidationPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "bankruptPrice",
       "type": "std/double"
     },
     {
@@ -119,20 +107,80 @@
       "type": "std/string_view"
     },
     {
-      "name": "unrealisedCost",
+      "name": "positionSide",
+      "type": "std/string_view"
+    },
+    {
+      "name": "leverage",
       "type": "std/double"
     },
     {
-      "name": "unrealisedPnl",
+      "name": "maintMarginReq",
       "type": "std/double"
     },
     {
-      "name": "unrealisedPnlPcnt",
+      "name": "posMaint",
       "type": "std/double"
     },
     {
-      "name": "unrealisedRoePcnt",
+      "name": "autoDeposit",
+      "type": "std/bool"
+    },
+    {
+      "name": "riskLimit",
       "type": "std/double"
+    },
+    {
+      "name": "realLeverage",
+      "type": "std/double"
+    },
+    {
+      "name": "posCross",
+      "type": "std/double"
+    },
+    {
+      "name": "posComm",
+      "type": "std/double"
+    },
+    {
+      "name": "posLoss",
+      "type": "std/double"
+    },
+    {
+      "name": "posFunding",
+      "type": "std/double"
+    },
+    {
+      "name": "maintMargin",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "qty",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingFee",
+      "type": "std/double"
+    },
+    {
+      "name": "ts",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "success",
+      "type": "std/bool"
+    },
+    {
+      "name": "msg",
+      "type": "std/string_view"
     }
   ]
 }

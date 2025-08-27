@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/Position",
+  "name": "roq/kucoin_futures/json/PositionsData",
   "type": "item",
   "values": [
     {
@@ -11,20 +11,8 @@
       "type": "std/string_view"
     },
     {
-      "name": "autoDeposit",
-      "type": "std/bool"
-    },
-    {
-      "name": "maintMarginReq",
-      "type": "std/double"
-    },
-    {
-      "name": "riskLimit",
-      "type": "std/double"
-    },
-    {
-      "name": "realLeverage",
-      "type": "std/double"
+      "name": "marginMode",
+      "type": "std/string_view"
     },
     {
       "name": "crossMode",
@@ -67,6 +55,22 @@
       "type": "std/double"
     },
     {
+      "name": "unrealisedPnl",
+      "type": "std/double"
+    },
+    {
+      "name": "unrealisedPnlPcnt",
+      "type": "std/double"
+    },
+    {
+      "name": "unrealisedRoePcnt",
+      "type": "std/double"
+    },
+    {
+      "name": "realisedGrossPnl",
+      "type": "std/double"
+    },
+    {
       "name": "isOpen",
       "type": "std/bool"
     },
@@ -83,19 +87,7 @@
       "type": "std/double"
     },
     {
-      "name": "posCross",
-      "type": "std/double"
-    },
-    {
       "name": "posInit",
-      "type": "std/double"
-    },
-    {
-      "name": "posComm",
-      "type": "std/double"
-    },
-    {
-      "name": "posLoss",
       "type": "std/double"
     },
     {
@@ -103,31 +95,7 @@
       "type": "std/double"
     },
     {
-      "name": "posMaint",
-      "type": "std/double"
-    },
-    {
-      "name": "maintMargin",
-      "type": "std/double"
-    },
-    {
-      "name": "realisedGrossPnl",
-      "type": "std/double"
-    },
-    {
       "name": "realisedPnl",
-      "type": "std/double"
-    },
-    {
-      "name": "unrealisedPnl",
-      "type": "std/double"
-    },
-    {
-      "name": "unrealisedPnlPcnt",
-      "type": "std/double"
-    },
-    {
-      "name": "unrealisedRoePcnt",
       "type": "std/double"
     },
     {
@@ -145,6 +113,66 @@
     {
       "name": "settleCurrency",
       "type": "std/string_view"
+    },
+    {
+      "name": "isInverse",
+      "type": "std/bool"
+    },
+    {
+      "name": "positionSide",
+      "type": "roq/kucoin_futures/json/Side"
+    },
+    {
+      "name": "leverage",
+      "type": "std/double"
+    },
+    {
+      "name": "maintMarginReq",
+      "type": "std/double"
+    },
+    {
+      "name": "posMaint",
+      "type": "std/double"
+    },
+    {
+      "name": "autoDeposit",
+      "type": "std/bool"
+    },
+    {
+      "name": "riskLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "realLeverage",
+      "type": "std/double"
+    },
+    {
+      "name": "posCross",
+      "type": "std/double"
+    },
+    {
+      "name": "posCrossMargin",
+      "type": "std/double"
+    },
+    {
+      "name": "posComm",
+      "type": "std/double"
+    },
+    {
+      "name": "posCommCommon",
+      "type": "std/double"
+    },
+    {
+      "name": "posLoss",
+      "type": "std/double"
+    },
+    {
+      "name": "posFunding",
+      "type": "std/double"
+    },
+    {
+      "name": "maintMargin",
+      "type": "std/double"
     }
   ]
 }

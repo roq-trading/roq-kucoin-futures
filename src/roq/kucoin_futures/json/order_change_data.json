@@ -3,15 +3,7 @@
   "type": "comp",
   "values": [
     {
-      "name": "orderId",
-      "type": "std/string_view"
-    },
-    {
-      "name": "symbol",
-      "type": "std/string_view"
-    },
-    {
-      "name": "type",
+      "name": "marginMode",
       "type": "std/string_view"
     },
     {
@@ -19,19 +11,43 @@
       "type": "std/string_view"
     },
     {
-      "name": "matchSize",
-      "type": "std/double"
+      "name": "type",
+      "type": "std/string_view"
     },
     {
-      "name": "matchPrice",
-      "type": "std/double"
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "side",
+      "type": "std/string_view"
+    },
+    {
+      "name": "tradeType",
+      "type": "std/string_view"
     },
     {
       "name": "orderType",
       "type": "std/string_view"
     },
     {
-      "name": "side",
+      "name": "feeType",
+      "type": "std/string_view"
+    },
+    {
+      "name": "liquidity",
+      "type": "std/string_view"
+    },
+    {
+      "name": "orderId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "clientOid",
+      "type": "std/string_view"
+    },
+    {
+      "name": "tradeId",
       "type": "std/string_view"
     },
     {
@@ -43,10 +59,6 @@
       "type": "std/double"
     },
     {
-      "name": "remainSize",
-      "type": "std/double"
-    },
-    {
       "name": "filledSize",
       "type": "std/double"
     },
@@ -55,24 +67,28 @@
       "type": "std/double"
     },
     {
-      "name": "tradeId",
-      "type": "std/string_view"
+      "name": "remainSize",
+      "type": "std/double"
     },
     {
-      "name": "clientOid",
-      "type": "std/string_view"
+      "name": "matchSize",
+      "type": "std/double"
     },
     {
-      "name": "orderTime",
-      "type": "std/nanoseconds"
+      "name": "matchPrice",
+      "type": "std/double"
     },
     {
       "name": "oldSize",
       "type": "std/double"
     },
     {
-      "name": "liquidity",
+      "name": "positionSide",
       "type": "std/string_view"
+    },
+    {
+      "name": "orderTime",
+      "type": "std/nanoseconds"
     },
     {
       "name": "ts",

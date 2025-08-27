@@ -10,8 +10,7 @@ Links
 -----
 
 * `Website <https://futures.kucoin.com/>`__
-* `Support <https://support.kucoin.plus/hc/en-us/categories/4403571259289-Futures-Trading?lang=en_US>`__
-* `API <https://docs.kucoin.com/futures/#general>`__
+* `API <https://www.kucoin.com/docs-new>`__
 
 
 Supports

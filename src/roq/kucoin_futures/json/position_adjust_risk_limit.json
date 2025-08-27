@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/OrderMarginChange",
+  "name": "roq/kucoin_futures/json/PositionAdjustRiskLimit",
   "type": "comp",
   "values": [
     {
@@ -17,7 +17,7 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/OrderMarginChangeData"
+      "type": "roq/kucoin_futures/json/PositionAdjustRiskLimitData"
     }
   ]
 }

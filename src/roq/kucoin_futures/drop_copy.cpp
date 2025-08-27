@@ -303,33 +303,42 @@ void DropCopy::operator()(Trace<json::Ack> const &event) {
 }
 
 void DropCopy::operator()(Trace<json::TickerV2> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::Match> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::Execution> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::MarkIndexPrice> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::FundingRate> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::Level2> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::FundingBegin> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::FundingEnd> const &) {
+  log::fatal("Unexpected"sv);
 }
 
 void DropCopy::operator()(Trace<json::Snapshot24h> const &) {
+  log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::OrderChange> const &) {
+void DropCopy::operator()(Trace<json::WalletBalanceChange> const &) {
 }
 
 void DropCopy::operator()(Trace<json::OrderMarginChange> const &) {
@@ -345,6 +354,15 @@ void DropCopy::operator()(Trace<json::PositionChange> const &) {
 }
 
 void DropCopy::operator()(Trace<json::PositionSettlement> const &) {
+}
+
+void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &) {
+}
+
+void DropCopy::operator()(Trace<json::SymbolOrderChange> const &) {
+}
+
+void DropCopy::operator()(Trace<json::OrderChange> const &) {
 }
 
 }  // namespace kucoin_futures

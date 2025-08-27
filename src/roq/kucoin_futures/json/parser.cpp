@@ -45,8 +45,10 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
         case FUNDING_BEGIN:
         case FUNDING_END:
         case SNAPSHOT_24H:
-        case ORDER_CHANGE:
           log::fatal("Unexpected"sv);
+          break;
+        case WALLET_BALANCE_CHANGE:
+          dispatch_helper<WalletBalanceChange>(handler, message, buffer, trace_info);
           break;
         case ORDER_MARGIN_CHANGE:
           dispatch_helper<OrderMarginChange>(handler, message, buffer, trace_info);
@@ -62,6 +64,13 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
           break;
         case POSITION_SETTLEMENT:
           dispatch_helper<PositionSettlement>(handler, message, buffer, trace_info);
+          break;
+        case POSITION_ADJUST_RISK_LIMIT:
+          dispatch_helper<PositionAdjustRiskLimit>(handler, message, buffer, trace_info);
+          break;
+        case SYMBOL_ORDER_CHANGE:
+        case ORDER_CHANGE:
+          log::fatal("Unexpected"sv);
           break;
       }
       break;
@@ -111,15 +120,20 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, std::sp
         case SNAPSHOT_24H:
           dispatch_helper<Snapshot24h>(handler, message, buffer, trace_info);
           break;
-        case ORDER_CHANGE:
-          dispatch_helper<OrderChange>(handler, message, buffer, trace_info);
-          break;
+        case WALLET_BALANCE_CHANGE:
         case ORDER_MARGIN_CHANGE:
         case AVAILABLE_BALANCE_CHANGE:
         case WITHDRAW_HOLD_CHANGE:
         case POSITION_CHANGE:
         case POSITION_SETTLEMENT:
+        case POSITION_ADJUST_RISK_LIMIT:
           log::fatal("Unexpected"sv);
+          break;
+        case SYMBOL_ORDER_CHANGE:
+          dispatch_helper<SymbolOrderChange>(handler, message, buffer, trace_info);
+          break;
+        case ORDER_CHANGE:
+          dispatch_helper<OrderChange>(handler, message, buffer, trace_info);
           break;
       }
       break;

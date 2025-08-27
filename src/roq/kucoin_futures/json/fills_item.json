@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/FillsDataItem",
+  "name": "roq/kucoin_futures/json/FillsItem",
   "type": "item",
   "values": [
     {
@@ -23,6 +23,10 @@
       "type": "std/string_view"
     },
     {
+      "name": "forceTaker",
+      "type": "std/bool"
+    },
+    {
       "name": "price",
       "type": "std/double"
     },
@@ -33,6 +37,18 @@
     {
       "name": "value",
       "type": "std/double"
+    },
+    {
+      "name": "openFeePay",
+      "type": "std/double"
+    },
+    {
+      "name": "closeFeePay",
+      "type": "std/double"
+    },
+    {
+      "name": "stop",
+      "type": "std/string_view"
     },
     {
       "name": "feeRate",
@@ -47,7 +63,7 @@
       "type": "std/string_view"
     },
     {
-      "name": "stop",
+      "name": "marginMode",
       "type": "std/string_view"
     },
     {
@@ -55,7 +71,15 @@
       "type": "std/double"
     },
     {
+      "name": "settleCurrency",
+      "type": "std/string_view"
+    },
+    {
       "name": "orderType",
+      "type": "std/string_view"
+    },
+    {
+      "name": "displayType",
       "type": "std/string_view"
     },
     {
@@ -63,16 +87,20 @@
       "type": "std/string_view"
     },
     {
-      "name": "createdAt",
-      "type": "std/milliseconds"
-    },
-    {
-      "name": "settleCurrency",
+      "name": "subTradeType",
       "type": "std/string_view"
     },
     {
       "name": "tradeTime",
       "type": "std/nanoseconds"
+    },
+    {
+      "name": "createdAt",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "positionSide",
+      "type": "std/string_view"
     }
   ]
 }

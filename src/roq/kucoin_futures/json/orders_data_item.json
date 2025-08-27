@@ -31,11 +31,11 @@
       "type": "std/double"
     },
     {
-      "name": "filledValue",
+      "name": "dealValue",
       "type": "std/double"
     },
     {
-      "name": "filledSize",
+      "name": "dealSize",
       "type": "std/double"
     },
     {
@@ -87,8 +87,8 @@
       "type": "std/bool"
     },
     {
-      "name": "reduceOnly",
-      "type": "std/bool"
+      "name": "visibleSize",
+      "type": "std/double"
     },
     {
       "name": "clientOid",
@@ -96,6 +96,10 @@
     },
     {
       "name": "remark",
+      "type": "std/string_view"
+    },
+    {
+      "name": "tags",
       "type": "std/string_view"
     },
     {
@@ -111,20 +115,48 @@
       "type": "std/milliseconds"
     },
     {
+      "name": "updatedAt",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "endAt",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "orderTime",
+      "type": "std/nanoseconds"
+    },
+    {
       "name": "settleCurrency",
       "type": "std/string_view"
+    },
+    {
+      "name": "marginMode",
+      "type": "std/string_view"
+    },
+    {
+      "name": "avgDealPrice",
+      "type": "std/double"
     },
     {
       "name": "status",
       "type": "std/string_view"
     },
     {
-      "name": "updatedAt",
-      "type": "std/milliseconds"
+      "name": "filledSize",
+      "type": "std/double"
     },
     {
-      "name": "orderTime",
-      "type": "std/nanoseconds"
+      "name": "filledValue",
+      "type": "std/double"
+    },
+    {
+      "name": "reduceOnly",
+      "type": "std/bool"
+    },
+    {
+      "name": "positionSide",
+      "type": "std/string_view"
     }
   ]
 }

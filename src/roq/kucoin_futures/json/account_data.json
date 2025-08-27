@@ -33,6 +33,14 @@
     {
       "name": "currency",
       "type": "std/string_view"
+    },
+    {
+      "name": "riskRatio",
+      "type": "std/double"
+    },
+    {
+      "name": "maxWithdrawAmount",
+      "type": "std/double"
     }
   ]
 }

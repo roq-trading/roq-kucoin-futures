@@ -1,0 +1,11 @@
+{
+  "name": "roq/kucoin_futures/json/CancelOrderAckData",
+  "type": "comp",
+  "values": [
+    {
+      "name": "cancelledOrderIds",
+      "type": "std/string_view",
+      "array": "std/span"
+    }
+  ]
+}

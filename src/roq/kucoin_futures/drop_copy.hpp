@@ -90,12 +90,15 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   void operator()(Trace<json::FundingEnd> const &) override;
   void operator()(Trace<json::Snapshot24h> const &) override;
 
-  void operator()(Trace<json::OrderChange> const &) override;
+  void operator()(Trace<json::WalletBalanceChange> const &) override;
   void operator()(Trace<json::OrderMarginChange> const &) override;
   void operator()(Trace<json::AvailableBalanceChange> const &) override;
   void operator()(Trace<json::WithdrawHoldChange> const &) override;
   void operator()(Trace<json::PositionChange> const &) override;
   void operator()(Trace<json::PositionSettlement> const &) override;
+  void operator()(Trace<json::PositionAdjustRiskLimit> const &) override;
+  void operator()(Trace<json::SymbolOrderChange> const &) override;
+  void operator()(Trace<json::OrderChange> const &) override;
 
  private:
   Handler &handler_;

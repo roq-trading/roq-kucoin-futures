@@ -98,8 +98,8 @@ OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_i
           .orders_ack = create_metrics(shared.settings, name_, "orders_ack"sv),
           .fills = create_metrics(shared.settings, name_, "fills"sv),
           .fills_ack = create_metrics(shared.settings, name_, "fills_ack"sv),
-          .create_order = create_metrics(shared.settings, name_, "create_order"sv),
-          .create_order_ack = create_metrics(shared.settings, name_, "create_order_ack"sv),
+          .add_order = create_metrics(shared.settings, name_, "add_order"sv),
+          .add_order_ack = create_metrics(shared.settings, name_, "add_order_ack"sv),
           .cancel_order = create_metrics(shared.settings, name_, "cancel_order"sv),
           .cancel_order_ack = create_metrics(shared.settings, name_, "cancel_order_ack"sv),
           .cancel_all_orders = create_metrics(shared.settings, name_, "cancel_all_orders"sv),
@@ -138,8 +138,8 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
       .write(profile_.orders_ack, metrics::Type::PROFILE)
       .write(profile_.fills, metrics::Type::PROFILE)
       .write(profile_.fills_ack, metrics::Type::PROFILE)
-      .write(profile_.create_order, metrics::Type::PROFILE)
-      .write(profile_.create_order_ack, metrics::Type::PROFILE)
+      .write(profile_.add_order, metrics::Type::PROFILE)
+      .write(profile_.add_order_ack, metrics::Type::PROFILE)
       .write(profile_.cancel_order, metrics::Type::PROFILE)
       .write(profile_.cancel_order_ack, metrics::Type::PROFILE)
       .write(profile_.cancel_all_orders, metrics::Type::PROFILE)
@@ -149,7 +149,7 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
 }
 
 uint16_t OrderEntry::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
-  create_order(event, order, request_id);
+  add_order(event, order, request_id);
   return stream_id_;
 }
 
@@ -328,7 +328,7 @@ void OrderEntry::operator()(Trace<json::Token> const &event) {
 void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.rest_private.account_overview;
+    auto path = shared_.api.rest_private.get_account_list;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -383,7 +383,7 @@ void OrderEntry::operator()(Trace<json::Account> const &event) {
 void OrderEntry::get_positions() {
   profile_.positions([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.rest_private.all_position;
+    auto path = shared_.api.rest_private.get_position_list;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -438,7 +438,7 @@ void OrderEntry::operator()(Trace<json::Positions> const &event) {
 void OrderEntry::get_orders() {
   profile_.orders([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.rest_private.orders_all_active;
+    auto path = shared_.api.rest_private.get_order_list;
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
@@ -493,7 +493,7 @@ void OrderEntry::operator()(Trace<json::Orders> const &event) {
 void OrderEntry::get_fills() {
   profile_.fills([&]() {
     auto method = web::http::Method::GET;
-    auto path = shared_.api.rest_private.orders_historical_trades;
+    auto path = shared_.api.rest_private.get_recent_fills;
     // XXX HANS for v2 we ned SYMBOL !!!
     auto headers = account_.create_signature_api_v2(method, path, {}, {});
     auto request = web::rest::Request{
@@ -544,10 +544,10 @@ void OrderEntry::operator()(Trace<json::Fills> const &event) {
   log::info<2>("fills={}"sv, fills);
 }
 
-// create-order
+// add-order
 
-void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Order const &, std::string_view const &request_id) {
-  profile_.create_order([&]() {
+void OrderEntry::add_order(Event<CreateOrder> const &event, server::oms::Order const &, std::string_view const &request_id) {
+  profile_.add_order([&]() {
     if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
     }
@@ -584,7 +584,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
     log::debug(R"(body="{}")"sv, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
-        .path = shared_.api.rest_private.order,
+        .path = shared_.api.rest_private.add_order,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
@@ -596,15 +596,19 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
       auto version = uint32_t{1};
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      create_order_ack(event, user_id, order_id, version);
+      add_order_ack(event, user_id, order_id, version);
     };
     (*connection_)(request_id, request, callback);
   });
 }
 
-void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
-  profile_.create_order_ack([&]() {
-    auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+void OrderEntry::add_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+  profile_.add_order_ack([&]() {
+    auto handle_success = [&](auto &body) {
+      json::AddOrderAck add_order_ack{body, decode_buffer_};
+      Trace event_2{event, add_order_ack};
+      (*this)(event_2, user_id, order_id, version);
+    };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       auto response = server::oms::Response{
@@ -625,6 +629,9 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
   });
 }
 
+void OrderEntry::operator()(Trace<json::AddOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version) {
+}
+
 // cancel-order
 
 void OrderEntry::cancel_order(
@@ -637,8 +644,7 @@ void OrderEntry::cancel_order(
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, cancel_order] = event;
-    auto path = shared_.api.rest_private.order;
-    // XXX HANS v2 requires SYMBOL
+    auto path = fmt::format("{}/{}"sv, shared_.api.rest_private.cancel_order, order.external_order_id);
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
         .path = path,
@@ -661,7 +667,11 @@ void OrderEntry::cancel_order(
 
 void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
-    auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+    auto handle_success = [&](auto &body) {
+      json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
+      Trace event_2{event, cancel_order_ack};
+      (*this)(event_2, user_id, order_id, version);
+    };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       auto response = server::oms::Response{
@@ -680,6 +690,9 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
     };
     process_response(event, handle_success, handle_error);
   });
+}
+
+void OrderEntry::operator()(Trace<json::CancelOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version) {
 }
 
 // cancel-all-orders
@@ -715,7 +728,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
     };
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
-        .path = shared_.api.rest_private.orders,
+        .path = shared_.api.rest_private.cancel_all_orders,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
@@ -757,7 +770,11 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
       Trace event_2{event, cancel_all_orders_ack};
       shared_(event_2);
     };
-    auto handle_success = [&]([[maybe_unused]] auto &body) { log::fatal("NOT IMPLEMENTED"sv); };
+    auto handle_success = [&](auto &body) {
+      json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
+      Trace event_2{event, cancel_all_orders_ack};
+      (*this)(event_2);
+    };
     auto handle_error = [&](auto origin, auto status, auto error, auto text) {
       log::warn(R"(error={}, text="{}")"sv, error, text);
       send_ack(origin, status, error, text);
@@ -765,6 +782,11 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
     process_response(event, handle_success, handle_error);
   });
 }
+
+void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &) {
+}
+
+// helpers
 
 template <typename SuccessHandler, typename ErrorHandler>
 void OrderEntry::process_response(web::rest::Response const &response, SuccessHandler success_handler, ErrorHandler error_handler) {

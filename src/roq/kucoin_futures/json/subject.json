@@ -35,7 +35,8 @@
       "name": "snapshot_24h"
     },
     {
-      "name": "orderChange"
+      "raw": "walletBalance.change",
+      "name": "WalletBalanceChange"
     },
     {
       "raw": "orderMargin.change",
@@ -56,6 +57,16 @@
     {
       "raw": "position.settlement",
       "name": "PositionSettlement"
+    },
+    {
+      "raw": "position.adjustRiskLimit",
+      "name": "PositionAdjustRiskLimit"
+    },
+    {
+      "name": "symbolOrderChange"
+    },
+    {
+      "name": "orderChange"
     }
   ]
 }

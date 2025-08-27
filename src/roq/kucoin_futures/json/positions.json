@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/Position",
+      "type": "roq/kucoin_futures/json/PositionsData",
       "array": "std/span"
     }
   ]

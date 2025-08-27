@@ -1,22 +1,26 @@
 {
-  "name": "roq/kucoin_futures/json/OrderChange",
+  "name": "roq/kucoin_futures/json/WalletBalanceChange",
   "type": "comp",
   "values": [
-    {
-      "name": "userId",
-      "type": "std/string_view"
-    },
     {
       "name": "topic",
       "type": "std/string_view"
     },
     {
       "name": "type",
-      "type": "roq/kucoin_futures/json/Type"
+      "type": "std/string_view"
     },
     {
       "name": "subject",
       "type": "roq/kucoin_futures/json/Subject"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view"
+    },
+    {
+      "name": "userId",
+      "type": "std/string_view"
     },
     {
       "name": "channelType",
@@ -24,7 +28,7 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/OrderChangeData"
+      "type": "roq/kucoin_futures/json/WalletBalanceChangeData"
     }
   ]
 }

@@ -13,7 +13,8 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/FillsData"
+      "type": "roq/kucoin_futures/json/FillsItem",
+      "array": "std/span"
     }
   ]
 }

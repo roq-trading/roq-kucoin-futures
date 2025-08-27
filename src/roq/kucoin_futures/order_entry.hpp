@@ -23,6 +23,9 @@
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/account.hpp"
+#include "roq/kucoin_futures/json/add_order_ack.hpp"
+#include "roq/kucoin_futures/json/cancel_all_orders_ack.hpp"
+#include "roq/kucoin_futures/json/cancel_order_ack.hpp"
 #include "roq/kucoin_futures/json/fills.hpp"
 #include "roq/kucoin_futures/json/orders.hpp"
 #include "roq/kucoin_futures/json/positions.hpp"
@@ -94,14 +97,17 @@ struct OrderEntry final : public web::rest::Client::Handler {
   void get_fills_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<json::Fills> const &);
 
-  void create_order(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id);
-  void create_order_ack(Trace<web::rest::Response> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
+  void add_order(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id);
+  void add_order_ack(Trace<web::rest::Response> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
+  void operator()(Trace<json::AddOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
 
   void cancel_order(Event<CancelOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id);
   void cancel_order_ack(Trace<web::rest::Response> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
+  void operator()(Trace<json::CancelOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
 
   void cancel_all_orders(Event<CancelAllOrders> const &, std::string_view const &request_id);
   void cancel_all_orders_ack(Trace<web::rest::Response> const &, std::string_view const &request_id);
+  void operator()(Trace<json::CancelAllOrdersAck> const &);
 
   template <typename SuccessHandler, typename ErrorHandler>
   void process_response(web::rest::Response const &, SuccessHandler, ErrorHandler);
@@ -130,7 +136,7 @@ struct OrderEntry final : public web::rest::Client::Handler {
         positions, positions_ack,                              //
         orders, orders_ack,                                    //
         fills, fills_ack,                                      //
-        create_order, create_order_ack,                        //
+        add_order, add_order_ack,                              //
         cancel_order, cancel_order_ack,                        //
         cancel_all_orders, cancel_all_orders_ack;
   } profile_;

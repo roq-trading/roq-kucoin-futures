@@ -1,0 +1,14 @@
+{
+  "name": "roq/kucoin_futures/json/CancelAllOrdersAck",
+  "type": "comp",
+  "values": [
+    {
+      "name": "code",
+      "type": "std/int32"
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/json/CancelAllOrdersAckData"
+    }
+  ]
+}

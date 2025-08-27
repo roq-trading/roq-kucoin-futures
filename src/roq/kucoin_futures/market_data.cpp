@@ -625,7 +625,7 @@ void MarketData::operator()(Trace<json::Snapshot24h> const &event) {
   });
 }
 
-void MarketData::operator()(Trace<json::OrderChange> const &) {
+void MarketData::operator()(Trace<json::WalletBalanceChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
@@ -646,6 +646,18 @@ void MarketData::operator()(Trace<json::PositionChange> const &) {
 }
 
 void MarketData::operator()(Trace<json::PositionSettlement> const &) {
+  log::fatal("Unexpected"sv);
+}
+
+void MarketData::operator()(Trace<json::PositionAdjustRiskLimit> const &) {
+  log::fatal("Unexpected"sv);
+}
+
+void MarketData::operator()(Trace<json::SymbolOrderChange> const &) {
+  log::fatal("Unexpected"sv);
+}
+
+void MarketData::operator()(Trace<json::OrderChange> const &) {
   log::fatal("Unexpected"sv);
 }
 

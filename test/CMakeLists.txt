@@ -21,9 +21,11 @@ set(SOURCES
     json_position_change.cpp
     json_positions.cpp
     json_position_settlement.cpp
+    json_position_adjust_risk_limit.cpp
     json_snapshot24h.cpp
     json_ticker_v2.cpp
     json_token.cpp
+    json_wallet_balance_change.cpp
     json_withdraw_hold_change.cpp
     main.cpp)
 
