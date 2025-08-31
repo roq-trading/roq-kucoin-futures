@@ -1,0 +1,15 @@
+{
+  "name": "roq/kucoin_futures/json/StopPriceType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "TP"
+    },
+    {
+      "name": "MP"
+    },
+    {
+      "name": "IP"
+    }
+  ]
+}

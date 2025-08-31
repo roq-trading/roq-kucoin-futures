@@ -63,6 +63,7 @@ struct Gateway final : public server::Handler, public Rest::Handler, public Orde
   void operator()(Trace<TradeSummary> const &, bool is_last) override;
   void operator()(Trace<StatisticsUpdate> const &, bool is_last) override;
   void operator()(Trace<FundsUpdate> const &, bool is_last) override;
+  void operator()(Trace<PositionUpdate> const &, bool is_last) override;
 
   void operator()(Rest::PublicToken const &) override;
   void operator()(Rest::SymbolsUpdate &) override;
@@ -75,6 +76,9 @@ struct Gateway final : public server::Handler, public Rest::Handler, public Orde
 
   template <typename... Args>
   void dispatch(Args &&...);
+
+  template <typename... Args>
+  static void dispatch_helper(auto &self, Args &&...);
 
   OrderEntry &get_order_entry(std::string_view const &account);
 

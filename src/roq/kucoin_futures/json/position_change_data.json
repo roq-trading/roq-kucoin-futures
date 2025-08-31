@@ -3,8 +3,12 @@
   "type": "comp",
   "values": [
     {
-      "name": "marginMode",
+      "name": "symbol",
       "type": "std/string_view"
+    },
+    {
+      "name": "marginMode",
+      "type": "roq/kucoin_futures/json/MarginMode"
     },
     {
       "name": "crossMode",

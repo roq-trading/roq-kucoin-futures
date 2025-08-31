@@ -12,7 +12,7 @@
     },
     {
       "name": "marginMode",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/MarginMode"
     },
     {
       "name": "crossMode",

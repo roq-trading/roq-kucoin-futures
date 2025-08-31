@@ -11,7 +11,7 @@ namespace kucoin_futures {
 
 // === IMPLEMENTATION ===
 
-API API::create(Settings const &settings) {
+API API::create(Settings const &) {
   return {
       .rest_public{
           .bullet_public = "/api/v1/bullet-public"sv,

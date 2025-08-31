@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/json/FeeType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "takerFee"
+    },
+    {
+      "name": "makerFee"
+    }
+  ]
+}

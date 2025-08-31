@@ -1,0 +1,9 @@
+{
+  "name": "roq/kucoin_futures/json/TimeInForce",
+  "type": "enum",
+  "values": [
+    {
+      "name": "gtc"
+    }
+  ]
+}

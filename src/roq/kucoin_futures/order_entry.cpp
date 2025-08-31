@@ -34,7 +34,7 @@ auto const SUPPORTS = Mask{
     SupportType::FUNDS,
 };
 
-auto const SYSTEM_CODE_SUCCESS = int32_t{200000};
+int32_t const SYSTEM_CODE_SUCCESS = 200000;
 }  // namespace
 
 // === HELPERS ===
@@ -376,6 +376,22 @@ void OrderEntry::get_account_ack(Trace<web::rest::Response> const &event, uint32
 void OrderEntry::operator()(Trace<json::Account> const &event) {
   auto &[trace_info, account] = event;
   log::info<2>("account={}"sv, account);
+  auto &data = account.data;
+  auto funds_update = FundsUpdate{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .currency = data.currency,
+      .margin_mode = {},
+      .balance = data.available_balance,
+      .hold = NaN,  // ???
+      .borrowed = NaN,
+      .external_account = {},
+      .update_type = UpdateType::SNAPSHOT,
+      .exchange_time_utc = {},  // ???
+      .exchange_sequence = {},  // ???
+      .sending_time_utc = {},
+  };
+  create_trace_and_dispatch(handler_, trace_info, funds_update, true);
 }
 
 // positions
@@ -431,6 +447,23 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
 void OrderEntry::operator()(Trace<json::Positions> const &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
+  for (auto &item : positions.data) {
+    auto position_update = PositionUpdate{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .margin_mode = map(item.margin_mode),
+        .external_account = {},
+        .long_quantity = std::max(item.current_qty, 0.0),    // XXX FIXME TODO qty ???
+        .short_quantity = std::max(-item.current_qty, 0.0),  // XXX FIXME TODO qty ???
+        .update_type = UpdateType::INCREMENTAL,
+        .exchange_time_utc = {},  // ???
+        .exchange_sequence = {},
+        .sending_time_utc = item.current_timestamp,
+    };
+    create_trace_and_dispatch(handler_, trace_info, position_update, true);
+  }
 }
 
 // orders
@@ -486,6 +519,41 @@ void OrderEntry::get_orders_ack(Trace<web::rest::Response> const &event, uint32_
 void OrderEntry::operator()(Trace<json::Orders> const &event) {
   auto &[trace_info, orders] = event;
   log::info<2>("orders={}"sv, orders);
+  for (auto &item : orders.data.items) {
+    auto order_update = server::oms::OrderUpdate{
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .side = map(item.side),
+        .position_effect = {},
+        .margin_mode = map(item.margin_mode),
+        .max_show_quantity = item.visible_size,
+        .order_type = {},
+        .time_in_force = {},
+        .execution_instructions = {},
+        .create_time_utc = item.created_at,
+        .update_time_utc = item.updated_at,
+        .external_account = {},
+        .external_order_id = {},
+        .client_order_id = item.client_oid,
+        .order_status = {},
+        .quantity = item.size,
+        .price = item.price,
+        .stop_price = item.stop_price,
+        .remaining_quantity = NaN,
+        .traded_quantity = NaN,
+        .average_traded_price = item.avg_deal_price,
+        .last_traded_quantity = item.filled_size,
+        .last_traded_price = NaN,
+        .last_liquidity = {},
+        .routing_id = {},
+        .max_request_version = {},
+        .max_response_version = {},
+        .max_accepted_version = {},
+        .update_type = {},
+        .sending_time_utc = {},
+    };
+  }
 }
 
 // fills
@@ -629,7 +697,9 @@ void OrderEntry::add_order_ack(Trace<web::rest::Response> const &event, uint8_t 
   });
 }
 
-void OrderEntry::operator()(Trace<json::AddOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::operator()(Trace<json::AddOrderAck> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+  auto &[trace_info, add_order_ack] = event;
+  log::info<2>("add_order_ack={}, user_id={}, order_id={}, version={}"sv, add_order_ack, user_id, order_id, version);
 }
 
 // cancel-order
@@ -692,7 +762,9 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
   });
 }
 
-void OrderEntry::operator()(Trace<json::CancelOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::operator()(Trace<json::CancelOrderAck> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+  auto &[trace_info, cancel_order_ack] = event;
+  log::info<2>("cancel_order_ack={}, user_id={}, order_id={}, version={}"sv, cancel_order_ack, user_id, order_id, version);
 }
 
 // cancel-all-orders
@@ -783,7 +855,9 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
   });
 }
 
-void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &) {
+void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event) {
+  auto &[trace_info, cancel_all_orders_ack] = event;
+  log::info<2>("cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
 }
 
 // helpers

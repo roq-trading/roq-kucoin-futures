@@ -1,0 +1,21 @@
+{
+  "name": "roq/kucoin_futures/json/OrderUpdateType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "open"
+    },
+    {
+      "name": "match"
+    },
+    {
+      "name": "update"
+    },
+    {
+      "name": "filled"
+    },
+    {
+      "name": "canceled"
+    }
+  ]
+}

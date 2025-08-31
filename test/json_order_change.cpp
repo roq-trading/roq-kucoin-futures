@@ -53,12 +53,12 @@ TEST_CASE("json_order_change_example", "[json_order_change]") {
   auto &data = obj.data;
   CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
   CHECK(data.symbol == "XBTUSDM"sv);
-  CHECK(data.type == "match"sv);
-  CHECK(data.status == "open"sv);
+  CHECK(data.type == json::OrderUpdateType::MATCH);
+  CHECK(data.status == json::OrderStatus::OPEN);
   CHECK(std::isnan(data.match_size) == true);
   CHECK(std::isnan(data.match_price) == true);
-  CHECK(data.order_type == "limit"sv);
-  CHECK(data.side == "buy"sv);
+  CHECK(data.order_type == json::OrderType::LIMIT);
+  CHECK(data.side == json::Side::BUY);
   CHECK(data.price == 3600.0_a);
   CHECK(data.size == 20000.0_a);
   CHECK(data.remain_size == 20001.0_a);
@@ -68,6 +68,6 @@ TEST_CASE("json_order_change_example", "[json_order_change]") {
   CHECK(data.client_oid == "5ce24c16b210233c36ee321d"sv);
   CHECK(data.order_time == 1545914149935808589ns);
   CHECK(data.old_size == 15000.0_a);
-  CHECK(data.liquidity == "maker"sv);
+  CHECK(data.liquidity == json::Liquidity::MAKER);
   CHECK(data.ts == 1545914149935808589ns);
 }

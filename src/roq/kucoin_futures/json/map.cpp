@@ -13,6 +13,35 @@ using Helper = detail::MapHelper<Args...>;
 
 // kucoin_futures::json => roq
 
+// kucoin_futures::json::MarginMode => roq::MarginMode
+
+template <>
+template <>
+constexpr Helper<kucoin_futures::json::MarginMode>::operator std::optional<roq::MarginMode>() const {
+  switch (std::get<0>(args_)) {
+    using enum kucoin_futures::json::MarginMode::type_t;
+    case UNDEFINED_INTERNAL:
+      return roq::MarginMode::UNDEFINED;
+    case UNKNOWN_INTERNAL:
+      return roq::MarginMode::UNDEFINED;
+    case CROSS:
+      return roq::MarginMode::CROSS;
+    case ISOLATED:
+      return roq::MarginMode::ISOLATED;
+  }
+  return {};
+}
+
+static_assert(Helper{kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::UNDEFINED_INTERNAL}} == roq::MarginMode::UNDEFINED);
+static_assert(Helper{kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::CROSS}} == roq::MarginMode::CROSS);
+static_assert(Helper{kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::ISOLATED}} == roq::MarginMode::ISOLATED);
+
+template <>
+template <>
+std::optional<roq::MarginMode> Map<kucoin_futures::json::MarginMode>::helper() const {
+  return Helper{args_};
+}
+
 // kucoin_futures::json::Side => roq::Side
 
 template <>
@@ -39,6 +68,32 @@ static_assert(Helper{kucoin_futures::json::Side{kucoin_futures::json::Side::SELL
 template <>
 template <>
 std::optional<roq::Side> Map<kucoin_futures::json::Side>::helper() const {
+  return Helper{args_};
+}
+
+// kucoin_futures::json::TimeInForce => roq::TimeInForce
+
+template <>
+template <>
+constexpr Helper<kucoin_futures::json::TimeInForce>::operator std::optional<roq::TimeInForce>() const {
+  switch (std::get<0>(args_)) {
+    using enum kucoin_futures::json::TimeInForce::type_t;
+    case UNDEFINED_INTERNAL:
+      return roq::TimeInForce::UNDEFINED;
+    case UNKNOWN_INTERNAL:
+      return roq::TimeInForce::UNDEFINED;
+    case GTC:
+      return roq::TimeInForce::GTC;
+  }
+  return {};
+}
+
+static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::GTC}} == roq::TimeInForce::GTC);
+
+template <>
+template <>
+std::optional<roq::TimeInForce> Map<kucoin_futures::json::TimeInForce>::helper() const {
   return Helper{args_};
 }
 

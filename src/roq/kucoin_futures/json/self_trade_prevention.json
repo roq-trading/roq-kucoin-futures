@@ -1,0 +1,15 @@
+{
+  "name": "roq/kucoin_futures/json/SelfTradePrevention",
+  "type": "enum",
+  "values": [
+    {
+      "name": "CN"
+    },
+    {
+      "name": "CO"
+    },
+    {
+      "name": "CB"
+    }
+  ]
+}

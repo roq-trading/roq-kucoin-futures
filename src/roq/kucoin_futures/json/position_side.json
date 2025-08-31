@@ -1,0 +1,15 @@
+{
+  "name": "roq/kucoin_futures/json/PositionSide",
+  "type": "enum",
+  "values": [
+    {
+      "name": "BOTH"
+    },
+    {
+      "name": "LONG"
+    },
+    {
+      "name": "SHORT"
+    }
+  ]
+}

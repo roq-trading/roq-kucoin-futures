@@ -18,10 +18,12 @@ set(AUTOGEN_SCHEMAS
     cancel_order_ack.json
     contracts_item.json
     contracts.json
+    display_type.json
     error.json
     execution_data.json
     execution.json
     fair_method.json
+    fee_type.json
     fills_item.json
     fills.json
     funding_begin_data.json
@@ -34,6 +36,8 @@ set(AUTOGEN_SCHEMAS
     level2_data_item.json
     level2_data.json
     level2.json
+    liquidity.json
+    margin_mode.json
     mark_index_price_data.json
     mark_index_price.json
     mark_method.json
@@ -50,6 +54,9 @@ set(AUTOGEN_SCHEMAS
     orders_data_item.json
     orders_data.json
     orders.json
+    order_status.json
+    order_type.json
+    order_update_type.json
     pong.json
     position_adjust_risk_limit_data.json
     position_adjust_risk_limit.json
@@ -58,17 +65,23 @@ set(AUTOGEN_SCHEMAS
     positions_data.json
     position_settlement_data.json
     position_settlement.json
+    position_side.json
     positions.json
+    self_trade_prevention.json
     side.json
     snapshot24h_data.json
     snapshot24h.json
     status.json
+    stop.json
+    stop_price_type.json
     subject.json
     symbol_order_change.json
     ticker_v2_data.json
     ticker_v2.json
+    time_in_force.json
     token_data.json
     token.json
+    trade_type.json
     type.json
     wallet_balance_change_data.json
     wallet_balance_change.json

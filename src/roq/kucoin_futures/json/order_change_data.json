@@ -4,15 +4,15 @@
   "values": [
     {
       "name": "marginMode",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/MarginMode"
     },
     {
       "name": "status",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/OrderStatus"
     },
     {
       "name": "type",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/OrderUpdateType"
     },
     {
       "name": "symbol",
@@ -20,23 +20,23 @@
     },
     {
       "name": "side",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/Side"
     },
     {
       "name": "tradeType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/TradeType"
     },
     {
       "name": "orderType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/OrderType"
     },
     {
       "name": "feeType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/FeeType"
     },
     {
       "name": "liquidity",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/Liquidity"
     },
     {
       "name": "orderId",
@@ -84,7 +84,7 @@
     },
     {
       "name": "positionSide",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/PositionSide"
     },
     {
       "name": "orderTime",

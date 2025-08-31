@@ -1,0 +1,15 @@
+{
+  "name": "roq/kucoin_futures/json/OrderStatus",
+  "type": "enum",
+  "values": [
+    {
+      "name": "open"
+    },
+    {
+      "name": "match"
+    },
+    {
+      "name": "done"
+    }
+  ]
+}

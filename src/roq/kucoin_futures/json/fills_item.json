@@ -16,11 +16,11 @@
     },
     {
       "name": "side",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/Side"
     },
     {
       "name": "liquidity",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/Liquidity"
     },
     {
       "name": "forceTaker",
@@ -48,7 +48,7 @@
     },
     {
       "name": "stop",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/Stop"
     },
     {
       "name": "feeRate",
@@ -64,7 +64,7 @@
     },
     {
       "name": "marginMode",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/MarginMode"
     },
     {
       "name": "fee",
@@ -76,19 +76,20 @@
     },
     {
       "name": "orderType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/OrderType"
     },
     {
       "name": "displayType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/DisplayType"
     },
     {
       "name": "tradeType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/TradeType"
     },
     {
       "name": "subTradeType",
-      "type": "std/string_view"
+      "type": "std/string_view",
+      "comment": "deprecated"
     },
     {
       "name": "tradeTime",
@@ -100,7 +101,7 @@
     },
     {
       "name": "positionSide",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/PositionSide"
     }
   ]
 }

@@ -12,6 +12,7 @@
 
 #include "roq/web/socket/client.hpp"
 
+#include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
 using namespace std::literals;
@@ -29,6 +30,7 @@ auto const SUPPORTS = Mask{
     SupportType::ORDER,
     SupportType::TRADE,
     SupportType::FUNDS,
+    SupportType::POSITION,
 };
 }  // namespace
 
@@ -249,7 +251,12 @@ void DropCopy::subscribe(std::string_view const &topic) {
 void DropCopy::send_ping(std::chrono::nanoseconds now) {
   assert(ping_frequency_.count() > 0);
   next_ping_ = now + ping_frequency_ / 2;
-  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"sv, now.count());
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":{},)"
+      R"("type":"ping")"
+      R"(}})"sv,
+      now.count());
   (*connection_).send_text(message);
 }
 
@@ -283,8 +290,7 @@ void DropCopy::operator()(Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
-    log::warn("error={}"sv, error);
-    // log::fatal("event={{error={}, trace_info={}}}"sv, error, trace_info);
+    log::error("error={}"sv, error);
   });
 }
 
@@ -338,31 +344,81 @@ void DropCopy::operator()(Trace<json::Snapshot24h> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::WalletBalanceChange> const &) {
+void DropCopy::operator()(Trace<json::WalletBalanceChange> const &event) {
+  auto &[trace_info, wallet_balance_change] = event;
+  log::info<2>("wallet_balance_change={}"sv, wallet_balance_change);
+  auto &data = wallet_balance_change.data;
+  auto funds_update = FundsUpdate{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .currency = data.currency,
+      .margin_mode = {},
+      .balance = data.available_balance,
+      .hold = data.hold_balance,
+      .borrowed = NaN,
+      .external_account = {},
+      .update_type = UpdateType::INCREMENTAL,
+      .exchange_time_utc = data.timestamp,  // ???
+      .exchange_sequence = data.version,
+      .sending_time_utc = {},
+  };
+  create_trace_and_dispatch(handler_, trace_info, funds_update, true);
 }
 
-void DropCopy::operator()(Trace<json::OrderMarginChange> const &) {
+void DropCopy::operator()(Trace<json::OrderMarginChange> const &event) {
+  auto &[trace_info, order_margin_change] = event;
+  log::info<2>("order_margin_change={}"sv, order_margin_change);
 }
 
-void DropCopy::operator()(Trace<json::AvailableBalanceChange> const &) {
+void DropCopy::operator()(Trace<json::AvailableBalanceChange> const &event) {
+  auto &[trace_info, available_balance_change] = event;
+  log::info<2>("available_balance_change={}"sv, available_balance_change);
 }
 
-void DropCopy::operator()(Trace<json::WithdrawHoldChange> const &) {
+void DropCopy::operator()(Trace<json::WithdrawHoldChange> const &event) {
+  auto &[trace_info, withdraw_hold_change] = event;
+  log::info<2>("withdraw_hold_change={}"sv, withdraw_hold_change);
 }
 
-void DropCopy::operator()(Trace<json::PositionChange> const &) {
+void DropCopy::operator()(Trace<json::PositionChange> const &event) {
+  auto &[trace_info, position_change] = event;
+  log::info<2>("position_change={}"sv, position_change);
+  auto &data = position_change.data;
+  auto position_update = PositionUpdate{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .exchange = shared_.settings.exchange,
+      .symbol = data.symbol,
+      .margin_mode = map(data.margin_mode),
+      .external_account = {},
+      .long_quantity = std::max(data.current_qty, 0.0),    // XXX FIXME TODO qty ???
+      .short_quantity = std::max(-data.current_qty, 0.0),  // XXX FIXME TODO qty ???
+      .update_type = UpdateType::INCREMENTAL,
+      .exchange_time_utc = data.ts,  // ???
+      .exchange_sequence = {},
+      .sending_time_utc = data.current_timestamp,
+  };
+  create_trace_and_dispatch(handler_, trace_info, position_update, true);
 }
 
-void DropCopy::operator()(Trace<json::PositionSettlement> const &) {
+void DropCopy::operator()(Trace<json::PositionSettlement> const &event) {
+  auto &[trace_info, position_settlement] = event;
+  log::info<2>("position_settlement={}"sv, position_settlement);
 }
 
-void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &) {
+void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &event) {
+  auto &[trace_info, positoin_adjust_risk_limit] = event;
+  log::info<2>("positoin_adjust_risk_limit={}"sv, positoin_adjust_risk_limit);
 }
 
-void DropCopy::operator()(Trace<json::SymbolOrderChange> const &) {
+void DropCopy::operator()(Trace<json::SymbolOrderChange> const &event) {
+  auto &[trace_info, symbol_order_change] = event;
+  log::info<2>("symbol_order_change={}"sv, symbol_order_change);
 }
 
-void DropCopy::operator()(Trace<json::OrderChange> const &) {
+void DropCopy::operator()(Trace<json::OrderChange> const &event) {
+  auto &[trace_info, order_change] = event;
+  log::info<2>("order_change={}"sv, order_change);
 }
 
 }  // namespace kucoin_futures
