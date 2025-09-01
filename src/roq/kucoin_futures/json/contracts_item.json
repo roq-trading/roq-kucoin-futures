@@ -292,6 +292,10 @@
       "name": "crossRiskLimit",
       "type": "std/double",
       "comment": "undoc"
+    },
+    {
+      "name": "adjustMmrLevConstant",
+      "comment": "undoc"
     }
   ]
 }
