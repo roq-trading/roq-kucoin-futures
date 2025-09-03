@@ -32,6 +32,8 @@ auto const SUPPORTS = Mask{
     SupportType::FUNDS,
     SupportType::POSITION,
 };
+
+size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 }  // namespace
 
 // === HELPERS ===
@@ -84,7 +86,7 @@ DropCopy::DropCopy(
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, connection_{create_connection(*this, shared.settings, context, uri, query)},
-      ping_frequency_{ping_frequency}, decode_buffer_(shared.settings.misc.decode_buffer_size),
+      ping_frequency_{ping_frequency}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
