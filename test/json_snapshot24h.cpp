@@ -2,6 +2,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/snapshot24h.hpp"
 
 using namespace roq;
@@ -28,6 +30,6 @@ TEST_CASE("json_snapshot24h", "[json_snapshot24h]") {
                        R"("volume":684.327)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   [[maybe_unused]] json::Snapshot24h obj{message, buffer};
 }

@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/order_margin_change.hpp"
 
 using namespace roq;
@@ -27,7 +29,7 @@ TEST_CASE("json_order_margin_change_example", "[json_order_margin_change]") {
                        R"("timestamp": 1553842862614)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::OrderMarginChange obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);

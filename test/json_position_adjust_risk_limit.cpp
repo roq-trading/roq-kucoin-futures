@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/position_adjust_risk_limit.hpp"
 
 using namespace roq;
@@ -24,7 +26,7 @@ TEST_CASE("json_position_adjust_risk_limit", "[json_position_adjust_risk_limit]"
                        R"("data": {)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::PositionAdjustRiskLimit obj{message, buffer};
   /*
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);

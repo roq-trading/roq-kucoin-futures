@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/position_change.hpp"
 
 using namespace roq;
@@ -57,7 +59,7 @@ TEST_CASE("json_position_change_example_1", "[json_position_change]") {
                        R"("settleCurrency": "XBT")"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::PositionChange obj{message, buffer};
   CHECK(obj.user_id == "5c32d69203aa676ce4b543c7"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);
@@ -116,7 +118,7 @@ TEST_CASE("json_position_change_example_2", "[json_position_change]") {
                        R"("settleCurrency": "XBT")"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::PositionChange obj{message, buffer};
   CHECK(obj.user_id == "5cd3f1a7b7ebc19ae9558591"sv);
   CHECK(obj.topic == "/contract/position:XBTUSDM"sv);

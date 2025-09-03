@@ -2,6 +2,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/ticker_v2.hpp"
 
 using namespace roq;
@@ -25,6 +27,6 @@ TEST_CASE("json_ticker_v2", "[json_ticker_v2]") {
                        R"("ts":1756199639879000000)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   [[maybe_unused]] json::TickerV2 obj{message, buffer};
 }

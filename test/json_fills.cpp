@@ -4,6 +4,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/fills.hpp"
 
 using namespace roq;
@@ -19,7 +21,7 @@ TEST_CASE("json_fills_simple", "[json_fills]") {
                        R"("data":[)"
                        R"(])"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::Fills obj{message, buffer};
   /*
   CHECK(obj.code == 200000);

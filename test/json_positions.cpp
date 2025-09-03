@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/positions.hpp"
 
 using namespace roq;
@@ -94,7 +96,7 @@ TEST_CASE("json_positions_simple", "[json_positions]") {
                        R"(})"
                        R"(])"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::Positions obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;

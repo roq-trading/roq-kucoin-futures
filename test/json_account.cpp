@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/account.hpp"
 
 using namespace roq;
@@ -29,7 +31,7 @@ TEST_CASE("json_account_simple", "[json_account]") {
                        R"("currency":"XBT")"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::Account obj{message, buffer};
   CHECK(obj.code == 200000);
   auto &data = obj.data;

@@ -2,6 +2,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/level2.hpp"
 
 using namespace roq;
@@ -21,6 +23,6 @@ TEST_CASE("json_level2", "[json_level2]") {
                        R"("timestamp":1756205427835)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::Level2 obj{message, buffer};
 }

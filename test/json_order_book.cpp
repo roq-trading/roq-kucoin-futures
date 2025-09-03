@@ -4,6 +4,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/order_book.hpp"
 
 using namespace roq;
@@ -29,6 +31,6 @@ TEST_CASE("json_order_book", "[json_order_book]") {
                        R"("ts":1756205428766000000)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::OrderBook obj{message, buffer};
 }

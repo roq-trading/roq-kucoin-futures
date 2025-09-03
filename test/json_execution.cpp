@@ -4,6 +4,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/execution.hpp"
 
 using namespace roq;
@@ -29,7 +31,7 @@ TEST_CASE("json_v2_execution_simple", "[json_execution]") {
                        R"("ts":1656667043469)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::Execution obj{message, buffer};
   CHECK(obj.type == json::Type::MESSAGE);
   CHECK(obj.topic == "/futuresMarket/execution:BTCUSDM"sv);

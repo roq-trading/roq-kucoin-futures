@@ -4,6 +4,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/contracts.hpp"
 
 using namespace roq;
@@ -240,6 +242,6 @@ TEST_CASE("json_contracts", "[json_contracts]") {
                        R"(})"
                        R"(])"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   [[maybe_unused]] json::Contracts obj{message, buffer};
 }

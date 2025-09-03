@@ -4,6 +4,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/wallet_balance_change.hpp"
 
 using namespace roq;
@@ -22,6 +24,6 @@ TEST_CASE("json_wallet_balance_change", "[json_wallet_balance_change]") {
                        R"("data": {)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::WalletBalanceChange obj{message, buffer};
 }

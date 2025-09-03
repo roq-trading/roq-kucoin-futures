@@ -6,6 +6,8 @@
 
 #include "roq/core/datetime.hpp"
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/available_balance_change.hpp"
 
 using namespace roq;
@@ -28,7 +30,7 @@ TEST_CASE("json_available_balance_change_example", "[json_available_balance_chan
                        R"("timestamp": 1553842862614)"
                        R"(})"
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   json::AvailableBalanceChange obj{message, buffer};
   CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
   CHECK(obj.topic == "/contractAccount/wallet"sv);

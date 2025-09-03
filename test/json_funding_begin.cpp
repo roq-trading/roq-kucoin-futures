@@ -2,6 +2,8 @@
 
 #include <catch2/catch_all.hpp>
 
+#include "roq/core/json/buffer_stack.hpp"
+
 #include "roq/kucoin_futures/json/funding_begin.hpp"
 
 using namespace roq;
@@ -13,6 +15,6 @@ TEST_CASE("json_funding_begin", "[json_funding_begin]") {
   auto const message = R"({)"
                        // XXX FIXME don't have
                        R"(})";
-  std::vector<std::byte> buffer(8192);
+  core::json::BufferStack buffer{8192, 1};
   [[maybe_unused]] json::FundingBegin obj{message, buffer};
 }
