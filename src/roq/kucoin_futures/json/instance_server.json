@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/InstanceServer",
-  "type": "item",
+  "type": "dictionary",
   "values": [
     {
       "name": "pingInterval",

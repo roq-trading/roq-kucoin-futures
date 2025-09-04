@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/MarkIndexPrice",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "topic",

@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/Account",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "code",

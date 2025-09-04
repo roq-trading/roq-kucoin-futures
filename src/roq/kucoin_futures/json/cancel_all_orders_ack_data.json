@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/CancelAllOrdersAckData",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "cancelledOrderIds",

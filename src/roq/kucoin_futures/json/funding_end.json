@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/FundingEnd",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "topic",

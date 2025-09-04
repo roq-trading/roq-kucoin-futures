@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/WithdrawHoldChange",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "userId",

@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/AvailableBalanceChangeData",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "availableBalance",

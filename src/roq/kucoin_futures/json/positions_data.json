@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/PositionsData",
-  "type": "item",
+  "type": "dictionary",
   "values": [
     {
       "name": "id",

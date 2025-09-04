@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/FillsItem",
-  "type": "item",
+  "type": "dictionary",
   "values": [
     {
       "name": "symbol",

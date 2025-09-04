@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/AddOrderAckData",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "orderId",

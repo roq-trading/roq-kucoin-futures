@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/OrdersDataItem",
-  "type": "item",
+  "type": "dictionary",
   "values": [
     {
       "name": "id",

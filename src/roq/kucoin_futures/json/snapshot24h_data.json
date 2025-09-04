@@ -1,6 +1,6 @@
 {
   "name": "roq/kucoin_futures/json/Snapshot24hData",
-  "type": "comp",
+  "type": "dictionary",
   "values": [
     {
       "name": "highPrice",
