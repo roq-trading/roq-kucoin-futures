@@ -24,17 +24,20 @@ void dispatch_helper(auto &handler, auto &message, auto &buffer_stack, auto &tra
 
 // === IMPLEMENTATION ===
 
-bool Parser::dispatch(Handler &handler, std::string_view const &message, core::json::BufferStack &buffer_stack, TraceInfo const &trace_info) {
-  Message message_{message, buffer_stack};
-  switch (message_.type) {
+bool Parser::dispatch(
+    Handler &handler, std::string_view const &message, core::json::BufferStack &buffer_stack, TraceInfo const &trace_info, bool allow_unknown_event_types) {
+  Message message_2{message, buffer_stack};
+  switch (message_2.type) {
     using enum json::Type::type_t;
     case UNDEFINED_INTERNAL:
-    case UNKNOWN_INTERNAL:
-      switch (message_.subject) {
+      switch (message_2.subject) {
         using enum json::Subject::type_t;
         case UNDEFINED_INTERNAL:
+          break;
         case UNKNOWN_INTERNAL:
-          log::fatal("Unexpected"sv);
+          if (allow_unknown_event_types) {
+            return false;
+          }
           break;
         case TICKER_V2:
         case MATCH:
@@ -45,81 +48,84 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, core::j
         case FUNDING_BEGIN:
         case FUNDING_END:
         case SNAPSHOT_24H:
-          log::fatal("Unexpected"sv);
           break;
         case WALLET_BALANCE_CHANGE:
           dispatch_helper<WalletBalanceChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case ORDER_MARGIN_CHANGE:
           dispatch_helper<OrderMarginChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case AVAILABLE_BALANCE_CHANGE:
           dispatch_helper<AvailableBalanceChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case WITHDRAW_HOLD_CHANGE:
           dispatch_helper<WithdrawHoldChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case POSITION_CHANGE:
           dispatch_helper<PositionChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case POSITION_SETTLEMENT:
           dispatch_helper<PositionSettlement>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case POSITION_ADJUST_RISK_LIMIT:
           dispatch_helper<PositionAdjustRiskLimit>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case SYMBOL_ORDER_CHANGE:
         case ORDER_CHANGE:
-          log::fatal("Unexpected"sv);
           break;
       }
       break;
+    case UNKNOWN_INTERNAL:
+      break;
     case WELCOME:
       dispatch_helper<Welcome>(handler, message, buffer_stack, trace_info);
-      break;
+      return true;
     case ERROR:
       dispatch_helper<Error>(handler, message, buffer_stack, trace_info);
-      break;
+      return true;
     case PONG:
       dispatch_helper<Pong>(handler, message, buffer_stack, trace_info);
-      break;
+      return true;
     case ACK:
       dispatch_helper<Ack>(handler, message, buffer_stack, trace_info);
-      break;
+      return true;
     case MESSAGE:
-      switch (message_.subject) {
+      switch (message_2.subject) {
         using enum json::Subject::type_t;
         case UNDEFINED_INTERNAL:
+          break;
         case UNKNOWN_INTERNAL:
-          log::fatal("Unexpected"sv);
+          if (allow_unknown_event_types) {
+            return false;
+          }
           break;
         case TICKER_V2:
           dispatch_helper<TickerV2>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case MATCH:
           dispatch_helper<Match>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case EXECUTION:
           dispatch_helper<Execution>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case MARK_INDEX_PRICE:
           dispatch_helper<MarkIndexPrice>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case FUNDING_RATE:
           dispatch_helper<FundingRate>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case LEVEL2:
           dispatch_helper<Level2>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case FUNDING_BEGIN:
           dispatch_helper<FundingBegin>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case FUNDING_END:
           dispatch_helper<FundingEnd>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case SNAPSHOT_24H:
           dispatch_helper<Snapshot24h>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case WALLET_BALANCE_CHANGE:
         case ORDER_MARGIN_CHANGE:
         case AVAILABLE_BALANCE_CHANGE:
@@ -127,18 +133,17 @@ bool Parser::dispatch(Handler &handler, std::string_view const &message, core::j
         case POSITION_CHANGE:
         case POSITION_SETTLEMENT:
         case POSITION_ADJUST_RISK_LIMIT:
-          log::fatal("Unexpected"sv);
           break;
         case SYMBOL_ORDER_CHANGE:
           dispatch_helper<SymbolOrderChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
         case ORDER_CHANGE:
           dispatch_helper<OrderChange>(handler, message, buffer_stack, trace_info);
-          break;
+          return true;
       }
       break;
   }
-  return true;
+  log::fatal(R"(Unexpected: message="{}")"sv, message);
 }
 
 }  // namespace json
