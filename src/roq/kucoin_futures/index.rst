@@ -5,12 +5,35 @@
 roq-kucoin-futures
 ==================
 
+.. tab:: Unstable
 
-Links
------
+  .. code-block:: shell
 
-* `Website <https://futures.kucoin.com/>`__
-* `API <https://www.kucoin.com/docs-new>`__
+     $ conda install \
+           --channel https://roq-trading.com/conda/unstable \
+           roq-kucoin-futures
+
+.. tab:: Stable
+
+  .. code-block:: shell
+
+     $ conda install \
+           --channel https://roq-trading.com/conda/stable \
+           roq-kucoin-futures
+
+
+:code:`roq-kucoin-futures`
+--------------------------
+
+.. code-block:: shell
+
+   $ roq-kucoin-futures [FLAGS]
+
+
+Description
+~~~~~~~~~~~
+
+:code:`roq-kucoin-futures` is a gateway
 
 
 Supports
@@ -82,47 +105,10 @@ Supports
         - |checkmark|
 
 
-Installing
-----------
-
-* :ref:`Using Conda <tutorial-conda>`
-
-.. tab:: Unstable
-
-  .. code-block:: shell
-
-     $ conda install \
-           --channel https://roq-trading.com/conda/unstable \
-           roq-kucoin-futures
-
-.. tab:: Stable
-
-  .. code-block:: shell
-
-     $ conda install \
-           --channel https://roq-trading.com/conda/stable \
-           roq-kucoin-futures
-
-
-Using
------
-
-.. code-block:: shell
-
-   $ roq-kucoin-futures \
-         --name "kucoin-futures" \
-         --config_file $CONFIG_FILE_PATH \
-         --client_listen_address $UNIX_SOCKET_PATH \
-         --flagfile $ENVIRONMENT_FLAGFILE
-
-
 .. _roq-kucoin-futures-flags:
 
 Flags
 -----
-
-* :ref:`Using Flags <abseil-cpp>`
-* :ref:`Gateway Flags <gateway-flags>`
 
 .. code-block:: shell
 
