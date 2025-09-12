@@ -12,6 +12,7 @@
 
 #include "roq/server/oms/exceptions.hpp"
 
+#include "roq/kucoin_futures/json/encoder.hpp"
 #include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
@@ -631,7 +632,7 @@ void OrderEntry::add_order(Event<CreateOrder> const &event, server::oms::Order c
     auto &[message_info, create_order] = event;
     auto method = web::http::Method::POST;
     auto path = shared_.api.rest_private.add_order;
-    auto body = json::add_order(encode_buffer_, create_order, order, request_id);
+    auto body = json::Encoder::add_order(encode_buffer_, create_order, order, request_id);
     log::debug(R"(body="{}")"sv, body);
     auto headers = account_.create_signature_api_v2(method, path, {}, body);
     auto request = web::rest::Request{

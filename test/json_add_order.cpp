@@ -4,7 +4,7 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/kucoin_futures/json/utils.hpp"
+#include "roq/kucoin_futures/json/encoder.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -46,7 +46,7 @@ TEST_CASE("json_add_order_simple", "[json_add_order]") {
       .precision = Precision::_1,
   };
   auto request_id = "1234"sv;
-  auto message = json::add_order(buffer, create_order, order, request_id);
+  auto message = json::Encoder::add_order(buffer, create_order, order, request_id);
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
