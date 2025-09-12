@@ -10,8 +10,6 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/web/socket/client.hpp"
-
 #include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
@@ -39,8 +37,8 @@ size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 // === HELPERS ===
 
 namespace {
-auto create_name(auto stream_id) {
-  return fmt::format("{}:{}"sv, stream_id, NAME);
+auto create_name(auto stream_id, auto &account) {
+  return fmt::format("{}:{}:{}"sv, stream_id, NAME, account.name);
 }
 
 auto create_connection(auto &handler, auto &settings, auto &context, auto &uri, auto &query) {
@@ -85,8 +83,9 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, connection_{create_connection(*this, shared.settings, context, uri, query)},
-      ping_frequency_{ping_frequency}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
+      connection_{create_connection(*this, shared.settings, context, uri, query)}, ping_frequency_{ping_frequency},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },

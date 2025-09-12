@@ -10,6 +10,8 @@
 
 #include "roq/core/json/parser.hpp"
 
+#include "roq/server/oms/order.hpp"
+
 namespace roq {
 namespace kucoin_futures {
 namespace json {
@@ -71,6 +73,10 @@ inline std::string_view strip_symbol_from_topic(std::string_view const &topic) {
   auto pos = topic.find_last_of(':');
   return pos == topic.npos ? topic : topic.substr(pos + 1);
 }
+
+extern std::string_view add_order(std::string &buffer, CreateOrder const &, server::oms::Order const &, std::string_view const &request_id);
+
+extern Error guess_error(int32_t code);
 
 }  // namespace json
 }  // namespace kucoin_futures

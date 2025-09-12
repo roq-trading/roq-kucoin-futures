@@ -7,6 +7,10 @@
       "type": "std/int32"
     },
     {
+      "name": "msg",
+      "type": "std/string_view"
+    },
+    {
       "name": "data",
       "type": "roq/kucoin_futures/json/CancelAllOrdersAckData"
     }

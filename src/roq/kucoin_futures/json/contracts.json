@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "code",
-      "type": "std/string_view"
+      "type": "std/int32"
     },
     {
       "name": "msg",

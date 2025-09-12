@@ -14,8 +14,6 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/web/socket/client.hpp"
-
 #include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
@@ -281,7 +279,12 @@ void MarketData::subscribe(std::string_view const &topic, std::span<Symbol const
 void MarketData::send_ping(std::chrono::nanoseconds now) {
   assert(ping_frequency_.count() > 0);
   next_ping_ = now + ping_frequency_ / 2;
-  auto message = fmt::format(R"({{"id":{},"type":"ping"}})"sv, now.count());
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":{},)"
+      R"("type":"ping")"
+      R"(}})"sv,
+      now.count());
   (*connection_).send_text(message);
 }
 
@@ -387,11 +390,10 @@ void MarketData::operator()(Trace<json::Match> const &event) {
   });
 }
 
-// XXX FIXME TODO what is this ???
 void MarketData::operator()(Trace<json::Execution> const &event) {
-  log::fatal("HERE"sv);
   profile_.execution([&]() {
     auto &[trace_info, execution] = event;
+    log::fatal("Unexpected: execution={}"sv, execution);  // XXX FIXME TODO what is this event ???
     log::info<4>("execution={}"sv, execution);
     (*connection_).touch(trace_info.source_receive_time);
     auto &data = execution.data;

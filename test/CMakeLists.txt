@@ -4,6 +4,7 @@ set(TARGET_NAME ${PROJECT_NAME}-test)
 
 set(SOURCES
     json_account.cpp
+    json_add_order.cpp
     json_available_balance_change.cpp
     json_contracts.cpp
     json_execution.cpp
@@ -18,10 +19,10 @@ set(SOURCES
     json_order_change.cpp
     json_order_margin_change.cpp
     json_orders.cpp
+    json_position_adjust_risk_limit.cpp
     json_position_change.cpp
     json_positions.cpp
     json_position_settlement.cpp
-    json_position_adjust_risk_limit.cpp
     json_snapshot24h.cpp
     json_ticker_v2.cpp
     json_token.cpp
