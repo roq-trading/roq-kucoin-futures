@@ -546,18 +546,16 @@ void Rest::process_response(web::rest::Response const &response, auto error_hand
       case SUCCESS:
         success_handler(body);
         break;
+      case REDIRECTION:
+        log::fatal("Unexpected: URL is being redirected"sv);
       case CLIENT_ERROR:
         success_handler(body);  // throws
         break;
-      case REDIRECTION:
-        log::fatal("Unexpected: URL is being redirected"sv);
       case SERVER_ERROR: {
         auto message = fmt::format("{}"sv, status);
         error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, message);
         break;
       }
-      default:
-        response.expect(web::http::Status::OK);  // throws
     }
   } catch (NetworkError &e) {
     log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
