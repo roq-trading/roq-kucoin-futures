@@ -296,6 +296,15 @@
     {
       "name": "adjustMmrLevConstant",
       "comment": "undoc"
+    },
+    {
+      "name": "marketStage",
+      "type": "roq/kucoin_futures/json/MarketStage",
+      "comment": "undoc"
+    },
+    {
+      "name": "preMarketToPerpDate",
+      "comment": "undoc"
     }
   ]
 }

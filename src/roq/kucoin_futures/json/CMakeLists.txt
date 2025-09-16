@@ -38,6 +38,7 @@ set(AUTOGEN_SCHEMAS
     level2.json
     liquidity.json
     margin_mode.json
+    market_stage.json
     mark_index_price_data.json
     mark_index_price.json
     mark_method.json

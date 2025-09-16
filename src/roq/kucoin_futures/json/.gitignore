@@ -33,6 +33,7 @@ level2_data.hpp
 level2.hpp
 liquidity.hpp
 margin_mode.hpp
+market_stage.hpp
 mark_index_price_data.hpp
 mark_index_price.hpp
 mark_method.hpp
@@ -116,6 +117,7 @@ level2_data.cpp
 level2.cpp
 liquidity.cpp
 margin_mode.cpp
+market_stage.cpp
 mark_index_price_data.cpp
 mark_index_price.cpp
 mark_method.cpp
