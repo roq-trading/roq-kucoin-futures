@@ -345,7 +345,7 @@ void OrderEntry::get_account() {
       Trace event{trace_info, response};
       get_account_ack(event, sequence);
     };
-    (*connection_)("account", request, callback);
+    (*connection_)("account"sv, request, callback);
   });
 }
 
@@ -476,11 +476,15 @@ void OrderEntry::get_orders() {
   profile_.orders([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.rest_private.get_order_list;
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto query = fmt::format(
+        "?status=active"
+        "&pageSize={}"sv,
+        1000);  // XXX FIXME TODO flags
+    auto headers = account_.create_signature_api_v2(method, path, query, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
-        .query = {},
+        .query = query,
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = headers,
@@ -526,39 +530,58 @@ void OrderEntry::operator()(Trace<json::Orders> const &event) {
   log::info<2>("orders={}"sv, orders);
   for (auto &item : orders.data.items) {
     log::debug("item={}"sv, item);
+    // note! following shouldn't be necessary due to only downloading active orders -- just being safe
+    auto order_status = [&]() -> OrderStatus {
+      auto result = map(item.status).template get<OrderStatus>();
+      if (result == OrderStatus::COMPLETED) {
+        if (!utils::is_equal(item.size, item.filled_size)) {
+          return OrderStatus::CANCELED;
+        }
+      }
+      return result;
+    }();
+    auto remaining_quantity = [&]() -> double {
+      if (order_status == OrderStatus::CANCELED) {
+        return 0.0;
+      }
+      return item.size - item.filled_size;
+    }();
     auto order_update = server::oms::OrderUpdate{
         .account = account_.name,
         .exchange = shared_.settings.exchange,
         .symbol = item.symbol,
         .side = map(item.side),
-        .position_effect = {},
+        .position_effect = map(item.position_side, item.side),
         .margin_mode = map(item.margin_mode),
         .max_show_quantity = item.visible_size,
-        .order_type = {},
-        .time_in_force = {},
+        .order_type = map(item.type),
+        .time_in_force = map(item.time_in_force),
         .execution_instructions = {},
         .create_time_utc = item.created_at,
         .update_time_utc = item.updated_at,
         .external_account = {},
-        .external_order_id = {},
+        .external_order_id = item.id,
         .client_order_id = item.client_oid,
-        .order_status = {},
+        .order_status = order_status,
         .quantity = item.size,
         .price = item.price,
         .stop_price = item.stop_price,
-        .remaining_quantity = NaN,
-        .traded_quantity = NaN,
+        .remaining_quantity = remaining_quantity,
+        .traded_quantity = item.filled_size,
         .average_traded_price = item.avg_deal_price,
-        .last_traded_quantity = item.filled_size,
+        .last_traded_quantity = NaN,
         .last_traded_price = NaN,
         .last_liquidity = {},
         .routing_id = {},
         .max_request_version = {},
         .max_response_version = {},
         .max_accepted_version = {},
-        .update_type = {},
+        .update_type = UpdateType::SNAPSHOT,
         .sending_time_utc = {},
     };
+    log::warn("DEBUG order_update={}"sv, order_update);
+    Trace event_2{trace_info, order_update};
+    (*this)(event_2, item.client_oid);
   }
 }
 
@@ -632,7 +655,7 @@ void OrderEntry::add_order(Event<CreateOrder> const &event, server::oms::Order c
     auto &[message_info, create_order] = event;
     auto method = web::http::Method::POST;
     auto path = shared_.api.rest_private.add_order;
-    auto body = json::Encoder::add_order(encode_buffer_, create_order, order, request_id);
+    auto body = json::Encoder::add_order(encode_buffer_, create_order, order, request_id, shared_.margin_mode);
     log::debug(R"(body="{}")"sv, body);
     auto headers = account_.create_signature_api_v2(method, path, {}, body);
     auto request = web::rest::Request{
@@ -670,6 +693,7 @@ void OrderEntry::add_order_ack(Trace<web::rest::Response> const &event, uint8_t 
           .quantity = NaN,
           .price = NaN,
       };
+      log::warn("response={}, user_id={}, order_id={}"sv, response, user_id, order_id);
       Trace event_2{event, response};
       (*this)(event_2, user_id, order_id);
     };
@@ -689,6 +713,7 @@ void OrderEntry::add_order_ack(Trace<web::rest::Response> const &event, uint8_t 
 void OrderEntry::operator()(Trace<json::AddOrderAck> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   auto &[trace_info, add_order_ack] = event;
   log::info<2>("add_order_ack={}, user_id={}, order_id={}, version={}"sv, add_order_ack, user_id, order_id, version);
+  // XXX FIXME TODO we only have the order-id, then what?
 }
 
 // cancel_order
@@ -696,7 +721,7 @@ void OrderEntry::operator()(Trace<json::AddOrderAck> const &event, uint8_t user_
 void OrderEntry::cancel_order(
     Event<CancelOrder> const &event,
     server::oms::Order const &order,
-    [[maybe_unused]] std::string_view const &request_id,
+    std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {
     if (!ready()) {
@@ -741,14 +766,21 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
           .quantity = NaN,
           .price = NaN,
       };
+      log::warn("response={}, user_id={}, order_id={}"sv, response, user_id, order_id);
       Trace event_2{event, response};
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
       json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
       if (cancel_order_ack.code == SYSTEM_CODE_SUCCESS) {
-        Trace event_2{event, cancel_order_ack};
-        (*this)(event_2, user_id, order_id, version);
+        if (std::empty(cancel_order_ack.data.cancelled_order_ids)) {
+          auto error = Error::UNKNOWN_ORDER_ID;
+          auto msg = std::empty(cancel_order_ack.msg) ? magic_enum::enum_name(error) : cancel_order_ack.msg;
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN_ORDER_ID, msg);
+        } else {
+          Trace event_2{event, cancel_order_ack};
+          (*this)(event_2, user_id, order_id, version);
+        }
       } else {
         handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(cancel_order_ack.code), cancel_order_ack.msg);
       }
@@ -770,13 +802,13 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &cancel_all_orders = event.value;
-    auto send_ack = [&]() {
+    auto send_ack = [&](auto &symbol) {
       auto cancel_all_orders_ack = CancelAllOrdersAck{
           .stream_id = stream_id_,
           .account = account_.name,
           .order_id = cancel_all_orders.order_id,
           .exchange = cancel_all_orders.exchange,
-          .symbol = cancel_all_orders.symbol,
+          .symbol = symbol,
           .side = cancel_all_orders.side,
           .origin = Origin::GATEWAY,
           .request_status = RequestStatus::FORWARDED,
@@ -793,26 +825,38 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
       Trace event_2{trace_info, cancel_all_orders_ack};
       shared_(event_2);
     };
-    auto method = web::http::Method::DELETE;
-    auto path = shared_.api.rest_private.cancel_all_orders;
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
-    auto request = web::rest::Request{
-        .method = method,
-        .path = path,
-        .query = {},
-        .accept = web::http::Accept::APPLICATION_JSON,
-        .content_type = {},
-        .headers = headers,
-        .body = {},
-        .quality_of_service = io::QualityOfService::IMMEDIATE,
-    };
-    auto callback = [this](auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      cancel_all_orders_ack(event, request_id);
-    };
-    (*connection_)(request_id, request, callback);
-    send_ack();
+    //
+    if (shared_.dispatcher_.get_all_order_symbols(
+            [&](auto &symbol) {
+              if (!std::empty(cancel_all_orders.symbol) && symbol != cancel_all_orders.symbol) {
+                return;
+              }
+              auto method = web::http::Method::DELETE;
+              auto path = shared_.api.rest_private.cancel_all_orders;
+              auto query = fmt::format("?symbol={}"sv, symbol);
+              auto headers = account_.create_signature_api_v2(method, path, query, {});
+              auto request = web::rest::Request{
+                  .method = method,
+                  .path = path,
+                  .query = query,
+                  .accept = web::http::Accept::APPLICATION_JSON,
+                  .content_type = {},
+                  .headers = headers,
+                  .body = {},
+                  .quality_of_service = io::QualityOfService::IMMEDIATE,
+              };
+              auto callback = [this](auto &request_id, auto &response) {
+                TraceInfo trace_info;
+                Trace event{trace_info, response};
+                cancel_all_orders_ack(event, request_id);
+              };
+              (*connection_)(request_id, request, callback);
+              send_ack(symbol);
+            },
+            account_.name)) {
+    } else {
+      log::warn("*** NOT POSSIBLE TO CANCEL ALL OPEN ORDERS (NO SYMBOLS) ***"sv);
+    }
   });
 }
 

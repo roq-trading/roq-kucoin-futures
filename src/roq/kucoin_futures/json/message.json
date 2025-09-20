@@ -59,6 +59,11 @@
       "name": "timestamp",
       "type": "std/microseconds",
       "optional": true
+    },
+    {
+      "name": "channelType",
+      "type": "std/string_view",
+      "optional": true
     }
   ]
 }

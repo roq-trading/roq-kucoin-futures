@@ -18,6 +18,17 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
+TEST_CASE("empty", "[json_positions]") {
+  auto const message = R"({)"
+                       R"("code":"200000",)"
+                       R"("data":[])"
+                       R"(})";
+  core::json::BufferStack buffer{8192, 1};
+  json::Positions obj{message, buffer};
+  CHECK(obj.code == 200000);
+  CHECK(std::empty(obj.data));
+}
+
 TEST_CASE("json_positions_simple", "[json_positions]") {
   auto const message = R"({)"
                        R"("code":"200000",)"

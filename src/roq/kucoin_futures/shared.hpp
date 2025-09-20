@@ -44,6 +44,7 @@ struct Shared final {
 
  public:
   API const api;
+  MarginMode const margin_mode = {};
 
  private:
   struct {
@@ -61,7 +62,7 @@ struct Shared final {
 
   utils::unordered_map<std::string, market::mbp::Sequencer> mbp_sequencer;
 
- private:
+ public:
   server::Dispatcher &dispatcher_;
 
  public:

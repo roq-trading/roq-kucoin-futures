@@ -8,6 +8,11 @@
       "required": true,
       "default": "kucoin-futures",
       "description": "Exchange identifier"
+    },
+    {
+      "name": "margin_mode",
+      "type": "std/string",
+      "description": "Default margin_mode (when CreateOrder doesn't explicitly specify)"
     }
   ]
 }

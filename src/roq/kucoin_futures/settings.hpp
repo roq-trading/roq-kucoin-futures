@@ -22,6 +22,7 @@ struct Settings final : public server::flags::Settings {
   explicit Settings(args::Parser const &);
 
   std::string_view exchange;
+  std::string_view margin_mode;
 
   flags::Misc misc;
   flags::REST rest;
@@ -45,6 +46,7 @@ struct fmt::formatter<roq::kucoin_futures::Settings> {
         context.out(),
         R"({{)"
         R"(exchange="{}", )"
+        R"(margin_mode={}, )"
         R"(misc={}, )"
         R"(rest={}, )"
         R"(ws={}, )"
@@ -53,6 +55,7 @@ struct fmt::formatter<roq::kucoin_futures::Settings> {
         R"(server={})"
         R"(}})"sv,
         value.exchange,
+        value.margin_mode,
         value.misc,
         value.rest,
         value.ws,

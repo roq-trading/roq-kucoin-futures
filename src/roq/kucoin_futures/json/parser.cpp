@@ -50,8 +50,7 @@ bool Parser::dispatch(
         case SNAPSHOT_24H:
           break;
         case WALLET_BALANCE_CHANGE:
-          dispatch_helper<WalletBalanceChange>(handler, message, buffer_stack, trace_info);
-          return true;
+          break;
         case ORDER_MARGIN_CHANGE:
           dispatch_helper<OrderMarginChange>(handler, message, buffer_stack, trace_info);
           return true;
@@ -127,6 +126,8 @@ bool Parser::dispatch(
           dispatch_helper<Snapshot24h>(handler, message, buffer_stack, trace_info);
           return true;
         case WALLET_BALANCE_CHANGE:
+          dispatch_helper<WalletBalanceChange>(handler, message, buffer_stack, trace_info);
+          return true;
         case ORDER_MARGIN_CHANGE:
         case AVAILABLE_BALANCE_CHANGE:
         case WITHDRAW_HOLD_CHANGE:

@@ -242,7 +242,8 @@ void DropCopy::subscribe(std::string_view const &topic) {
       R"("id":"{}",)"
       R"("type":"subscribe",)"
       R"("topic":"{}",)"
-      R"("response":true)"
+      R"("response":true,)"
+      R"("privateChannel":true)"
       R"(}})"sv,
       now.count(),
       topic);
@@ -408,8 +409,8 @@ void DropCopy::operator()(Trace<json::PositionSettlement> const &event) {
 }
 
 void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &event) {
-  auto &[trace_info, positoin_adjust_risk_limit] = event;
-  log::info<2>("positoin_adjust_risk_limit={}"sv, positoin_adjust_risk_limit);
+  auto &[trace_info, position_adjust_risk_limit] = event;
+  log::info<2>("position_adjust_risk_limit={}"sv, position_adjust_risk_limit);
 }
 
 void DropCopy::operator()(Trace<json::SymbolOrderChange> const &event) {
@@ -420,6 +421,104 @@ void DropCopy::operator()(Trace<json::SymbolOrderChange> const &event) {
 void DropCopy::operator()(Trace<json::OrderChange> const &event) {
   auto &[trace_info, order_change] = event;
   log::info<2>("order_change={}"sv, order_change);
+  auto &data = order_change.data;
+  auto is_match = data.type == json::OrderUpdateType::MATCH;
+  auto is_canceled = data.type == json::OrderUpdateType::CANCELED;
+  auto order_status = [&]() -> OrderStatus {
+    if (is_canceled) {
+      return OrderStatus::CANCELED;
+    }
+    return map(data.status);
+  }();
+  auto remaining_quantity = [&]() -> double {
+    if (order_status == OrderStatus::CANCELED) {
+      return 0.0;
+    }
+    return data.remain_size;
+  }();
+  auto last_liquidity = [&]() -> Liquidity {
+    if (is_match) {
+      return map(data.liquidity);
+    }
+    return {};
+  }();
+  auto order_update = server::oms::OrderUpdate{
+      .account = account_.name,
+      .exchange = shared_.settings.exchange,
+      .symbol = data.symbol,
+      .side = map(data.side),
+      .position_effect = map(data.position_side, data.side),
+      .margin_mode = map(data.margin_mode),
+      .max_show_quantity = NaN,
+      .order_type = map(data.order_type),
+      .time_in_force = {},
+      .execution_instructions = {},
+      .create_time_utc = {},
+      .update_time_utc = data.order_time,
+      .external_account = {},
+      .external_order_id = data.order_id,
+      .client_order_id = data.client_oid,
+      .order_status = order_status,
+      .quantity = data.size,
+      .price = data.price,
+      .stop_price = NaN,
+      .remaining_quantity = remaining_quantity,
+      .traded_quantity = data.filled_size,
+      .average_traded_price = NaN,
+      .last_traded_quantity = data.match_size,
+      .last_traded_price = data.match_price,
+      .last_liquidity = last_liquidity,
+      .routing_id = {},
+      .max_request_version = {},
+      .max_response_version = {},
+      .max_accepted_version = {},
+      .update_type = UpdateType::SNAPSHOT,
+      .sending_time_utc = data.ts,
+  };
+  log::warn("DEBUG order_update={}"sv, order_update);
+  if (shared_.update_order(data.client_oid, stream_id_, trace_info, order_update, [&](auto &order) {
+        if (!is_match) {
+          return;
+        }
+        auto fill = Fill{
+            .exchange_time_utc = {},
+            .external_trade_id = data.trade_id,
+            .quantity = data.match_size,
+            .price = data.match_price,
+            .liquidity = last_liquidity,
+            .commission_amount = NaN,
+            .commission_currency = {},
+            .base_amount = NaN,
+            .quote_amount = NaN,
+            .profit_loss_amount = NaN,
+        };
+        auto trade_update = TradeUpdate{
+            .stream_id = stream_id_,
+            .account = order.account,
+            .order_id = order.order_id,
+            .exchange = order.exchange,
+            .symbol = order.symbol,
+            .side = order.side,
+            .position_effect = order.position_effect,
+            .margin_mode = order.margin_mode,
+            .create_time_utc = data.ts,
+            .update_time_utc = data.ts,
+            .external_account = {},
+            .external_order_id = order.external_order_id,
+            .client_order_id = order.client_order_id,
+            .fills = {&fill, 1},
+            .routing_id = order.routing_id,
+            .update_type = UpdateType::INCREMENTAL,  // ???
+            .sending_time_utc = data.ts,
+            .user = {},
+            .strategy_id = order.strategy_id,
+        };
+        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
+        log::warn("DEBUG trade_update={}"sv, trade_update);
+      })) {
+  } else {
+    log::warn<1>(R"(*** EXTERNAL ORDER *** (order_id="{}", order_link_id="{}"))"sv, data.order_id, data.client_oid);
+  }
 }
 
 }  // namespace kucoin_futures

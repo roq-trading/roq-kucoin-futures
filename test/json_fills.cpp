@@ -15,22 +15,13 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("json_fills_simple", "[json_fills]") {
+TEST_CASE("empty", "[json_fills]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
-                       R"("data":[)"
-                       R"(])"
+                       R"("data":[])"
                        R"(})";
   core::json::BufferStack buffer{8192, 1};
   json::Fills obj{message, buffer};
-  /*
   CHECK(obj.code == 200000);
-  auto &data = obj.data;
-  CHECK(data.current_page == 1);
-  CHECK(data.page_size == 50);
-  CHECK(data.total_num == 0);
-  CHECK(data.total_page == 0);
-  auto &items = data.items;
-  CHECK(std::size(items) == 0);
-  */
+  CHECK(std::empty(obj.data));
 }

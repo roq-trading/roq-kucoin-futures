@@ -4,9 +4,11 @@ set(TARGET_NAME ${PROJECT_NAME}-test)
 
 set(SOURCES
     json_account.cpp
-    json_add_order.cpp
+    json_add_order_ack.cpp
     json_available_balance_change.cpp
+    json_cancel_order_ack.cpp
     json_contracts.cpp
+    json_encoder.cpp
     json_execution.cpp
     json_fills.cpp
     json_funding_begin.cpp

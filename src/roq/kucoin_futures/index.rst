@@ -504,23 +504,13 @@ Streams
 Constraints
 -----------
 
-* It does not appear to be possible to subscribe all symbols more than once per IP address.
-
 
 Comments
 --------
 
-* Orders can **NOT** be canceled by client order id.
+* The default margin mode may have to be configured (flag) if not specified when creating orders.
+  This is due to Kucoin **always** defaulting to the :code:`isolated` margin mode.
 
-* Fills are not communicated in real-time (only indirectly through order updates).
+* No support for stop orders.
+  This is due to Roq not currently supporting a stop "direction".
 
-* There are no options to instruct the exchange to auto-cancel orders on disconnect.
-
-* API v2 has been announced.
-  As of 2022-07-01, it is unclear when this new API will be released to production.
-  However, it sounds like it will be a change with no transition period with support 
-  for both API's.
-
-  * `2022-05-31 <https://www.kucoin.com/news/en-kucoin-futures-api-update-notice/>`__
-  * `2022-06-24 <https://www.kucoin.com/news/hk-the-launch-of-the-new-paper-trading-system-for-KuCoin-Futures-on-June-24-2022/>`__
-  * `docs <https://docs.kucoin.com/futures/new>`__

@@ -17,18 +17,20 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("json_account_simple", "[json_account]") {
+TEST_CASE("simple", "[json_account]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
-                       R"("accountEquity":0.00000000,)"
-                       R"("unrealisedPNL":0.00000000,)"
-                       R"("marginBalance":0.00000000,)"
-                       R"("positionMargin":0.00000000,)"
-                       R"("orderMargin":0.00000000,)"
-                       R"("frozenFunds":0.00000000,)"
-                       R"("availableBalance":0.00000000,)"
-                       R"("currency":"XBT")"
+                       R"("accountEquity":0,)"
+                       R"("unrealisedPNL":0,)"
+                       R"("marginBalance":0,)"
+                       R"("positionMargin":0,)"
+                       R"("orderMargin":0,)"
+                       R"("frozenFunds":0,)"
+                       R"("availableBalance":0,)"
+                       R"("currency":"XBT",)"
+                       R"("riskRatio":0,)"
+                       R"("maxWithdrawAmount":0)"
                        R"(})"
                        R"(})";
   core::json::BufferStack buffer{8192, 1};
@@ -43,4 +45,6 @@ TEST_CASE("json_account_simple", "[json_account]") {
   CHECK(data.frozen_funds == 0.0_a);
   CHECK(data.available_balance == 0.0_a);
   CHECK(data.currency == "XBT"sv);
+  CHECK(data.risk_ratio == 0.0_a);
+  CHECK(data.max_withdraw_amount == 0.0_a);
 }
