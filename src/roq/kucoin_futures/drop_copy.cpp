@@ -232,7 +232,7 @@ uint32_t DropCopy::download(DropCopyState state) {
 void DropCopy::subscribe() {
   subscribe("/contractAccount/wallet"sv);
   subscribe("/contractMarket/tradeOrders"sv);
-  subscribe("/contract/position"sv);  // XXX HANS maybe need symbol
+  subscribe("/contract/positionAll"sv);
 }
 
 void DropCopy::subscribe(std::string_view const &topic) {
@@ -370,21 +370,25 @@ void DropCopy::operator()(Trace<json::WalletBalanceChange> const &event) {
 void DropCopy::operator()(Trace<json::OrderMarginChange> const &event) {
   auto &[trace_info, order_margin_change] = event;
   log::info<2>("order_margin_change={}"sv, order_margin_change);
+  log::warn("DEBUG order_margin_change={}"sv, order_margin_change);
 }
 
 void DropCopy::operator()(Trace<json::AvailableBalanceChange> const &event) {
   auto &[trace_info, available_balance_change] = event;
   log::info<2>("available_balance_change={}"sv, available_balance_change);
+  log::warn("DEBUG available_balance_change={}"sv, available_balance_change);
 }
 
 void DropCopy::operator()(Trace<json::WithdrawHoldChange> const &event) {
   auto &[trace_info, withdraw_hold_change] = event;
   log::info<2>("withdraw_hold_change={}"sv, withdraw_hold_change);
+  log::warn("DEBUG withdraw_hold_change={}"sv, withdraw_hold_change);
 }
 
 void DropCopy::operator()(Trace<json::PositionChange> const &event) {
   auto &[trace_info, position_change] = event;
   log::info<2>("position_change={}"sv, position_change);
+  log::warn("DEBUG position_change={}"sv, position_change);
   auto &data = position_change.data;
   auto position_update = PositionUpdate{
       .stream_id = stream_id_,
@@ -406,16 +410,19 @@ void DropCopy::operator()(Trace<json::PositionChange> const &event) {
 void DropCopy::operator()(Trace<json::PositionSettlement> const &event) {
   auto &[trace_info, position_settlement] = event;
   log::info<2>("position_settlement={}"sv, position_settlement);
+  log::warn("DEBUG position_settlement={}"sv, position_settlement);
 }
 
 void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &event) {
   auto &[trace_info, position_adjust_risk_limit] = event;
   log::info<2>("position_adjust_risk_limit={}"sv, position_adjust_risk_limit);
+  log::warn("DEBUG position_adjust_risk_limit={}"sv, position_adjust_risk_limit);
 }
 
 void DropCopy::operator()(Trace<json::SymbolOrderChange> const &event) {
   auto &[trace_info, symbol_order_change] = event;
   log::info<2>("symbol_order_change={}"sv, symbol_order_change);
+  log::warn("DEBUG symbol_order_change={}"sv, symbol_order_change);
 }
 
 void DropCopy::operator()(Trace<json::OrderChange> const &event) {
@@ -425,6 +432,9 @@ void DropCopy::operator()(Trace<json::OrderChange> const &event) {
   auto is_match = data.type == json::OrderUpdateType::MATCH;
   auto is_canceled = data.type == json::OrderUpdateType::CANCELED;
   auto order_status = [&]() -> OrderStatus {
+    if (is_match && utils::is_zero(data.remain_size)) {
+      return OrderStatus::COMPLETED;
+    }
     if (is_canceled) {
       return OrderStatus::CANCELED;
     }
@@ -513,8 +523,8 @@ void DropCopy::operator()(Trace<json::OrderChange> const &event) {
             .user = {},
             .strategy_id = order.strategy_id,
         };
-        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
         log::warn("DEBUG trade_update={}"sv, trade_update);
+        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
       })) {
   } else {
     log::warn<1>(R"(*** EXTERNAL ORDER *** (order_id="{}", order_link_id="{}"))"sv, data.order_id, data.client_oid);

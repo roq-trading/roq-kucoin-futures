@@ -25,3 +25,43 @@ TEST_CASE("empty", "[json_fills]") {
   CHECK(obj.code == 200000);
   CHECK(std::empty(obj.data));
 }
+
+TEST_CASE("simple", "[json_fills]") {
+  auto const message = R"({)"
+                       R"("code":"200000",)"
+                       R"("data":[{)"
+                       R"("symbol":"XBTUSDTM",)"
+                       R"("tradeId":"1873921404162",)"
+                       R"("orderId":"359065448081260544",)"
+                       R"("side":"buy",)"
+                       R"("liquidity":"taker",)"
+                       R"("forceTaker":false,)"
+                       R"("price":"115549.8",)"
+                       R"("size":1,)"
+                       R"("value":"115.5498",)"
+                       R"("openFeePay":"0.055463904",)"
+                       R"("closeFeePay":"0",)"
+                       R"("stop":"",)"
+                       R"("feeRate":"0.00048",)"
+                       R"("fixFee":"0",)"
+                       R"("feeCurrency":"USDT",)"
+                       R"("tradeTime":1758421075974000000,)"
+                       R"("subTradeType":null,)"
+                       R"("marginMode":"CROSS",)"
+                       R"("openFeeTaxPay":"0",)"
+                       R"("closeFeeTaxPay":"0",)"
+                       R"("positionSide":"BOTH",)"
+                       R"("settleCurrency":"USDT",)"
+                       R"("displayType":"limit",)"
+                       R"("fee":"0.055463904",)"
+                       R"("orderType":"limit",)"
+                       R"("tradeType":"trade",)"
+                       R"("createdAt":1758421075987)"
+                       R"(})"
+                       R"(])"
+                       R"(})";
+  core::json::BufferStack buffer{8192, 1};
+  json::Fills obj{message, buffer};
+  CHECK(obj.code == 200000);
+  REQUIRE(std::size(obj.data) == 1);
+}

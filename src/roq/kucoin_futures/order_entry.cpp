@@ -637,11 +637,47 @@ void OrderEntry::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t
   });
 }
 
+// note! we don't get a client_oid
 void OrderEntry::operator()(Trace<json::Fills> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
   for (auto &item : fills.data) {
     log::debug("item={}"sv, item);
+    auto fill = Fill{
+        .exchange_time_utc = {},
+        .external_trade_id = item.trade_id,
+        .quantity = item.size,
+        .price = item.price,
+        .liquidity = map(item.liquidity),
+        .commission_amount = NaN,  // XXX FIXME TODO open_fee_pay + close_fee_pay
+        .commission_currency = {},
+        .base_amount = NaN,
+        .quote_amount = NaN,
+        .profit_loss_amount = NaN,
+    };
+    auto trade_update = TradeUpdate{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .order_id = {},  // XXX FIXME TODO this is an issue !!!
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .side = map(item.side),
+        .position_effect = map(item.position_side, item.side),
+        .margin_mode = map(item.margin_mode),
+        .create_time_utc = item.trade_time,
+        .update_time_utc = item.trade_time,
+        .external_account = {},
+        .external_order_id = item.order_id,
+        .client_order_id = {},  // XXX FIXME TODO this is an issue !!!
+        .fills = {&fill, 1},
+        .routing_id = {},
+        .update_type = UpdateType::SNAPSHOT,
+        .sending_time_utc = {},
+        .user = {},
+        .strategy_id = {},
+    };
+    log::warn("DEBUG trade_update={}"sv, trade_update);
+    // create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
   }
 }
 

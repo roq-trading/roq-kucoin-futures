@@ -514,3 +514,5 @@ Comments
 * No support for stop orders.
   This is due to Roq not currently supporting a stop "direction".
 
+* Downloaded fills don't have the :code:`clientOid` field.
+  The implication is that we can't correctly persist historical fills.

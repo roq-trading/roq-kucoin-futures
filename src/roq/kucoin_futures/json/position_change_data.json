@@ -185,6 +185,21 @@
     {
       "name": "msg",
       "type": "std/string_view"
+    },
+    {
+      "name": "changeReason",
+      "type": "std/string_view",
+      "comment": "undoc"
+    },
+    {
+      "name": "tax",
+      "type": "std/double",
+      "comment": "undoc"
+    },
+    {
+      "name": "dealComm",
+      "type": "std/double",
+      "comment": "undoc"
     }
   ]
 }

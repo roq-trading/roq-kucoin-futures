@@ -30,48 +30,8 @@ bool Parser::dispatch(
   switch (message_2.type) {
     using enum json::Type::type_t;
     case UNDEFINED_INTERNAL:
-      switch (message_2.subject) {
-        using enum json::Subject::type_t;
-        case UNDEFINED_INTERNAL:
-          break;
-        case UNKNOWN_INTERNAL:
-          if (allow_unknown_event_types) {
-            return false;
-          }
-          break;
-        case TICKER_V2:
-        case MATCH:
-        case EXECUTION:
-        case MARK_INDEX_PRICE:
-        case FUNDING_RATE:
-        case LEVEL2:
-        case FUNDING_BEGIN:
-        case FUNDING_END:
-        case SNAPSHOT_24H:
-          break;
-        case WALLET_BALANCE_CHANGE:
-          break;
-        case ORDER_MARGIN_CHANGE:
-          dispatch_helper<OrderMarginChange>(handler, message, buffer_stack, trace_info);
-          return true;
-        case AVAILABLE_BALANCE_CHANGE:
-          dispatch_helper<AvailableBalanceChange>(handler, message, buffer_stack, trace_info);
-          return true;
-        case WITHDRAW_HOLD_CHANGE:
-          dispatch_helper<WithdrawHoldChange>(handler, message, buffer_stack, trace_info);
-          return true;
-        case POSITION_CHANGE:
-          dispatch_helper<PositionChange>(handler, message, buffer_stack, trace_info);
-          return true;
-        case POSITION_SETTLEMENT:
-          dispatch_helper<PositionSettlement>(handler, message, buffer_stack, trace_info);
-          return true;
-        case POSITION_ADJUST_RISK_LIMIT:
-          dispatch_helper<PositionAdjustRiskLimit>(handler, message, buffer_stack, trace_info);
-          return true;
-        case SYMBOL_ORDER_CHANGE:
-        case ORDER_CHANGE:
-          break;
+      if (allow_unknown_event_types) {
+        return false;
       }
       break;
     case UNKNOWN_INTERNAL:
@@ -129,12 +89,23 @@ bool Parser::dispatch(
           dispatch_helper<WalletBalanceChange>(handler, message, buffer_stack, trace_info);
           return true;
         case ORDER_MARGIN_CHANGE:
+          dispatch_helper<OrderMarginChange>(handler, message, buffer_stack, trace_info);
+          return true;
         case AVAILABLE_BALANCE_CHANGE:
+          dispatch_helper<AvailableBalanceChange>(handler, message, buffer_stack, trace_info);
+          return true;
         case WITHDRAW_HOLD_CHANGE:
+          dispatch_helper<WithdrawHoldChange>(handler, message, buffer_stack, trace_info);
+          return true;
         case POSITION_CHANGE:
+          dispatch_helper<PositionChange>(handler, message, buffer_stack, trace_info);
+          return true;
         case POSITION_SETTLEMENT:
+          dispatch_helper<PositionSettlement>(handler, message, buffer_stack, trace_info);
+          return true;
         case POSITION_ADJUST_RISK_LIMIT:
-          break;
+          dispatch_helper<PositionAdjustRiskLimit>(handler, message, buffer_stack, trace_info);
+          return true;
         case SYMBOL_ORDER_CHANGE:
           dispatch_helper<SymbolOrderChange>(handler, message, buffer_stack, trace_info);
           return true;

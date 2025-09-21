@@ -3,10 +3,6 @@
   "type": "dictionary",
   "values": [
     {
-      "name": "id",
-      "type": "std/string_view"
-    },
-    {
       "name": "symbol",
       "type": "std/string_view"
     },
@@ -47,14 +43,6 @@
       "type": "std/double"
     },
     {
-      "name": "realisedGrossCost",
-      "type": "std/double"
-    },
-    {
-      "name": "realisedCost",
-      "type": "std/double"
-    },
-    {
       "name": "unrealisedPnl",
       "type": "std/double"
     },
@@ -67,7 +55,19 @@
       "type": "std/double"
     },
     {
+      "name": "realisedCost",
+      "type": "std/double"
+    },
+    {
+      "name": "realisedGrossCost",
+      "type": "std/double"
+    },
+    {
       "name": "realisedGrossPnl",
+      "type": "std/double"
+    },
+    {
+      "name": "realisedPnl",
       "type": "std/double"
     },
     {
@@ -95,10 +95,6 @@
       "type": "std/double"
     },
     {
-      "name": "realisedPnl",
-      "type": "std/double"
-    },
-    {
       "name": "avgEntryPrice",
       "type": "std/double"
     },
@@ -115,12 +111,8 @@
       "type": "std/string_view"
     },
     {
-      "name": "isInverse",
-      "type": "std/bool"
-    },
-    {
       "name": "positionSide",
-      "type": "roq/kucoin_futures/json/Side"
+      "type": "roq/kucoin_futures/json/PositionSide"
     },
     {
       "name": "leverage",
@@ -151,15 +143,7 @@
       "type": "std/double"
     },
     {
-      "name": "posCrossMargin",
-      "type": "std/double"
-    },
-    {
       "name": "posComm",
-      "type": "std/double"
-    },
-    {
-      "name": "posCommCommon",
       "type": "std/double"
     },
     {
@@ -173,6 +157,59 @@
     {
       "name": "maintMargin",
       "type": "std/double"
+    },
+    {
+      "name": "fundingTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "qty",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingFee",
+      "type": "std/double"
+    },
+    {
+      "name": "ts",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "success",
+      "type": "std/bool"
+    },
+    {
+      "name": "msg",
+      "type": "std/string_view"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view",
+      "comment": "undoc"
+    },
+    {
+      "name": "isInverse",
+      "type": "std/bool",
+      "comment": "undoc"
+    },
+    {
+      "name": "maintainMargin",
+      "type": "std/double",
+      "comment": "undoc -- same as maintMargin ???"
+    },
+    {
+      "name": "dealComm",
+      "type": "std/double",
+      "comment": "undoc"
+    },
+    {
+      "name": "tax",
+      "type": "std/double",
+      "comment": "undoc"
     }
   ]
 }

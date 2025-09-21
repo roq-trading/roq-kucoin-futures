@@ -102,6 +102,16 @@
     {
       "name": "positionSide",
       "type": "roq/kucoin_futures/json/PositionSide"
+    },
+    {
+      "name": "openFeeTaxPay",
+      "type": "std/double",
+      "comment": "undoc"
+    },
+    {
+      "name": "closeFeeTaxPay",
+      "type": "std/double",
+      "comment": "undoc"
     }
   ]
 }
