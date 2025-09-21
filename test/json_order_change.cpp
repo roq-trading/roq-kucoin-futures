@@ -324,4 +324,3 @@ TEST_CASE("match_parser", "[json_order_change]") {
   CHECK(res == true);
   CHECK(handler.count == 1);
 }
-

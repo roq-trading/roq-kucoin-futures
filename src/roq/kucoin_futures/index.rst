@@ -25,11 +25,6 @@ roq-kucoin-futures
 :code:`roq-kucoin-futures`
 --------------------------
 
-.. code-block:: shell
-
-   $ roq-kucoin-futures [FLAGS]
-
-
 Description
 ~~~~~~~~~~~
 
