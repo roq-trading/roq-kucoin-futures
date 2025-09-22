@@ -33,29 +33,7 @@ Crypto::Crypto(std::string_view const &key, std::string_view const &secret, std:
     : key_{key}, mac_{secret}, passphrase_{passphrase}, signed_passphrase_{create_signed_passphrase(mac_, digest_, passphrase)} {
 }
 
-std::string Crypto::create_headers_v1(
-    web::http::Method method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds timestamp) {
-  assert(!std::empty(path));
-  auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);
-  mac_.clear();
-  mac_.update(tmp);
-  auto digest = mac_.final(digest_);
-  std::string signature;
-  utils::codec::Base64::encode(signature, digest, false, false);
-  auto result = fmt::format(
-      "KC-API-KEY: {}\r\n"
-      "KC-API-SIGN: {}\r\n"
-      "KC-API-TIMESTAMP: {}\r\n"
-      "KC-API-PASSPHRASE: {}\r\n"
-      "KC-API-KEY-VERSION: 1\r\n"sv,
-      key_,
-      signature,
-      timestamp.count(),
-      passphrase_);
-  return result;
-}
-
-std::string Crypto::create_headers_v2(
+std::string Crypto::create_headers(
     web::http::Method method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds timestamp) {
   assert(!std::empty(path));
   auto tmp = fmt::format("{}{}{}{}{}"sv, timestamp.count(), method, path, query, body);

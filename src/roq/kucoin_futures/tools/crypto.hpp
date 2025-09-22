@@ -21,10 +21,7 @@ struct Crypto final {
   Crypto(Crypto &&) = delete;
   Crypto(Crypto const &) = delete;
 
-  std::string create_headers_v1(
-      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds now);
-
-  std::string create_headers_v2(
+  std::string create_headers(
       web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds now);
 
  private:

@@ -35,7 +35,7 @@ auto const SUPPORTS = Mask{
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 
-int32_t const SYSTEM_CODE_SUCCESS = 200000;
+int32_t const SYSTEM_CODE_SUCCESS = 200'000;
 }  // namespace
 
 // === HELPERS ===
@@ -242,8 +242,12 @@ uint32_t OrderEntry::download(OrderEntryState state) {
       get_orders();
       return 1;
     case FILLS:
-      get_fills();
-      return 1;
+      if (shared_.settings.download.trades_lookback.count()) {
+        get_fills();
+        return 1;
+      } else {
+        return 0;
+      }
     case DONE:
       (*this)(ConnectionStatus::READY);
       return 0;
@@ -258,7 +262,7 @@ void OrderEntry::get_private_token() {
   profile_.private_token([&]() {
     auto method = web::http::Method::POST;
     auto path = shared_.api.rest_private.bullet_private;
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_headers(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -329,7 +333,7 @@ void OrderEntry::get_account() {
   profile_.account([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.rest_private.get_account_list;
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_headers(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -402,7 +406,7 @@ void OrderEntry::get_positions() {
   profile_.positions([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.rest_private.get_position_list;
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_headers(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -480,7 +484,7 @@ void OrderEntry::get_orders() {
         "?status=active"
         "&pageSize={}"sv,
         1000);  // XXX FIXME TODO flags
-    auto headers = account_.create_signature_api_v2(method, path, query, {});
+    auto headers = account_.create_headers(method, path, query, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -591,8 +595,7 @@ void OrderEntry::get_fills() {
   profile_.fills([&]() {
     auto method = web::http::Method::GET;
     auto path = shared_.api.rest_private.get_recent_fills;
-    // XXX HANS for v2 we ned SYMBOL !!!
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_headers(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -693,7 +696,7 @@ void OrderEntry::add_order(Event<CreateOrder> const &event, server::oms::Order c
     auto path = shared_.api.rest_private.add_order;
     auto body = json::Encoder::add_order(encode_buffer_, create_order, order, request_id, shared_.margin_mode);
     log::debug(R"(body="{}")"sv, body);
-    auto headers = account_.create_signature_api_v2(method, path, {}, body);
+    auto headers = account_.create_headers(method, path, {}, body);
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -766,7 +769,7 @@ void OrderEntry::cancel_order(
     auto &[message_info, cancel_order] = event;
     auto method = web::http::Method::DELETE;
     auto path = fmt::format("{}/{}"sv, shared_.api.rest_private.cancel_order, order.external_order_id);
-    auto headers = account_.create_signature_api_v2(method, path, {}, {});
+    auto headers = account_.create_headers(method, path, {}, {});
     auto request = web::rest::Request{
         .method = method,
         .path = path,
@@ -870,7 +873,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
               auto method = web::http::Method::DELETE;
               auto path = shared_.api.rest_private.cancel_all_orders;
               auto query = fmt::format("?symbol={}"sv, symbol);
-              auto headers = account_.create_signature_api_v2(method, path, query, {});
+              auto headers = account_.create_headers(method, path, query, {});
               auto request = web::rest::Request{
                   .method = method,
                   .path = path,
