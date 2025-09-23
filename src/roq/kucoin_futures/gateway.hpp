@@ -17,7 +17,7 @@
 #include "roq/kucoin_futures/config.hpp"
 #include "roq/kucoin_futures/drop_copy.hpp"
 #include "roq/kucoin_futures/market_data.hpp"
-#include "roq/kucoin_futures/order_entry.hpp"
+#include "roq/kucoin_futures/order_entry_rest.hpp"
 #include "roq/kucoin_futures/order_entry_ws.hpp"
 #include "roq/kucoin_futures/rest.hpp"
 #include "roq/kucoin_futures/settings.hpp"
@@ -28,7 +28,7 @@ namespace kucoin_futures {
 
 struct Gateway final : public server::Handler,
                        public Rest::Handler,
-                       public OrderEntry::Handler,
+                       public OrderEntryREST::Handler,
                        public OrderEntryWS::Handler,
                        public DropCopy::Handler,
                        public MarketData::Handler {
@@ -77,7 +77,7 @@ struct Gateway final : public server::Handler,
 
   void ensure_symbol_slices(size_t size);
 
-  void operator()(OrderEntry::PrivateToken const &) override;
+  void operator()(OrderEntryREST::PrivateToken const &) override;
 
   // utilities
 
@@ -87,7 +87,7 @@ struct Gateway final : public server::Handler,
   template <typename... Args>
   static void dispatch_helper(auto &self, Args &&...);
 
-  OrderEntry &get_order_entry(std::string_view const &account);
+  OrderEntryREST &get_order_entry(std::string_view const &account);
 
  private:
   server::Dispatcher &dispatcher_;
@@ -101,7 +101,7 @@ struct Gateway final : public server::Handler,
   uint16_t stream_id_ = {};
   // streams
   Rest rest_;
-  utils::unordered_map<std::string, std::unique_ptr<OrderEntry>> order_entry_;
+  utils::unordered_map<std::string, std::unique_ptr<OrderEntryREST>> order_entry_rest_;
   utils::unordered_map<std::string, std::unique_ptr<OrderEntryWS>> order_entry_ws_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
   std::vector<std::unique_ptr<MarketData>> market_data_;

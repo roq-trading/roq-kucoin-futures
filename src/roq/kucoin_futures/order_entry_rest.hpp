@@ -36,7 +36,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-struct OrderEntry final : public web::rest::Client::Handler {
+struct OrderEntryREST final : public web::rest::Client::Handler {
   struct PrivateToken final {
     std::string_view account;
     std::string_view uri;
@@ -54,9 +54,9 @@ struct OrderEntry final : public web::rest::Client::Handler {
     virtual void operator()(PrivateToken const &) = 0;
   };
 
-  OrderEntry(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
+  OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
 
-  OrderEntry(OrderEntry const &) = delete;
+  OrderEntryREST(OrderEntryREST const &) = delete;
 
   bool ready() const { return status_ == ConnectionStatus::READY; }
 
