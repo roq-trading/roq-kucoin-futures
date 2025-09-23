@@ -7,7 +7,11 @@
     },
     {
       "raw": "futures.order",
-      "name": "order"
+      "name": "add_order_ack"
+    },
+    {
+      "raw": "futures.cancel",
+      "name": "cancel_order_ack"
     }
   ]
 }

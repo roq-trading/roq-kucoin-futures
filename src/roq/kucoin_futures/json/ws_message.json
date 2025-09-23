@@ -50,6 +50,9 @@
       "name": "data"
     },
     {
+      "name": "userRateLimit"
+    },
+    {
       "name": "inTime",
       "type": "std/milliseconds",
       "optional": true
@@ -57,10 +60,6 @@
     {
       "name": "outTime",
       "type": "std/milliseconds",
-      "optional": true
-    },
-    {
-      "name": "rateLimit",
       "optional": true
     }
   ]

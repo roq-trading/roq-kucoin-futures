@@ -10,6 +10,9 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
+#include "roq/server/oms/exceptions.hpp"
+
+#include "roq/kucoin_futures/json/encoder.hpp"
 #include "roq/kucoin_futures/json/map.hpp"
 #include "roq/kucoin_futures/json/utils.hpp"
 
@@ -89,7 +92,8 @@ OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stre
           .welcome = create_metrics(shared.settings, name_, "welcome"sv),
           .error = create_metrics(shared.settings, name_, "error"sv),
           .pong = create_metrics(shared.settings, name_, "pong"sv),
-          .ack = create_metrics(shared.settings, name_, "ack"sv),
+          .add_order_ack = create_metrics(shared.settings, name_, "add_order_ack"sv),
+          .cancel_order_ack = create_metrics(shared.settings, name_, "cancel_order_ack"sv),
       },
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
@@ -137,10 +141,38 @@ void OrderEntryWS::operator()(metrics::Writer &writer) const {
       .write(profile_.welcome, metrics::Type::PROFILE)
       .write(profile_.error, metrics::Type::PROFILE)
       .write(profile_.pong, metrics::Type::PROFILE)
-      .write(profile_.ack, metrics::Type::PROFILE)
+      .write(profile_.add_order_ack, metrics::Type::PROFILE)
+      .write(profile_.cancel_order_ack, metrics::Type::PROFILE)
       // latency
       .write(latency_.ping, metrics::Type::LATENCY)
       .write(latency_.heartbeat, metrics::Type::LATENCY);
+}
+
+uint16_t OrderEntryWS::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+  auto &[message_info, create_order] = event;
+  auto message = json::Encoder::ws_add_order(encode_buffer_, create_order, order, request_id, shared_.margin_mode);
+  (*connection_).send_text(message);
+  return stream_id_;
+}
+
+uint16_t OrderEntryWS::operator()(
+    Event<ModifyOrder> const &,
+    server::oms::Order const &,
+    [[maybe_unused]] std::string_view const &request_id,
+    [[maybe_unused]] std::string_view const &previous_request_id) {
+  throw server::oms::NotSupported{"not supported"sv};
+}
+
+uint16_t OrderEntryWS::operator()(
+    Event<CancelOrder> const &event, server::oms::Order const &order, std::string_view const &request_id, std::string_view const &previous_request_id) {
+  auto &[message_info, cancel_order] = event;
+  auto message = json::Encoder::ws_cancel_order(encode_buffer_, cancel_order, order, request_id, previous_request_id);
+  (*connection_).send_text(message);
+  return stream_id_;
+}
+
+uint16_t OrderEntryWS::operator()(Event<CancelAllOrders> const &, [[maybe_unused]] std::string_view const &request_id) {
+  throw server::oms::NotSupported{"not supported"sv};
 }
 
 void OrderEntryWS::operator()(web::socket::Client::Connected const &) {
@@ -259,16 +291,12 @@ void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
   });
 }
 
-/*
-// error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
-void OrderEntryWS::operator()(Trace<json::Error> const &event) {
+void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
   profile_.error([&]() {
-    // XXX HANS DEBUG
     auto &[trace_info, error] = event;
     log::error("error={}"sv, error);
   });
 }
-*/
 
 void OrderEntryWS::operator()(Trace<json::WSPong> const &event) {
   profile_.pong([&]() {
@@ -278,14 +306,21 @@ void OrderEntryWS::operator()(Trace<json::WSPong> const &event) {
   });
 }
 
-/*
-void OrderEntryWS::operator()(Trace<json::Ack> const &event) {
-  profile_.ack([&]() {
-    auto &[trace_info, ack] = event;
-    log::info<2>("ack={}"sv, ack);
+void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
+  profile_.add_order_ack([&]() {
+    auto &[trace_info, add_order_ack] = event;
+    log::info<4>("add_order_ack={}"sv, add_order_ack);
+    log::warn("DEBUG add_order_ack={}"sv, add_order_ack);
   });
 }
-*/
+
+void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
+  profile_.cancel_order_ack([&]() {
+    auto &[trace_info, cancel_order_ack] = event;
+    log::info<4>("cancel_order_ack={}"sv, cancel_order_ack);
+    log::warn("DEBUG cancel_order_ack={}"sv, cancel_order_ack);
+  });
+}
 
 }  // namespace kucoin_futures
 }  // namespace roq

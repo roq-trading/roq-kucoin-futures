@@ -15,6 +15,12 @@ namespace json {
 // === HELPERS ===
 
 namespace {
+int32_t const CODE_SUCCESS = 200000;
+}
+
+// === HELPERS ===
+
+namespace {
 template <typename T, typename... Args>
 void dispatch_helper(auto &handler, auto &message, auto &buffer_stack, auto &trace_info, Args &&...args) {
   T obj{message, buffer_stack};
@@ -40,7 +46,19 @@ bool WSParser::dispatch(
       case PONG:
         dispatch_helper<WSPong>(handler, message, buffer_stack, trace_info);
         return true;
-      case ORDER:
+      case ADD_ORDER_ACK:
+        if (message_2.code != CODE_SUCCESS) {
+          dispatch_helper<WSError>(handler, message, buffer_stack, trace_info);
+          return true;
+        }
+        dispatch_helper<WSAddOrderAck>(handler, message, buffer_stack, trace_info);
+        return true;
+      case CANCEL_ORDER_ACK:
+        if (message_2.code != CODE_SUCCESS) {
+          dispatch_helper<WSError>(handler, message, buffer_stack, trace_info);
+          return true;
+        }
+        dispatch_helper<WSCancelOrderAck>(handler, message, buffer_stack, trace_info);
         return true;
     }
   } else {

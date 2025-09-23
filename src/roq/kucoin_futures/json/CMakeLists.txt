@@ -89,10 +89,16 @@ set(AUTOGEN_SCHEMAS
     welcome.json
     withdraw_hold_change_data.json
     withdraw_hold_change.json
+    ws_add_order_ack_data.json
+    ws_add_order_ack.json
     ws_auth.json
+    ws_cancel_order_ack_data.json
+    ws_cancel_order_ack.json
+    ws_error.json
     ws_message.json
     ws_op.json
     ws_pong.json
+    ws_user_rate_limit.json
     ws_welcome.json)
 
 roq_autogen_hpp(

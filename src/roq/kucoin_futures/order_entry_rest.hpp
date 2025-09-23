@@ -21,6 +21,7 @@
 #include "roq/server.hpp"
 
 #include "roq/kucoin_futures/account.hpp"
+#include "roq/kucoin_futures/order_entry.hpp"
 #include "roq/kucoin_futures/order_entry_state.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
@@ -36,7 +37,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-struct OrderEntryREST final : public web::rest::Client::Handler {
+struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handler {
   struct PrivateToken final {
     std::string_view account;
     std::string_view uri;
@@ -58,7 +59,7 @@ struct OrderEntryREST final : public web::rest::Client::Handler {
 
   OrderEntryREST(OrderEntryREST const &) = delete;
 
-  bool ready() const { return status_ == ConnectionStatus::READY; }
+  bool ready() const override { return status_ == ConnectionStatus::READY; }
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
@@ -66,11 +67,13 @@ struct OrderEntryREST final : public web::rest::Client::Handler {
 
   void operator()(metrics::Writer &) const;
 
-  uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id);
-  uint16_t operator()(Event<ModifyOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id);
-  uint16_t operator()(Event<CancelOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id);
+  uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id) override;
+  uint16_t operator()(
+      Event<ModifyOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
+  uint16_t operator()(
+      Event<CancelOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
 
-  uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id);
+  uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) override;
 
  protected:
   void operator()(Trace<web::rest::Client::Connected> const &) override;

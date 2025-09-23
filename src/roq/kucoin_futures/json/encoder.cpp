@@ -72,6 +72,46 @@ std::string_view Encoder::add_order(
   return buffer;
 }
 
+// WSAPI
+
+std::string_view Encoder::ws_add_order(
+    std::string &buffer, CreateOrder const &create_order, server::oms::Order const &order, std::string_view const &request_id, roq::MarginMode margin_mode) {
+  auto args = add_order(buffer, create_order, order, request_id, margin_mode);
+  // note! just overwrite
+  buffer = fmt::format(
+      R"({{)"
+      R"("id":"{}",)"
+      R"("op":"futures.order",)"
+      R"("args":{})"
+      R"(}})"sv,
+      request_id,
+      args);
+  return buffer;
+}
+
+std::string_view Encoder::ws_cancel_order(
+    std::string &buffer,
+    CancelOrder const &,
+    server::oms::Order const &order,
+    std::string_view const &request_id,
+    [[maybe_unused]] std::string_view const &previous_request_id) {
+  buffer.clear();
+  fmt::format_to(
+      std::back_inserter(buffer),
+      R"({{)"
+      R"("id":"{}",)"
+      R"("op":"futures.cancel",)"
+      R"("args":{{)"
+      R"("symbol":"{}",)"
+      R"("clientOid":"{}")"
+      R"(}})"
+      R"(}})"sv,
+      request_id,
+      order.symbol,
+      order.client_order_id);
+  return buffer;
+}
+
 }  // namespace json
 }  // namespace kucoin_futures
 }  // namespace roq

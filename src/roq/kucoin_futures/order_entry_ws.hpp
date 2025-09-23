@@ -20,7 +20,7 @@
 #include "roq/server.hpp"
 
 #include "roq/kucoin_futures/account.hpp"
-#include "roq/kucoin_futures/drop_copy_state.hpp"
+#include "roq/kucoin_futures/order_entry.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/ws_parser.hpp"
@@ -28,7 +28,7 @@
 namespace roq {
 namespace kucoin_futures {
 
-struct OrderEntryWS final : public web::socket::Client::Handler, public json::WSParser::Handler {
+struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handler, public json::WSParser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -41,13 +41,21 @@ struct OrderEntryWS final : public web::socket::Client::Handler, public json::WS
 
   OrderEntryWS(OrderEntryWS const &) = delete;
 
-  bool ready() const;
+  bool ready() const override;
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
+
+  uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, std::string_view const &request_id) override;
+  uint16_t operator()(
+      Event<ModifyOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
+  uint16_t operator()(
+      Event<CancelOrder> const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &previous_request_id) override;
+
+  uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) override;
 
  protected:
   void operator()(web::socket::Client::Connected const &) override;
@@ -67,9 +75,10 @@ struct OrderEntryWS final : public web::socket::Client::Handler, public json::WS
 
   void operator()(Trace<json::WSAuth> const &, std::string_view const &message) override;
   void operator()(Trace<json::WSWelcome> const &) override;
-  // void operator()(Trace<json::WSError> const &) override;
+  void operator()(Trace<json::WSError> const &) override;
   void operator()(Trace<json::WSPong> const &) override;
-  // void operator()(Trace<json::WSAck> const &) override;
+  void operator()(Trace<json::WSAddOrderAck> const &) override;
+  void operator()(Trace<json::WSCancelOrderAck> const &) override;
 
  private:
   Handler &handler_;
@@ -86,7 +95,7 @@ struct OrderEntryWS final : public web::socket::Client::Handler, public json::WS
   } counter_;
   struct {
     utils::metrics::Profile parse,  //
-        auth, welcome, error, pong, ack;
+        auth, welcome, error, pong, add_order_ack, cancel_order_ack;
   } profile_;
   struct {
     utils::metrics::Latency ping, heartbeat;
@@ -101,6 +110,8 @@ struct OrderEntryWS final : public web::socket::Client::Handler, public json::WS
   ConnectionStatus status_ = {};
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
+  //
+  std::string encode_buffer_;
 };
 
 }  // namespace kucoin_futures

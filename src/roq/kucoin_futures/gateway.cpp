@@ -223,9 +223,10 @@ uint16_t Gateway::operator()(
   return get_order_entry(event.value.account)(event, order, request_id, previous_request_id);
 }
 
+// note! REST-only
 uint16_t Gateway::operator()(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   assert(!std::empty(event.value.account));
-  return get_order_entry(event.value.account)(event, request_id);
+  return get_order_entry_rest(event.value.account)(event, request_id);
 }
 
 uint16_t Gateway::operator()(Event<MassQuote> const &) {
@@ -265,12 +266,27 @@ void Gateway::dispatch_helper(auto &self, Args &&...args) {
   }
 }
 
-OrderEntryREST &Gateway::get_order_entry(std::string_view const &account) {
+OrderEntry &Gateway::get_order_entry_rest(std::string_view const &account) {
   auto iter = order_entry_rest_.find(account);
   if (iter != std::end(order_entry_rest_)) {
     return *(*iter).second;
   }
   throw RuntimeError{R"(Unknown account="{}")"sv, account};
+}
+
+OrderEntry &Gateway::get_order_entry_ws(std::string_view const &account) {
+  auto iter = order_entry_ws_.find(account);
+  if (iter != std::end(order_entry_ws_)) {
+    return *(*iter).second;
+  }
+  throw RuntimeError{R"(Unknown account="{}")"sv, account};
+}
+
+OrderEntry &Gateway::get_order_entry(std::string_view const &account) {
+  if (shared_.settings.misc.test_wsapi) {
+    return get_order_entry_ws(account);
+  }
+  return get_order_entry_rest(account);
 }
 
 }  // namespace kucoin_futures
