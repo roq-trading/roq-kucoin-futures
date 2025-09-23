@@ -1,0 +1,13 @@
+{
+  "name": "roq/kucoin_futures/json/WSOp",
+  "type": "enum",
+  "values": [
+    {
+      "name": "pong"
+    },
+    {
+      "raw": "futures.order",
+      "name": "order"
+    }
+  ]
+}

@@ -43,6 +43,18 @@ R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &accoun
 }
 
 template <typename R>
+R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &account_by_account, Shared &shared) {
+  using result_type = std::remove_cvref_t<R>;
+  result_type result;
+  if (shared.settings.misc.test_wsapi && !std::empty(shared.settings.ws.uri)) {
+    for (auto &[name, account] : account_by_account) {
+      result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryWS>(gateway, context, ++stream_id, *account, shared));
+    }
+  }
+  return result;
+}
+
+template <typename R>
 R create_drop_copy(auto &account_by_account) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
@@ -58,6 +70,7 @@ R create_drop_copy(auto &account_by_account) {
 Gateway::Gateway(server::Dispatcher &dispatcher, Settings const &settings, Config const &config, io::Context &context)
     : dispatcher_{dispatcher}, accounts_{create_accounts<decltype(accounts_)>(config)}, context_{context}, shared_{dispatcher, settings},
       rest_{*this, context_, ++stream_id_, shared_}, order_entry_{create_order_entry<decltype(order_entry_)>(*this, context_, stream_id_, accounts_, shared_)},
+      order_entry_ws_{create_order_entry_ws<decltype(order_entry_ws_)>(*this, context_, stream_id_, accounts_, shared_)},
       drop_copy_{create_drop_copy<decltype(drop_copy_)>(accounts_)} {
 }
 
@@ -236,6 +249,9 @@ void Gateway::dispatch_helper(auto &self, Args &&...args) {
   auto helper = [&](auto &target) { target(std::forward<Args>(args)...); };
   helper(self.rest_);
   for (auto &[_, item] : self.order_entry_) {
+    helper(*item);
+  }
+  for (auto &[_, item] : self.order_entry_ws_) {
     helper(*item);
   }
   for (auto &[_, item] : self.drop_copy_) {

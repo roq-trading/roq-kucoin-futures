@@ -1,0 +1,22 @@
+{
+  "name": "roq/kucoin_futures/json/WSWelcome",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "sessionId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "data",
+      "type": "std/string_view"
+    },
+    {
+      "name": "pingInterval",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "pingTimeout",
+      "type": "std/milliseconds"
+    }
+  ]
+}

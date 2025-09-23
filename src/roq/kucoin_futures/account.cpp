@@ -20,5 +20,14 @@ std::string Account::create_headers(web::http::Method method, std::string_view c
   return crypto_.create_headers(method, path, query, body, utils::safe_cast(now));
 }
 
+std::string Account::create_ws_query() {
+  auto now = clock::get_realtime();
+  return crypto_.create_ws_query(utils::safe_cast(now));
+}
+
+std::string Account::create_ws_auth(std::string_view const &message) {
+  return crypto_.create_ws_auth(message);
+}
+
 }  // namespace kucoin_futures
 }  // namespace roq

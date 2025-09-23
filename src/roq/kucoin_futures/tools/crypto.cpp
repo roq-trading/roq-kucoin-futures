@@ -6,7 +6,10 @@
 
 #include <array>
 
+#include "roq/logging.hpp"
+
 #include "roq/utils/codec/base64.hpp"
+#include "roq/utils/codec/url.hpp"
 
 using namespace std::literals;
 
@@ -52,6 +55,34 @@ std::string Crypto::create_headers(
       signature,
       timestamp.count(),
       signed_passphrase_);
+  return result;
+}
+
+std::string Crypto::create_ws_query(std::chrono::milliseconds now) {
+  auto timestamp_2 = fmt::format("{}"sv, now.count());
+  // sign
+  mac_.clear();
+  mac_.update(key_);
+  mac_.update(timestamp_2);
+  auto digest = mac_.final(digest_);
+  std::string sign;
+  utils::codec::Base64::encode(sign, digest, false, false);
+  std::string buffer_sign;
+  auto sign_url = utils::codec::URL::encode(buffer_sign, sign);
+  // passphrase
+  std::string buffer_passphrase;
+  auto passphrase_url = utils::codec::URL::encode(buffer_passphrase, signed_passphrase_);
+  // query
+  auto result = fmt::format("?apikey={}&sign={}&passphrase={}&timestamp={}"sv, key_, sign_url, passphrase_url, timestamp_2);
+  return result;
+}
+
+std::string Crypto::create_ws_auth(std::string_view const &message) {
+  mac_.clear();
+  mac_.update(message);
+  auto digest = mac_.final(digest_);
+  std::string result;
+  utils::codec::Base64::encode(result, digest, false, false);
   return result;
 }
 

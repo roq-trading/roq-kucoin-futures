@@ -4,6 +4,13 @@
   "prefix": "ws_",
   "values": [
     {
+      "name": "uri",
+      "type": "roq/io/web/URI",
+      "validator": "roq/core/flags/URI",
+      "default": "wss://wsapi.kucoin.com/v1/private",
+      "description": "Exchange end-point"
+    },
+    {
       "name": "ping_freq",
       "type": "std/nanoseconds",
       "validator": "roq/flags/validators/TimePeriod",

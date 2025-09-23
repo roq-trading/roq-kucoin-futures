@@ -18,6 +18,7 @@
 #include "roq/kucoin_futures/drop_copy.hpp"
 #include "roq/kucoin_futures/market_data.hpp"
 #include "roq/kucoin_futures/order_entry.hpp"
+#include "roq/kucoin_futures/order_entry_ws.hpp"
 #include "roq/kucoin_futures/rest.hpp"
 #include "roq/kucoin_futures/settings.hpp"
 #include "roq/kucoin_futures/shared.hpp"
@@ -25,7 +26,12 @@
 namespace roq {
 namespace kucoin_futures {
 
-struct Gateway final : public server::Handler, public Rest::Handler, public OrderEntry::Handler, public DropCopy::Handler, public MarketData::Handler {
+struct Gateway final : public server::Handler,
+                       public Rest::Handler,
+                       public OrderEntry::Handler,
+                       public OrderEntryWS::Handler,
+                       public DropCopy::Handler,
+                       public MarketData::Handler {
   Gateway(server::Dispatcher &, Settings const &, Config const &, io::Context &);
 
   Gateway(Gateway const &) = delete;
@@ -96,6 +102,7 @@ struct Gateway final : public server::Handler, public Rest::Handler, public Orde
   // streams
   Rest rest_;
   utils::unordered_map<std::string, std::unique_ptr<OrderEntry>> order_entry_;
+  utils::unordered_map<std::string, std::unique_ptr<OrderEntryWS>> order_entry_ws_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
   std::vector<std::unique_ptr<MarketData>> market_data_;
   // websocket uri's

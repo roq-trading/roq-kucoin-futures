@@ -1,6 +1,6 @@
 set(TARGET_NAME ${PROJECT_NAME}-json)
 
-set(SOURCES encoder.cpp map.cpp parser.cpp utils.cpp)
+set(SOURCES encoder.cpp map.cpp parser.cpp utils.cpp ws_parser.cpp)
 
 include(RoqAutogen)
 
@@ -88,7 +88,12 @@ set(AUTOGEN_SCHEMAS
     wallet_balance_change.json
     welcome.json
     withdraw_hold_change_data.json
-    withdraw_hold_change.json)
+    withdraw_hold_change.json
+    ws_auth.json
+    ws_message.json
+    ws_op.json
+    ws_pong.json
+    ws_welcome.json)
 
 roq_autogen_hpp(
   OUTPUT

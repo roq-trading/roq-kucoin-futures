@@ -1,0 +1,291 @@
+/* Copyright (c) 2017-2025, Hans Erik Thrane */
+
+#include "roq/kucoin_futures/order_entry_ws.hpp"
+
+#include "roq/mask.hpp"
+
+#include "roq/utils/update.hpp"
+
+#include "roq/utils/exceptions/unhandled.hpp"
+
+#include "roq/utils/metrics/factory.hpp"
+
+#include "roq/kucoin_futures/json/map.hpp"
+#include "roq/kucoin_futures/json/utils.hpp"
+
+using namespace std::literals;
+
+namespace roq {
+namespace kucoin_futures {
+
+// === CONSTANTS ===
+
+namespace {
+auto const NAME = "ex"sv;
+
+auto const SUPPORTS = Mask{
+    SupportType::ORDER_ACK,
+    SupportType::ORDER,
+    SupportType::TRADE,
+    SupportType::FUNDS,
+    SupportType::POSITION,
+};
+
+size_t const MAX_DECODE_BUFFER_DEPTH = 1;
+}  // namespace
+
+// === HELPERS ===
+
+namespace {
+auto create_name(auto stream_id, auto &account) {
+  return fmt::format("{}:{}:{}"sv, stream_id, NAME, account.name);
+}
+
+auto create_connection(auto &handler, auto &settings, auto &context, auto &account) {
+  io::web::URI uri_{settings.ws.uri};
+  auto query = account.create_ws_query();
+  log::warn("DEBUG uri={}, query={}"sv, uri_, query);
+  auto config = web::socket::Client::Config{
+      // connection
+      .interface = {},
+      .uris = {&uri_, 1},
+      .host = {},
+      .validate_certificate = settings.net.tls_validate_certificate,
+      // connection manager
+      .connection_timeout = settings.net.connection_timeout,
+      .disconnect_on_idle_timeout = {},
+      .always_reconnect = true,
+      // proxy
+      .proxy = {},
+      // http
+      .query = query,
+      .user_agent = ROQ_PACKAGE_NAME,
+      .request_timeout = {},
+      .ping_frequency = settings.ws.ping_freq,
+      // implementation
+      .decode_buffer_size = settings.misc.decode_buffer_size,
+      .encode_buffer_size = settings.misc.encode_buffer_size,
+  };
+  return web::socket::Client::create(handler, context, config, []() -> std::string { return {}; });
+}
+
+struct create_metrics final : public utils::metrics::Factory {
+  create_metrics(auto &settings, auto &group, auto const &function) : utils::metrics::Factory{settings.app.name, group, function} {}
+};
+}  // namespace
+
+// === IMPLEMENTATION ===
+
+OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
+      connection_{create_connection(*this, shared.settings, context, account)},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+      counter_{
+          .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
+      },
+      profile_{
+          .parse = create_metrics(shared.settings, name_, "parse"sv),
+          .auth = create_metrics(shared.settings, name_, "auth"sv),
+          .welcome = create_metrics(shared.settings, name_, "welcome"sv),
+          .error = create_metrics(shared.settings, name_, "error"sv),
+          .pong = create_metrics(shared.settings, name_, "pong"sv),
+          .ack = create_metrics(shared.settings, name_, "ack"sv),
+      },
+      latency_{
+          .ping = create_metrics(shared.settings, name_, "ping"sv),
+          .heartbeat = create_metrics(shared.settings, name_, "heartbeat"sv),
+      },
+      account_{account}, shared_{shared} {
+}
+
+bool OrderEntryWS::ready() const {
+  return (*connection_).ready();
+}
+
+void OrderEntryWS::operator()(Event<Start> const &) {
+  (*connection_).start();
+}
+
+void OrderEntryWS::operator()(Event<Stop> const &) {
+  (*connection_).stop();
+}
+
+void OrderEntryWS::operator()(Event<Timer> const &event) {
+  auto now = event.value.now;
+  (*connection_).refresh(now);
+  // log::warn("DEBUG ready={}, welcome={}, ping_freq={}"sv, (*connection_).ready(), welcome_, ping_freq_);
+  if ((*connection_).ready()) {
+    if (welcome_) {
+      if (next_ping_ < now) {
+        send_ping(now);
+      }
+    }
+  } else if (logon_timeout_.count() && logon_timeout_ < now) {
+    assert(!welcome_);
+    log::warn("Did not receive the welcome message, disconnecting now..."sv);
+    (*connection_).close();
+  }
+}
+
+void OrderEntryWS::operator()(metrics::Writer &writer) const {
+  writer
+      // counter
+      .write(counter_.disconnect, metrics::Type::COUNTER)
+      // profile
+      .write(profile_.parse, metrics::Type::PROFILE)
+      .write(profile_.auth, metrics::Type::PROFILE)
+      .write(profile_.welcome, metrics::Type::PROFILE)
+      .write(profile_.error, metrics::Type::PROFILE)
+      .write(profile_.pong, metrics::Type::PROFILE)
+      .write(profile_.ack, metrics::Type::PROFILE)
+      // latency
+      .write(latency_.ping, metrics::Type::LATENCY)
+      .write(latency_.heartbeat, metrics::Type::LATENCY);
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Connected const &) {
+  assert(logon_timeout_.count() == 0);
+  auto now = clock::get_system();
+  logon_timeout_ = now + shared_.settings.ws.request_timeout;
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Disconnected const &) {
+  ++counter_.disconnect;
+  (*this)(ConnectionStatus::DISCONNECTED);
+  welcome_ = false;
+  ping_freq_ = {};
+  ready_ = false;
+  logon_timeout_ = {};
+  next_ping_ = {};
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Ready const &) {
+  // note! wait for welcome
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Close const &) {
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Latency const &latency) {
+  TraceInfo trace_info;
+  auto external_latency = ExternalLatency{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .latency = latency.sample,
+  };
+  create_trace_and_dispatch(handler_, trace_info, external_latency);
+  latency_.ping.update(latency.sample);
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Text const &text) {
+  parse(text.payload);
+}
+
+void OrderEntryWS::operator()(web::socket::Client::Binary const &) {
+  log::fatal("Unexpected"sv);
+}
+
+void OrderEntryWS::operator()(ConnectionStatus status) {
+  if (utils::update(status_, status)) {
+    TraceInfo trace_info;
+    auto stream_status = StreamStatus{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .supports = SUPPORTS,
+        .transport = Transport::TCP,
+        .protocol = Protocol::WS,
+        .encoding = {Encoding::JSON},
+        .priority = Priority::PRIMARY,
+        .connection_status = status_,
+        .interface = (*connection_).get_interface(),
+        .authority = (*connection_).get_current_authority(),
+        .path = (*connection_).get_current_path(),
+        .proxy = (*connection_).get_proxy(),
+    };
+    log::info("stream_status={}"sv, stream_status);
+    create_trace_and_dispatch(handler_, trace_info, stream_status);
+  }
+}
+
+void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
+  assert(ping_freq_.count() > 0);
+  next_ping_ = now + ping_freq_ / 2;
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":"{}",)"
+      R"("op":"ping")"
+      R"(}})"sv,
+      now.count());
+  log::warn("DEBUG {}"sv, message);
+  (*connection_).send_text(message);
+}
+
+void OrderEntryWS::parse(std::string_view const &message) {
+  profile_.parse([&]() {
+    log::warn("DEBUG {}"sv, message);
+    auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
+    try {
+      TraceInfo trace_info;
+      if (!json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+        log_message();
+      }
+    } catch (...) {
+      log_message();
+      utils::exceptions::Unhandled::terminate();
+    }
+  });
+}
+
+void OrderEntryWS::operator()(Trace<json::WSAuth> const &event, std::string_view const &message) {
+  profile_.auth([&]() {
+    auto &[trace_info, auth] = event;
+    log::info<1>("auth={}"sv, auth);
+    log::warn("DEBUG auth={}"sv, auth);
+    auto response = account_.create_ws_auth(message);
+    (*connection_).send_text(response);
+    (*this)(ConnectionStatus::DOWNLOADING);
+  });
+}
+
+void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
+  profile_.welcome([&]() {
+    auto &[trace_info, welcome] = event;
+    log::info<1>("welcome={}"sv, welcome);
+    log::warn("DEBUG welcome={}"sv, welcome);
+    welcome_ = true;
+    assert(welcome.ping_interval.count());
+    ping_freq_ = welcome.ping_interval;
+    (*this)(ConnectionStatus::READY);
+  });
+}
+
+/*
+// error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
+void OrderEntryWS::operator()(Trace<json::Error> const &event) {
+  profile_.error([&]() {
+    // XXX HANS DEBUG
+    auto &[trace_info, error] = event;
+    log::error("error={}"sv, error);
+  });
+}
+*/
+
+void OrderEntryWS::operator()(Trace<json::WSPong> const &event) {
+  profile_.pong([&]() {
+    auto &[trace_info, pong] = event;
+    log::info<4>("pong={}"sv, pong);
+    log::warn("DEBUG pong={}"sv, pong);
+  });
+}
+
+/*
+void OrderEntryWS::operator()(Trace<json::Ack> const &event) {
+  profile_.ack([&]() {
+    auto &[trace_info, ack] = event;
+    log::info<2>("ack={}"sv, ack);
+  });
+}
+*/
+
+}  // namespace kucoin_futures
+}  // namespace roq
