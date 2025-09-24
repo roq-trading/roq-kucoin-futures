@@ -2,13 +2,7 @@
 
 #include "roq/kucoin_futures/gateway.hpp"
 
-#include <algorithm>
-#include <cctype>
-#include <limits>
-
 #include "roq/logging.hpp"
-
-#include "roq/clock.hpp"
 
 #include "roq/server/oms/exceptions.hpp"
 
@@ -223,10 +217,9 @@ uint16_t Gateway::operator()(
   return get_order_entry(event.value.account)(event, order, request_id, previous_request_id);
 }
 
-// note! REST-only
 uint16_t Gateway::operator()(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   assert(!std::empty(event.value.account));
-  return get_order_entry_rest(event.value.account)(event, request_id);
+  return get_order_entry_rest(event.value.account)(event, request_id);  // note! REST-only
 }
 
 uint16_t Gateway::operator()(Event<MassQuote> const &) {

@@ -27,11 +27,9 @@ namespace {
 auto const NAME = "ex"sv;
 
 auto const SUPPORTS = Mask{
+    SupportType::CREATE_ORDER,
+    SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
-    SupportType::ORDER,
-    SupportType::TRADE,
-    SupportType::FUNDS,
-    SupportType::POSITION,
 };
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
