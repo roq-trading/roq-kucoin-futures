@@ -12,18 +12,17 @@ CONFIG="${CONFIG:-$NAME-test}"
 
 CONFIG_FILE="$ROQ_CONFIG_PATH/roq-kucoin-futures/$CONFIG.toml"
 
-URI="api-v2-futures.kucoin.com"
+API="v2"
 
-REST_URI="https://$URI"
+FLAGFILE="../../../share/flags/test/flags.cfg"
 
 $PREFIX ./roq-kucoin-futures \
   --name "$NAME" \
   --config_file "$CONFIG_FILE" \
+  --flagfile "$FLAGFILE" \
   --cache_dir "$HOME/var/lib/roq/cache" \
   --event_log_dir "$HOME/var/lib/roq/data" \
-  --event_log_symlink true \
   --client_listen_address "$HOME/run/$NAME.sock" \
   --service_listen_address "$HOME/run/metrics/${NAME}.sock" \
-  --rest_uri "$REST_URI" \
-  --api "v2" \
+  --api="$API" \
   $@
