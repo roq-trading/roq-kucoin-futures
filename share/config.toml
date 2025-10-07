@@ -1,3 +1,5 @@
+# config template for the roq-kucoin-futures gateway
+
 symbols = [
   "^ETHUSD[A-Z]M$",
   "^XBTUSD[A-Z]M$"
