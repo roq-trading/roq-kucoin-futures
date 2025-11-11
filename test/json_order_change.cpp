@@ -110,7 +110,7 @@ TEST_CASE("open_parser", "[json_order_change]") {
     void operator()(Trace<json::SymbolOrderChange> const &) override { FAIL(); }
     void operator()(Trace<json::OrderChange> const &event) override {
       ++count;
-      auto &[trace_info, order_change] = event;
+      [[maybe_unused]] auto &[trace_info, order_change] = event;
     }
 
   } handler;
@@ -210,7 +210,7 @@ TEST_CASE("canceled_parser", "[json_order_change]") {
     void operator()(Trace<json::SymbolOrderChange> const &) override { FAIL(); }
     void operator()(Trace<json::OrderChange> const &event) override {
       ++count;
-      auto &[trace_info, order_change] = event;
+      [[maybe_unused]] auto &[trace_info, order_change] = event;
     }
 
   } handler;
@@ -315,7 +315,7 @@ TEST_CASE("match_parser", "[json_order_change]") {
     void operator()(Trace<json::SymbolOrderChange> const &) override { FAIL(); }
     void operator()(Trace<json::OrderChange> const &event) override {
       ++count;
-      auto &[trace_info, order_change] = event;
+      [[maybe_unused]] auto &[trace_info, order_change] = event;
     }
 
   } handler;

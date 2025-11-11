@@ -10,7 +10,7 @@ namespace roq {
 namespace kucoin_futures {
 namespace json {
 
-Error guess_error(int32_t code) {
+Error guess_error([[maybe_unused]] int32_t code) {
   return Error::UNKNOWN;
 }
 
