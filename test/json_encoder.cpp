@@ -35,6 +35,7 @@ TEST_CASE("create_market", "[json_encoder]") {
       .quantity = 1.0,
       .price = NaN,
       .stop_price = NaN,
+      .leverage = NaN,
       .routing_id = {},
       .strategy_id = {},
   };
@@ -80,6 +81,7 @@ TEST_CASE("create_limit", "[json_add_order]") {
       .quantity = 1.0,
       .price = 32000.0,
       .stop_price = NaN,
+      .leverage = NaN,
       .routing_id = {},
       .strategy_id = {},
   };
@@ -129,6 +131,7 @@ TEST_CASE("ws_create_market", "[json_encoder]") {
       .quantity = 1.0,
       .price = NaN,
       .stop_price = NaN,
+      .leverage = NaN,
       .routing_id = {},
       .strategy_id = {},
   };

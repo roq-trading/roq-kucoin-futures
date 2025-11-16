@@ -573,6 +573,7 @@ void OrderEntryREST::operator()(Trace<json::Orders> const &event) {
         .quantity = item.size,
         .price = item.price,
         .stop_price = item.stop_price,
+        .leverage = NaN,
         .remaining_quantity = remaining_quantity,
         .traded_quantity = item.filled_size,
         .average_traded_price = item.avg_deal_price,

@@ -472,6 +472,7 @@ void DropCopy::operator()(Trace<json::OrderChange> const &event) {
       .quantity = data.size,
       .price = data.price,
       .stop_price = NaN,
+      .leverage = NaN,
       .remaining_quantity = remaining_quantity,
       .traded_quantity = data.filled_size,
       .average_traded_price = NaN,
