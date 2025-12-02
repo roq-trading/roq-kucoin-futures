@@ -259,8 +259,7 @@
     },
     {
       "name": "fundingRateCap",
-      "type": "std/double",
-      "comment": "undoc"
+      "type": "std/double"
     },
     {
       "name": "fundingRateFloor",
@@ -268,43 +267,39 @@
     },
     {
       "name": "period",
-      "type": "std/int32",
-      "comment": "undoc"
+      "type": "std/int32"
     },
     {
       "name": "nextFundingRateDateTime",
-      "type": "std/milliseconds",
-      "comment": "undoc"
+      "type": "std/milliseconds"
     },
     {
-      "name": "adjustK",
-      "comment": "undoc"
+      "name": "adjustK"
     },
     {
-      "name": "adjustM",
-      "comment": "undoc"
+      "name": "adjustM"
     },
     {
-      "name": "adjustActiveTime",
-      "comment": "undoc"
+      "name": "adjustActiveTime"
     },
     {
       "name": "crossRiskLimit",
-      "type": "std/double",
-      "comment": "undoc"
+      "type": "std/double"
     },
     {
-      "name": "adjustMmrLevConstant",
-      "comment": "undoc"
+      "name": "adjustMmrLevConstant"
     },
     {
       "name": "marketStage",
-      "type": "roq/kucoin_futures/json/MarketStage",
-      "comment": "undoc"
+      "type": "roq/kucoin_futures/json/MarketStage"
     },
     {
-      "name": "preMarketToPerpDate",
-      "comment": "undoc"
-    }
+      "name": "preMarketToPerpDate"
+    },
+    { "name": "marketMaxOrderQty", "type": "std/double" },
+    { "name": "dailyInterestRate", "type": "std/double" },
+    { "name": "effectiveFundingRateCycleStartTime", "type": "std/milliseconds" },
+    { "name": "currentFundingRateGranularity", "type": "std/double" },
+    { "name": "orderPriceRange", "type": "std/double" }
   ]
 }
