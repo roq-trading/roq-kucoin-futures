@@ -296,10 +296,25 @@
     {
       "name": "preMarketToPerpDate"
     },
-    { "name": "marketMaxOrderQty", "type": "std/double" },
-    { "name": "dailyInterestRate", "type": "std/double" },
-    { "name": "effectiveFundingRateCycleStartTime", "type": "std/milliseconds" },
-    { "name": "currentFundingRateGranularity", "type": "std/double" },
-    { "name": "orderPriceRange", "type": "std/double" }
+    {
+      "name": "marketMaxOrderQty",
+      "type": "std/double"
+    },
+    {
+      "name": "dailyInterestRate",
+      "type": "std/double"
+    },
+    {
+      "name": "effectiveFundingRateCycleStartTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "currentFundingRateGranularity",
+      "type": "std/double"
+    },
+    {
+      "name": "orderPriceRange",
+      "type": "std/double"
+    }
   ]
 }
