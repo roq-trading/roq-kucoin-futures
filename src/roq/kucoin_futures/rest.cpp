@@ -204,7 +204,7 @@ uint32_t Rest::download(RestState state) {
   return 0;
 }
 
-// public_token
+// bullet-public
 
 void Rest::get_public_token() {
   profile_.public_token([&]() {
@@ -305,13 +305,13 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Contracts contracts{body, decode_buffer_};
-        if (contracts.code == SYSTEM_CODE_SUCCESS) {
-          Trace event_2{event, contracts};
+        json::ContractsAck contracts_ack{body, decode_buffer_};
+        if (contracts_ack.code == SYSTEM_CODE_SUCCESS) {
+          Trace event_2{event, contracts_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(contracts.code), contracts.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(contracts_ack.code), contracts_ack.msg);
         }
       }
     };
@@ -319,13 +319,13 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
   });
 }
 
-void Rest::operator()(Trace<json::Contracts> const &event) {
-  auto &[trace_info, contracts] = event;
-  log::info<4>("contracts={}"sv, contracts);
+void Rest::operator()(Trace<json::ContractsAck> const &event) {
+  auto &[trace_info, contracts_ack] = event;
+  log::info<4>("contracts_ack={}"sv, contracts_ack);
   // reference data
   std::vector<Symbol> symbols;
   size_t counter = 0;
-  for (auto &item : contracts.data) {
+  for (auto &item : contracts_ack.data) {
     log::info<2>("item={}"sv, item);
     auto &symbol = item.symbol;
     auto security_type = [&]() -> SecurityType {
@@ -388,10 +388,10 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
     handler_(symbols_update);
   }
   if (counter > 0) {
-    log::info("Contracts {} / {}"sv, counter, std::size(contracts.data));
+    log::info("Contracts {} / {}"sv, counter, std::size(contracts_ack.data));
   }
   // market status
-  for (auto &item : contracts.data) {
+  for (auto &item : contracts_ack.data) {
     auto &symbol = item.symbol;
     if (all_symbols_.find(symbol) == std::end(all_symbols_)) {
       continue;
@@ -420,7 +420,7 @@ void Rest::operator()(Trace<json::Contracts> const &event) {
   }
 }
 
-// order_book
+// order-book
 
 void Rest::get_order_book(std::string_view const &symbol) {
   profile_.order_book([&]() {
@@ -452,9 +452,9 @@ void Rest::get_order_book_ack(Trace<web::rest::Response> const &event, [[maybe_u
       // XXX WHAT ???
     };
     auto handle_success = [&](auto &body) {
-      json::OrderBook order_book{body, decode_buffer_};
-      if (order_book.code == SYSTEM_CODE_SUCCESS) {
-        Trace event_2{event, order_book};
+      json::OrderBookAck order_book_ack{body, decode_buffer_};
+      if (order_book_ack.code == SYSTEM_CODE_SUCCESS) {
+        Trace event_2{event, order_book_ack};
         (*this)(event_2);
       };
     };
@@ -462,11 +462,10 @@ void Rest::get_order_book_ack(Trace<web::rest::Response> const &event, [[maybe_u
   });
 }
 
-void Rest::operator()(Trace<json::OrderBook> const &event) {
-  auto &trace_info = event.trace_info;
-  auto &order_book = event.value;
-  log::info<4>("order_book={}"sv, order_book);
-  auto &data = order_book.data;
+void Rest::operator()(Trace<json::OrderBookAck> const &event) {
+  auto &[trace_info, order_book_ack] = event;
+  log::info<4>("order_book_ack={}"sv, order_book_ack);
+  auto &data = order_book_ack.data;
   auto sequence = data.sequence;
   auto symbol = data.symbol;
   auto &sequencer = shared_.mbp_sequencer[symbol];

@@ -1,14 +1,10 @@
 /* Copyright (c) 2017-2025, Hans Erik Thrane */
 
-#include <cmath>
-
 #include <catch2/catch_all.hpp>
-
-#include "roq/core/datetime.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/positions.hpp"
+#include "roq/kucoin_futures/json/positions_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -18,18 +14,23 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("empty", "[json_positions]") {
+using value_type = json::PositionsAck;
+
+TEST_CASE("empty", "[json_positions_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":[])"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Positions obj{message, buffer};
-  CHECK(obj.code == 200000);
-  CHECK(std::empty(obj.data));
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    CHECK(std::empty(obj.data));
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }
 
-TEST_CASE("simple", "[json_positions]") {
+TEST_CASE("simple", "[json_positions_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":[{)"
@@ -73,47 +74,50 @@ TEST_CASE("simple", "[json_positions]") {
                        R"(})"
                        R"(])"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Positions obj{message, buffer};
-  CHECK(obj.code == 200000);
-  auto &data = obj.data;
-  REQUIRE(std::size(data) == 1);
-  /*
-  auto &d0 = data[0];
-  CHECK(d0.id == "615d67c7fa1b4f000638dd66"sv);
-  CHECK(d0.symbol == "XBTUSDTM"sv);
-  CHECK(d0.auto_deposit == false);
-  CHECK(d0.maint_margin_req == 0.005_a);
-  CHECK(d0.risk_limit == 200.0_a);
-  CHECK(d0.real_leverage == 0.0_a);
-  CHECK(d0.cross_mode == false);
-  CHECK(d0.delev_percentage == 0.0_a);
-  CHECK(d0.current_timestamp == 1633511367833ms);
-  CHECK(d0.current_qty == 0.0_a);
-  CHECK(d0.current_cost == 0.0_a);
-  CHECK(d0.current_comm == 0.0_a);
-  CHECK(d0.unrealised_cost == 0.0_a);
-  CHECK(d0.realised_gross_cost == 0.0_a);
-  CHECK(d0.realised_cost == 0.0_a);
-  CHECK(d0.is_open == false);
-  CHECK(d0.mark_price == 50664.85_a);
-  CHECK(d0.mark_value == 0.0_a);
-  CHECK(d0.pos_cost == 0.0_a);
-  CHECK(d0.pos_cross == 0.0_a);
-  CHECK(d0.pos_init == 0.0_a);
-  CHECK(d0.pos_comm == 0.0_a);
-  CHECK(d0.pos_loss == 0.0_a);
-  CHECK(d0.pos_margin == 0.0_a);
-  CHECK(d0.pos_maint == 0.0_a);
-  CHECK(d0.maint_margin == 0.0_a);
-  CHECK(d0.realised_gross_pnl == 0.0_a);
-  CHECK(d0.realised_pnl == 0.0_a);
-  CHECK(d0.unrealised_pnl == 0.0_a);
-  CHECK(d0.unrealised_pnl_pcnt == 0.0_a);
-  CHECK(d0.unrealised_roe_pcnt == 0.0_a);
-  CHECK(d0.avg_entry_price == 0.0_a);
-  CHECK(d0.liquidation_price == 0.0_a);
-  CHECK(d0.bankrupt_price == 0.0_a);
-  CHECK(d0.settle_currency == "USDT"sv);
-  */
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    auto &data = obj.data;
+    REQUIRE(std::size(data) == 1);
+    /*
+    auto &d0 = data[0];
+    CHECK(d0.id == "615d67c7fa1b4f000638dd66"sv);
+    CHECK(d0.symbol == "XBTUSDTM"sv);
+    CHECK(d0.auto_deposit == false);
+    CHECK(d0.maint_margin_req == 0.005_a);
+    CHECK(d0.risk_limit == 200.0_a);
+    CHECK(d0.real_leverage == 0.0_a);
+    CHECK(d0.cross_mode == false);
+    CHECK(d0.delev_percentage == 0.0_a);
+    CHECK(d0.current_timestamp == 1633511367833ms);
+    CHECK(d0.current_qty == 0.0_a);
+    CHECK(d0.current_cost == 0.0_a);
+    CHECK(d0.current_comm == 0.0_a);
+    CHECK(d0.unrealised_cost == 0.0_a);
+    CHECK(d0.realised_gross_cost == 0.0_a);
+    CHECK(d0.realised_cost == 0.0_a);
+    CHECK(d0.is_open == false);
+    CHECK(d0.mark_price == 50664.85_a);
+    CHECK(d0.mark_value == 0.0_a);
+    CHECK(d0.pos_cost == 0.0_a);
+    CHECK(d0.pos_cross == 0.0_a);
+    CHECK(d0.pos_init == 0.0_a);
+    CHECK(d0.pos_comm == 0.0_a);
+    CHECK(d0.pos_loss == 0.0_a);
+    CHECK(d0.pos_margin == 0.0_a);
+    CHECK(d0.pos_maint == 0.0_a);
+    CHECK(d0.maint_margin == 0.0_a);
+    CHECK(d0.realised_gross_pnl == 0.0_a);
+    CHECK(d0.realised_pnl == 0.0_a);
+    CHECK(d0.unrealised_pnl == 0.0_a);
+    CHECK(d0.unrealised_pnl_pcnt == 0.0_a);
+    CHECK(d0.unrealised_roe_pcnt == 0.0_a);
+    CHECK(d0.avg_entry_price == 0.0_a);
+    CHECK(d0.liquidation_price == 0.0_a);
+    CHECK(d0.bankrupt_price == 0.0_a);
+    CHECK(d0.settle_currency == "USDT"sv);
+    */
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }

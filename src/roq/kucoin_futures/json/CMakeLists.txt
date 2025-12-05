@@ -5,8 +5,8 @@ set(SOURCES encoder.cpp map.cpp parser.cpp utils.cpp ws_parser.cpp)
 include(RoqAutogen)
 
 set(AUTOGEN_SCHEMAS
-    account_data.json
-    account.json
+    account_ack_data.json
+    account_ack.json
     ack.json
     add_order_ack_data.json
     add_order_ack.json
@@ -16,16 +16,16 @@ set(AUTOGEN_SCHEMAS
     cancel_all_orders_ack.json
     cancel_order_ack_data.json
     cancel_order_ack.json
-    contracts_item.json
-    contracts.json
+    contracts_ack_data_item.json
+    contracts_ack.json
     display_type.json
     error.json
     execution_data.json
     execution.json
     fair_method.json
     fee_type.json
-    fills_item.json
-    fills.json
+    fills_ack_data_item.json
+    fills_ack.json
     funding_begin_data.json
     funding_begin.json
     funding_end_data.json
@@ -45,16 +45,16 @@ set(AUTOGEN_SCHEMAS
     match_data.json
     match.json
     message.json
-    order_book_data_item.json
-    order_book_data.json
-    order_book.json
+    order_book_ack_data_bids_asks_item.json
+    order_book_ack_data.json
+    order_book_ack.json
     order_change_data.json
     order_change.json
     order_margin_change_data.json
     order_margin_change.json
-    orders_data_item.json
-    orders_data.json
-    orders.json
+    orders_ack_data_items_item.json
+    orders_ack_data.json
+    orders_ack.json
     order_status.json
     order_type.json
     order_update_type.json
@@ -63,11 +63,11 @@ set(AUTOGEN_SCHEMAS
     position_adjust_risk_limit.json
     position_change_data.json
     position_change.json
-    positions_data.json
+    positions_ack_data_item.json
+    positions_ack.json
     position_settlement_data.json
     position_settlement.json
     position_side.json
-    positions.json
     self_trade_prevention.json
     side.json
     snapshot24h_data.json

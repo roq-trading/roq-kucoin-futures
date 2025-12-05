@@ -25,9 +25,10 @@
 #include "roq/kucoin_futures/rest_state.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
-#include "roq/kucoin_futures/json/contracts.hpp"
-#include "roq/kucoin_futures/json/order_book.hpp"
 #include "roq/kucoin_futures/json/token.hpp"
+
+#include "roq/kucoin_futures/json/contracts_ack.hpp"
+#include "roq/kucoin_futures/json/order_book_ack.hpp"
 
 namespace roq {
 namespace kucoin_futures {
@@ -67,6 +68,8 @@ struct Rest final : public web::rest::Client::Handler {
   void operator()(metrics::Writer &) const;
 
  protected:
+  // web::rest::Client::Handler
+
   void operator()(Trace<web::rest::Client::Connected> const &) override;
   void operator()(Trace<web::rest::Client::Disconnected> const &) override;
   void operator()(Trace<web::rest::Client::Latency> const &) override;
@@ -75,17 +78,25 @@ struct Rest final : public web::rest::Client::Handler {
 
   uint32_t download(RestState);
 
+  // bullet-public
+
   void get_public_token();
   void get_public_token_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<json::Token> const &);
 
+  // contracts
+
   void get_contracts();
   void get_contracts_ack(Trace<web::rest::Response> const &, uint32_t sequence);
-  void operator()(Trace<json::Contracts> const &);
+  void operator()(Trace<json::ContractsAck> const &);
+
+  // order-book
 
   void get_order_book(std::string_view const &symbol);
   void get_order_book_ack(Trace<web::rest::Response> const &, std::string_view const &symbol);
-  void operator()(Trace<json::OrderBook> const &);
+  void operator()(Trace<json::OrderBookAck> const &);
+
+  // helpers
 
   void check_request_queue(std::chrono::nanoseconds now);
 

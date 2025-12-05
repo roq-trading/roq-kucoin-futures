@@ -1,12 +1,10 @@
 /* Copyright (c) 2017-2025, Hans Erik Thrane */
 
-#include <cmath>
-
 #include <catch2/catch_all.hpp>
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/fills.hpp"
+#include "roq/kucoin_futures/json/fills_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -15,18 +13,23 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("empty", "[json_fills]") {
+using value_type = json::FillsAck;
+
+TEST_CASE("empty", "[json_fills_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":[])"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Fills obj{message, buffer};
-  CHECK(obj.code == 200000);
-  CHECK(std::empty(obj.data));
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    CHECK(std::empty(obj.data));
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }
 
-TEST_CASE("simple", "[json_fills]") {
+TEST_CASE("simple", "[json_fills_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":[{)"
@@ -60,8 +63,11 @@ TEST_CASE("simple", "[json_fills]") {
                        R"(})"
                        R"(])"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Fills obj{message, buffer};
-  CHECK(obj.code == 200000);
-  REQUIRE(std::size(obj.data) == 1);
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    REQUIRE(std::size(obj.data) == 1);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }

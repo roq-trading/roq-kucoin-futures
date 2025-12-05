@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/FillsItem",
+  "name": "roq/kucoin_futures/json/FillsAckDataItem",
   "type": "dictionary",
   "values": [
     {

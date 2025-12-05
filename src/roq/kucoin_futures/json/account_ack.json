@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/Contracts",
+  "name": "roq/kucoin_futures/json/AccountAck",
   "type": "dictionary",
   "values": [
     {
@@ -13,8 +13,7 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/ContractsItem",
-      "array": "std/span"
+      "type": "roq/kucoin_futures/json/AccountAckData"
     }
   ]
 }

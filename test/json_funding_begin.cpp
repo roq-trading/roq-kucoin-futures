@@ -2,19 +2,23 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/core/json/buffer_stack.hpp"
-
-#include "roq/kucoin_futures/json/funding_begin.hpp"
+#include "parser_tester.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-TEST_CASE("json_funding_begin", "[json_funding_begin]") {
-  auto const message = R"({)"
-                       // XXX FIXME don't have
-                       R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  [[maybe_unused]] json::FundingBegin obj{message, buffer};
+using value_type = json::FundingBegin;
+
+TEST_CASE("simple", "[json_funding_begin]") {
+  /*
+  auto message = R"({)"
+                 // XXX FIXME don't have
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    // XXX
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+  */
 }

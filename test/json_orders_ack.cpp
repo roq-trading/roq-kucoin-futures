@@ -1,14 +1,10 @@
 /* Copyright (c) 2017-2025, Hans Erik Thrane */
 
-#include <cmath>
-
 #include <catch2/catch_all.hpp>
-
-#include "roq/core/datetime.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/orders.hpp"
+#include "roq/kucoin_futures/json/orders_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -17,7 +13,9 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-TEST_CASE("empty", "[json_orders]") {
+using value_type = json::OrdersAck;
+
+TEST_CASE("empty", "[json_orders_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
@@ -28,19 +26,22 @@ TEST_CASE("empty", "[json_orders]") {
                        R"("items":[])"
                        R"(})"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Orders obj{message, buffer};
-  CHECK(obj.code == 200000);
-  auto &data = obj.data;
-  CHECK(data.current_page == 1);
-  CHECK(data.page_size == 1000);
-  CHECK(data.total_num == 0);
-  CHECK(data.total_page == 0);
-  auto &items = data.items;
-  CHECK(std::size(items) == 0);
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    auto &data = obj.data;
+    CHECK(data.current_page == 1);
+    CHECK(data.page_size == 1000);
+    CHECK(data.total_num == 0);
+    CHECK(data.total_page == 0);
+    auto &items = data.items;
+    CHECK(std::size(items) == 0);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }
 
-TEST_CASE("simple", "[json_orders]") {
+TEST_CASE("simple", "[json_orders_ack]") {
   auto const message = R"({)"
                        R"("code":"200000",)"
                        R"("data":{)"
@@ -92,15 +93,18 @@ TEST_CASE("simple", "[json_orders]") {
                        R"(])"
                        R"(})"
                        R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  json::Orders obj{message, buffer};
-  CHECK(obj.code == 200000);
-  auto &data = obj.data;
-  CHECK(data.current_page == 1);
-  CHECK(data.page_size == 1000);
-  CHECK(data.total_num == 1);
-  CHECK(data.total_page == 1);
-  auto &items = data.items;
-  REQUIRE(std::size(items) == 1);
-  CHECK(items[0].id == "358890922685038592"sv);
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.code == 200000);
+    auto &data = obj.data;
+    CHECK(data.current_page == 1);
+    CHECK(data.page_size == 1000);
+    CHECK(data.total_num == 1);
+    CHECK(data.total_page == 1);
+    auto &items = data.items;
+    REQUIRE(std::size(items) == 1);
+    CHECK(items[0].id == "358890922685038592"sv);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
 }

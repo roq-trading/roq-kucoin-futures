@@ -102,8 +102,8 @@ OrderEntryREST::OrderEntryREST(Handler &handler, io::Context &context, uint16_t 
           .orders_ack = create_metrics(shared.settings, name_, "orders_ack"sv),
           .fills = create_metrics(shared.settings, name_, "fills"sv),
           .fills_ack = create_metrics(shared.settings, name_, "fills_ack"sv),
-          .add_order = create_metrics(shared.settings, name_, "add_order"sv),
-          .add_order_ack = create_metrics(shared.settings, name_, "add_order_ack"sv),
+          .create_order = create_metrics(shared.settings, name_, "create_order"sv),
+          .create_order_ack = create_metrics(shared.settings, name_, "create_order_ack"sv),
           .cancel_order = create_metrics(shared.settings, name_, "cancel_order"sv),
           .cancel_order_ack = create_metrics(shared.settings, name_, "cancel_order_ack"sv),
           .cancel_all_orders = create_metrics(shared.settings, name_, "cancel_all_orders"sv),
@@ -142,8 +142,8 @@ void OrderEntryREST::operator()(metrics::Writer &writer) const {
       .write(profile_.orders_ack, metrics::Type::PROFILE)
       .write(profile_.fills, metrics::Type::PROFILE)
       .write(profile_.fills_ack, metrics::Type::PROFILE)
-      .write(profile_.add_order, metrics::Type::PROFILE)
-      .write(profile_.add_order_ack, metrics::Type::PROFILE)
+      .write(profile_.create_order, metrics::Type::PROFILE)
+      .write(profile_.create_order_ack, metrics::Type::PROFILE)
       .write(profile_.cancel_order, metrics::Type::PROFILE)
       .write(profile_.cancel_order_ack, metrics::Type::PROFILE)
       .write(profile_.cancel_all_orders, metrics::Type::PROFILE)
@@ -153,7 +153,7 @@ void OrderEntryREST::operator()(metrics::Writer &writer) const {
 }
 
 uint16_t OrderEntryREST::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
-  add_order(event, order, request_id);
+  create_order(event, order, request_id);
   return stream_id_;
 }
 
@@ -259,7 +259,7 @@ uint32_t OrderEntryREST::download(OrderEntryState state) {
   return 0;
 }
 
-// private_token
+// bullet-private
 
 void OrderEntryREST::get_private_token() {
   profile_.private_token([&]() {
@@ -281,7 +281,7 @@ void OrderEntryREST::get_private_token() {
       Trace event{trace_info, response};
       get_private_token_ack(event, sequence);
     };
-    (*connection_)("token", request, callback);
+    (*connection_)("bullet-private", request, callback);
   });
 }
 
@@ -367,13 +367,13 @@ void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event, ui
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Account account{body, decode_buffer_};
-        if (account.code == SYSTEM_CODE_SUCCESS) {
-          Trace event_2{event, account};
+        json::AccountAck account_ack{body, decode_buffer_};
+        if (account_ack.code == SYSTEM_CODE_SUCCESS) {
+          Trace event_2{event, account_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(account.code), account.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(account_ack.code), account_ack.msg);
         }
       }
     };
@@ -381,11 +381,11 @@ void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event, ui
   });
 }
 
-void OrderEntryREST::operator()(Trace<json::Account> const &event) {
-  auto &[trace_info, account] = event;
-  log::info<2>("account={}"sv, account);
-  log::debug("account={}"sv, account);
-  auto &data = account.data;
+void OrderEntryREST::operator()(Trace<json::AccountAck> const &event) {
+  auto &[trace_info, account_ack] = event;
+  log::info<2>("account_ack={}"sv, account_ack);
+  log::debug("account_ack={}"sv, account_ack);
+  auto &data = account_ack.data;
   auto funds_update = FundsUpdate{
       .stream_id = stream_id_,
       .account = account_.name,
@@ -440,13 +440,13 @@ void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event, 
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Positions positions{body, decode_buffer_};
-        if (positions.code == SYSTEM_CODE_SUCCESS) {
-          Trace event_2{event, positions};
+        json::PositionsAck positions_ack{body, decode_buffer_};
+        if (positions_ack.code == SYSTEM_CODE_SUCCESS) {
+          Trace event_2{event, positions_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(positions.code), positions.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(positions_ack.code), positions_ack.msg);
         }
       }
     };
@@ -454,10 +454,10 @@ void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event, 
   });
 }
 
-void OrderEntryREST::operator()(Trace<json::Positions> const &event) {
-  auto &[trace_info, positions] = event;
-  log::info<2>("positions={}"sv, positions);
-  for (auto &item : positions.data) {
+void OrderEntryREST::operator()(Trace<json::PositionsAck> const &event) {
+  auto &[trace_info, positions_ack] = event;
+  log::info<2>("positions_ack={}"sv, positions_ack);
+  for (auto &item : positions_ack.data) {
     log::debug("item={}"sv, item);
     auto position_update = PositionUpdate{
         .stream_id = stream_id_,
@@ -518,13 +518,13 @@ void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event, uin
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Orders orders{body, decode_buffer_};
-        if (orders.code == SYSTEM_CODE_SUCCESS) {
-          Trace event_2{event, orders};
+        json::OrdersAck orders_ack{body, decode_buffer_};
+        if (orders_ack.code == SYSTEM_CODE_SUCCESS) {
+          Trace event_2{event, orders_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(orders.code), orders.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(orders_ack.code), orders_ack.msg);
         }
       }
     };
@@ -532,10 +532,10 @@ void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event, uin
   });
 }
 
-void OrderEntryREST::operator()(Trace<json::Orders> const &event) {
-  auto &[trace_info, orders] = event;
-  log::info<2>("orders={}"sv, orders);
-  for (auto &item : orders.data.items) {
+void OrderEntryREST::operator()(Trace<json::OrdersAck> const &event) {
+  auto &[trace_info, orders_ack] = event;
+  log::info<2>("orders_ack={}"sv, orders_ack);
+  for (auto &item : orders_ack.data.items) {
     log::debug("item={}"sv, item);
     // note! following shouldn't be necessary due to only downloading active orders -- just being safe
     auto order_status = [&]() -> OrderStatus {
@@ -630,13 +630,13 @@ void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event, uint
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Fills fills{body, decode_buffer_};
-        if (fills.code == SYSTEM_CODE_SUCCESS) {
-          Trace event_2{event, fills};
+        json::FillsAck fills_ack{body, decode_buffer_};
+        if (fills_ack.code == SYSTEM_CODE_SUCCESS) {
+          Trace event_2{event, fills_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(fills.code), fills.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(fills_ack.code), fills_ack.msg);
         }
       }
     };
@@ -645,10 +645,10 @@ void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event, uint
 }
 
 // note! we don't get a client_oid
-void OrderEntryREST::operator()(Trace<json::Fills> const &event) {
-  auto &[trace_info, fills] = event;
-  log::info<2>("fills={}"sv, fills);
-  for (auto &item : fills.data) {
+void OrderEntryREST::operator()(Trace<json::FillsAck> const &event) {
+  auto &[trace_info, fills_ack] = event;
+  log::info<2>("fills_ack={}"sv, fills_ack);
+  for (auto &item : fills_ack.data) {
     log::debug("item={}"sv, item);
     auto fill = Fill{
         .exchange_time_utc = {},
@@ -688,10 +688,10 @@ void OrderEntryREST::operator()(Trace<json::Fills> const &event) {
   }
 }
 
-// add_order
+// create-order
 
-void OrderEntryREST::add_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
-  profile_.add_order([&]() {
+void OrderEntryREST::create_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+  profile_.create_order([&]() {
     if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
     }
@@ -715,14 +715,14 @@ void OrderEntryREST::add_order(Event<CreateOrder> const &event, server::oms::Ord
       auto version = 1;
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      add_order_ack(event, user_id, order_id, version);
+      create_order_ack(event, user_id, order_id, version);
     };
     (*connection_)(request_id, request, callback);
   });
 }
 
-void OrderEntryREST::add_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
-  profile_.add_order_ack([&]() {
+void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+  profile_.create_order_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       auto response = server::oms::Response{

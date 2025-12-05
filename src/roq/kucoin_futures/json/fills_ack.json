@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/Positions",
+  "name": "roq/kucoin_futures/json/FillsAck",
   "type": "dictionary",
   "values": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "name": "data",
-      "type": "roq/kucoin_futures/json/PositionsData",
+      "type": "roq/kucoin_futures/json/FillsAckDataItem",
       "array": "std/span"
     }
   ]

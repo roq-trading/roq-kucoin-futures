@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/OrderBookDataItem",
+  "name": "roq/kucoin_futures/json/OrderBookAckDataBidsAsksItem",
   "type": "by_index",
   "values": [
     {

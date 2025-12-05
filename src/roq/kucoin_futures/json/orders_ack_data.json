@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/OrdersData",
+  "name": "roq/kucoin_futures/json/OrdersAckData",
   "type": "dictionary",
   "values": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "name": "items",
-      "type": "roq/kucoin_futures/json/OrdersDataItem",
+      "type": "roq/kucoin_futures/json/OrdersAckDataItemsItem",
       "array": "std/span"
     }
   ]

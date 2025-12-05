@@ -1,5 +1,5 @@
 {
-  "name": "roq/kucoin_futures/json/PositionsData",
+  "name": "roq/kucoin_futures/json/PositionsAckDataItem",
   "type": "dictionary",
   "values": [
     {

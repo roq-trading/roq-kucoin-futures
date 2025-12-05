@@ -1,7 +1,5 @@
 /* Copyright (c) 2017-2025, Hans Erik Thrane */
 
-#include <cmath>
-
 #include <catch2/catch_all.hpp>
 
 #include "roq/kucoin_futures/json/encoder.hpp"
