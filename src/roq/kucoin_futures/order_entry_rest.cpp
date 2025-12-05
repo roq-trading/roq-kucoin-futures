@@ -587,7 +587,6 @@ void OrderEntryREST::operator()(Trace<json::OrdersAck> const &event) {
         .update_type = UpdateType::SNAPSHOT,
         .sending_time_utc = {},
     };
-    log::warn("DEBUG order_update={}"sv, order_update);
     Trace event_2{trace_info, order_update};
     (*this)(event_2, item.client_oid);
   }
@@ -683,7 +682,6 @@ void OrderEntryREST::operator()(Trace<json::FillsAck> const &event) {
         .user = {},
         .strategy_id = {},
     };
-    log::warn("DEBUG trade_update={}"sv, trade_update);
     // create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
   }
 }
