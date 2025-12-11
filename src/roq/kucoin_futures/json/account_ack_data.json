@@ -41,6 +41,10 @@
     {
       "name": "maxWithdrawAmount",
       "type": "std/double"
+    },
+    {
+      "name": "availableMargin",
+      "type": "std/double"
     }
   ]
 }

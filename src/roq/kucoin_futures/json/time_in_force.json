@@ -4,6 +4,15 @@
   "values": [
     {
       "name": "GTC"
+    },
+    {
+      "name": "IOC"
+    },
+    {
+      "name": "FOK"
+    },
+    {
+      "name": "GTT"
     }
   ]
 }

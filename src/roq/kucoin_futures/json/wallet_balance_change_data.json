@@ -65,6 +65,10 @@
     {
       "name": "timestamp",
       "type": "std/milliseconds"
+    },
+    {
+      "name": "availableMargin",
+      "type": "std/double"
     }
   ]
 }

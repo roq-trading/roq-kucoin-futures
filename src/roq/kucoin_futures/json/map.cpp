@@ -244,12 +244,21 @@ constexpr Helper<kucoin_futures::json::TimeInForce>::operator std::optional<roq:
       return roq::TimeInForce::UNDEFINED;
     case GTC:
       return roq::TimeInForce::GTC;
+    case IOC:
+      return roq::TimeInForce::IOC;
+    case FOK:
+      return roq::TimeInForce::FOK;
+    case GTT:
+      return roq::TimeInForce::UNDEFINED;
   }
   return {};
 }
 
 static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL}} == roq::TimeInForce::UNDEFINED);
 static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::GTC}} == roq::TimeInForce::GTC);
+static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::IOC}} == roq::TimeInForce::IOC);
+static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::FOK}} == roq::TimeInForce::FOK);
+static_assert(Helper{kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::GTT}} == roq::TimeInForce::UNDEFINED);
 
 template <>
 template <>
@@ -273,7 +282,7 @@ constexpr Helper<roq::MarginMode>::operator std::optional<kucoin_futures::json::
     case CROSS:
       return kucoin_futures::json::MarginMode::CROSS;
     case PORTFOLIO:
-      break;  // note!
+      return kucoin_futures::json::MarginMode::ISOLATED;  // note! default
   }
   return {};
 }
@@ -281,6 +290,7 @@ constexpr Helper<roq::MarginMode>::operator std::optional<kucoin_futures::json::
 static_assert(Helper{roq::MarginMode::UNDEFINED} == kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::ISOLATED});
 static_assert(Helper{roq::MarginMode::ISOLATED} == kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::ISOLATED});
 static_assert(Helper{roq::MarginMode::CROSS} == kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::CROSS});
+static_assert(Helper{roq::MarginMode::PORTFOLIO} == kucoin_futures::json::MarginMode{kucoin_futures::json::MarginMode::ISOLATED});
 
 template <>
 template <>
@@ -352,37 +362,49 @@ constexpr Helper<roq::TimeInForce>::operator std::optional<kucoin_futures::json:
     case UNDEFINED:
       return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GFD:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GTC:
       return kucoin_futures::json::TimeInForce::GTC;
     case OPG:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case IOC:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::IOC;
     case FOK:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::FOK;
     case GTX:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GTD:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case AT_THE_CLOSE:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GOOD_THROUGH_CROSSING:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case AT_CROSSING:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GOOD_FOR_TIME:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GFA:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
     case GFM:
-      break;  // note!
+      return kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL;
   }
   return {};
 }
 
 static_assert(Helper{roq::TimeInForce::UNDEFINED} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GFD} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
 static_assert(Helper{roq::TimeInForce::GTC} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::GTC});
+static_assert(Helper{roq::TimeInForce::OPG} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::IOC} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::IOC});
+static_assert(Helper{roq::TimeInForce::FOK} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::FOK});
+static_assert(Helper{roq::TimeInForce::GTX} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GTD} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::AT_THE_CLOSE} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GOOD_THROUGH_CROSSING} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::AT_CROSSING} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GOOD_FOR_TIME} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GFA} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
+static_assert(Helper{roq::TimeInForce::GFM} == kucoin_futures::json::TimeInForce{kucoin_futures::json::TimeInForce::UNDEFINED_INTERNAL});
 
 template <>
 template <>
