@@ -315,6 +315,14 @@
     {
       "name": "orderPriceRange",
       "type": "std/double"
+    },
+    {
+      "name": "displaySymbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "displayBaseCurrency",
+      "type": "std/string_view"
     }
   ]
 }

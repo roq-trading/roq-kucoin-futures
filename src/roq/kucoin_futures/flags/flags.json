@@ -10,6 +10,12 @@
       "description": "Exchange identifier"
     },
     {
+      "name": "ws_api",
+      "type": "std/bool",
+      "default": false,
+      "description": "Use WebSocket API?"
+    },
+    {
       "name": "margin_mode",
       "type": "std/string",
       "description": "Default margin_mode (when CreateOrder doesn't explicitly specify)"

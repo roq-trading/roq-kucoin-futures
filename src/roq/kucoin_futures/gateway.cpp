@@ -40,7 +40,7 @@ template <typename R>
 R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &account_by_account, Shared &shared) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
-  if (shared.settings.misc.test_wsapi && !std::empty(shared.settings.ws.uri)) {
+  if (shared.settings.ws_api && !std::empty(shared.settings.ws.uri)) {
     for (auto &[name, account] : account_by_account) {
       result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryWS>(gateway, context, ++stream_id, *account, shared));
     }
@@ -276,7 +276,7 @@ OrderEntry &Gateway::get_order_entry_ws(std::string_view const &account) {
 }
 
 OrderEntry &Gateway::get_order_entry(std::string_view const &account) {
-  if (shared_.settings.misc.test_wsapi) {
+  if (shared_.settings.ws_api) {
     return get_order_entry_ws(account);
   }
   return get_order_entry_rest(account);
