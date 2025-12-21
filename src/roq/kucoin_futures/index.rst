@@ -208,7 +208,7 @@ Configuration
 
 .. code-block:: shell
 
-   $ --flagfile $CONDA_PREFIX/share/roq-kucoin-futures/config.toml
+   $ --config_file $CONDA_PREFIX/share/roq-kucoin-futures/config.toml
 
 .. important::
 
