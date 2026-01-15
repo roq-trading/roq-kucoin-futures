@@ -41,7 +41,7 @@ std::string_view Encoder::add_order(
       margin_mode.as_raw_text(),
       type.as_raw_text());
   if (create_order.execution_instructions.has(ExecutionInstruction::PARTICIPATE_DO_NOT_INITIATE)) {
-    fmt::format_to(std::back_inserter(buffer), R"("postOnly":true)"sv);
+    fmt::format_to(std::back_inserter(buffer), R"(,"postOnly":true)"sv);
   }
   switch (create_order.order_type) {
     using enum roq::OrderType;
