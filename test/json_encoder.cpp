@@ -157,6 +157,56 @@ TEST_CASE("create_ioc", "[json_add_order]") {
                  R"(})"sv);
 }
 
+TEST_CASE("create_post_only", "[json_add_order]") {
+  std::string buffer;
+  auto create_order = CreateOrder{
+      .account = {},
+      .order_id = {},
+      .exchange = {},
+      .symbol = "XBTUSDTM"sv,
+      .side = Side::BUY,
+      .position_effect = {},
+      .margin_mode = MarginMode::ISOLATED,
+      .quantity_type = {},
+      .max_show_quantity = NaN,
+      .order_type = OrderType::LIMIT,
+      .time_in_force = TimeInForce::IOC,
+      .execution_instructions = {ExecutionInstruction::PARTICIPATE_DO_NOT_INITIATE},
+      .request_template = {},
+      .quantity = 1.0,
+      .price = 32000.0,
+      .stop_price = NaN,
+      .leverage = NaN,
+      .routing_id = {},
+      .strategy_id = {},
+  };
+  server::oms::Order order;
+  order.quantity_precision = {
+      .increment = 1.0,
+      .precision = Precision::_0,
+  };
+  order.price_precision = {
+      .increment = 0.1,
+      .precision = Precision::_1,
+  };
+  auto request_id = "1234"sv;
+  auto message = json::Encoder::add_order(buffer, create_order, order, request_id, {});
+  CHECK(
+      message == R"({)"
+                 R"("clientOid":"1234",)"
+                 R"("symbol":"XBTUSDTM",)"
+                 R"("side":"buy",)"
+                 R"("marginMode":)"
+                 R"("ISOLATED",)"
+                 R"("type":"limit",)"
+                 R"("postOnly":true,)"
+                 R"("timeInForce":"IOC",)"
+                 R"("reduceOnly":false,)"
+                 R"("size":"1",)"
+                 R"("price":"32000.0")"
+                 R"(})"sv);
+}
+
 // WSAPI
 
 TEST_CASE("ws_create_market", "[json_encoder]") {
