@@ -45,7 +45,6 @@ auto create_name(auto stream_id, auto &account) {
 auto create_connection(auto &handler, auto &settings, auto &context, auto &account) {
   io::web::URI uri_{settings.ws.uri};
   auto query = account.create_ws_query();
-  log::warn("DEBUG uri={}, query={}"sv, uri_, query);
   auto config = web::socket::Client::Config{
       // connection
       .interface = {},
@@ -115,7 +114,6 @@ void OrderEntryWS::operator()(Event<Stop> const &) {
 void OrderEntryWS::operator()(Event<Timer> const &event) {
   auto now = event.value.now;
   (*connection_).refresh(now);
-  // log::warn("DEBUG ready={}, welcome={}, ping_freq={}"sv, (*connection_).ready(), welcome_, ping_freq_);
   if ((*connection_).ready()) {
     if (welcome_) {
       if (next_ping_ < now) {
@@ -246,13 +244,11 @@ void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
       R"("op":"ping")"
       R"(}})"sv,
       now.count());
-  log::warn("DEBUG {}"sv, message);
   (*connection_).send_text(message);
 }
 
 void OrderEntryWS::parse(std::string_view const &message) {
   profile_.parse([&]() {
-    log::warn("DEBUG {}"sv, message);
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
@@ -270,7 +266,6 @@ void OrderEntryWS::operator()(Trace<json::WSAuth> const &event, std::string_view
   profile_.auth([&]() {
     auto &[trace_info, auth] = event;
     log::info<1>("auth={}"sv, auth);
-    log::warn("DEBUG auth={}"sv, auth);
     auto response = account_.create_ws_auth(message);
     (*connection_).send_text(response);
     (*this)(ConnectionStatus::DOWNLOADING);
@@ -281,7 +276,6 @@ void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("welcome={}"sv, welcome);
-    log::warn("DEBUG welcome={}"sv, welcome);
     welcome_ = true;
     assert(welcome.ping_interval.count());
     ping_freq_ = welcome.ping_interval;
@@ -300,7 +294,6 @@ void OrderEntryWS::operator()(Trace<json::WSPong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
     log::info<4>("pong={}"sv, pong);
-    log::warn("DEBUG pong={}"sv, pong);
   });
 }
 
@@ -308,7 +301,6 @@ void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
   profile_.add_order_ack([&]() {
     auto &[trace_info, add_order_ack] = event;
     log::info<4>("add_order_ack={}"sv, add_order_ack);
-    log::warn("DEBUG add_order_ack={}"sv, add_order_ack);
   });
 }
 
@@ -316,7 +308,6 @@ void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, cancel_order_ack] = event;
     log::info<4>("cancel_order_ack={}"sv, cancel_order_ack);
-    log::warn("DEBUG cancel_order_ack={}"sv, cancel_order_ack);
   });
 }
 

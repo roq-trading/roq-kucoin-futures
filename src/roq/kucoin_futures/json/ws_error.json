@@ -9,6 +9,22 @@
     {
       "name": "msg",
       "type": "std/string_view"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view"
+    },
+    {
+      "name": "op",
+      "type": "std/string_view"
+    },
+    {
+      "name": "inTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "outTime",
+      "type": "std/milliseconds"
     }
   ]
 }
