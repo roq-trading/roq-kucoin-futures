@@ -30,6 +30,7 @@ set(SOURCES
     json_token.cpp
     json_wallet_balance_change.cpp
     json_withdraw_hold_change.cpp
+    json_ws_error.cpp
     main.cpp)
 
 roq_gitignore(OUTPUT .gitignore SOURCES ${TARGET_NAME})

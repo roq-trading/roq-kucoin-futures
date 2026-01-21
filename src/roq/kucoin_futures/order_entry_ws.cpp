@@ -249,6 +249,7 @@ void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
 
 void OrderEntryWS::parse(std::string_view const &message) {
   profile_.parse([&]() {
+    log::warn("DEBUG {}"sv, message);
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
@@ -286,6 +287,36 @@ void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
 void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
   profile_.error([&]() {
     auto &[trace_info, error] = event;
+    auto helper = [&](auto request_type) {
+      auto error_2 = json::guess_error(error.code);
+      auto response = server::oms::Response{
+          .request_type = request_type,
+          .origin = Origin::EXCHANGE,
+          .request_status = RequestStatus::REJECTED,
+          .error = error_2,
+          .text = error.msg,
+          .version = {},
+          .request_id = error.id,
+          .external_order_id = {},
+          .quantity = NaN,
+          .price = NaN,
+      };
+      log::warn("response={}"sv, response);
+      shared_.update_order(error.id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+    };
+    switch (error.op) {
+      using enum json::WSOp::type_t;
+      case UNDEFINED_INTERNAL:
+      case UNKNOWN_INTERNAL:
+      case PONG:
+        break;
+      case ADD_ORDER_ACK:
+        helper(RequestType::CREATE_ORDER);
+        return;  // note!
+      case CANCEL_ORDER_ACK:
+        helper(RequestType::CANCEL_ORDER);
+        return;  // note!
+    }
     log::error("error={}"sv, error);
   });
 }

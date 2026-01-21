@@ -16,7 +16,11 @@
     },
     {
       "name": "op",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/json/WSOp"
+    },
+    {
+      "name": "userRateLimit",
+      "type": "roq/kucoin_futures/json/WSUserRateLimit"
     },
     {
       "name": "inTime",
