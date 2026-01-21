@@ -332,6 +332,20 @@ void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
   profile_.add_order_ack([&]() {
     auto &[trace_info, add_order_ack] = event;
     log::info<4>("add_order_ack={}"sv, add_order_ack);
+    auto response = server::oms::Response{
+        .request_type = RequestType::CREATE_ORDER,
+        .origin = Origin::EXCHANGE,
+        .request_status = RequestStatus::ACCEPTED,
+        .error = {},
+        .text = {},
+        .version = {},
+        .request_id = add_order_ack.id,
+        .external_order_id = add_order_ack.data.order_id,
+        .quantity = NaN,
+        .price = NaN,
+    };
+    log::warn("response={}"sv, response);
+    shared_.update_order(add_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
 
@@ -339,6 +353,20 @@ void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, cancel_order_ack] = event;
     log::info<4>("cancel_order_ack={}"sv, cancel_order_ack);
+    auto response = server::oms::Response{
+        .request_type = RequestType::CANCEL_ORDER,
+        .origin = Origin::EXCHANGE,
+        .request_status = RequestStatus::ACCEPTED,
+        .error = {},
+        .text = {},
+        .version = {},
+        .request_id = cancel_order_ack.id,
+        .external_order_id = {},
+        .quantity = NaN,
+        .price = NaN,
+    };
+    log::warn("response={}"sv, response);
+    shared_.update_order(cancel_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
 

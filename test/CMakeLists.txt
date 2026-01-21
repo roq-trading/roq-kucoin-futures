@@ -30,6 +30,8 @@ set(SOURCES
     json_token.cpp
     json_wallet_balance_change.cpp
     json_withdraw_hold_change.cpp
+    json_ws_add_order_ack.cpp
+    json_ws_cancel_order_ack.cpp
     json_ws_error.cpp
     main.cpp)
 
