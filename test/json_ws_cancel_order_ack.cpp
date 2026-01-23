@@ -11,7 +11,7 @@ using namespace std::literals;
 
 using value_type = json::WSCancelOrderAck;
 
-TEST_CASE("success", "[json_ws_add_order_ack]") {
+TEST_CASE("success", "[json_ws_cancel_order_ack]") {
   auto message = R"({)"
                  R"("id":"1AACM_ObhU0AAgAAAAAA",)"
                  R"("op":"futures.cancel",)"
@@ -28,10 +28,10 @@ TEST_CASE("success", "[json_ws_add_order_ack]") {
                  R"(})"
                  R"(})";
   auto helper = [](value_type const &obj) {
-    CHECK(obj.id == "IAACgxI9hU0AAQAAAAAA"sv);
+    CHECK(obj.id == "1AACM_ObhU0AAgAAAAAA"sv);
     CHECK(obj.op == json::WSOp::CANCEL_ORDER_ACK);
     CHECK(obj.code == 200000);
-    // CHECK(obj.data.client_order_id == "1wACM_ObhU0AAQAAAAAA"sv);
+    CHECK(obj.data.client_oid == "1wACM_ObhU0AAQAAAAAA"sv);
   };
   WSParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }
