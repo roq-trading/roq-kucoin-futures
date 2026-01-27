@@ -376,7 +376,7 @@ void Rest::operator()(Trace<json::ContractsAck> const &event) {
       log::info<1>(R"(Drop symbol="{}")"sv, item.symbol);
       continue;
     }
-    if (all_symbols_.emplace(symbol).second) {  // only include new
+    if (shared_.all_symbols.emplace(symbol).second) {  // only include new
       symbols.emplace_back(symbol);
     }
     ++counter;
@@ -393,7 +393,7 @@ void Rest::operator()(Trace<json::ContractsAck> const &event) {
   // market status
   for (auto &item : contracts_ack.data) {
     auto &symbol = item.symbol;
-    if (all_symbols_.find(symbol) == std::end(all_symbols_)) {
+    if (shared_.all_symbols.find(symbol) == std::end(shared_.all_symbols)) {
       continue;
     }
     auto trading_status = [&]() -> TradingStatus {
