@@ -202,6 +202,33 @@ Environments
    .. include:: flags/test/flags.cfg
      :code: shell
 
+.. tab:: Colo1
+
+   .. code-block:: shell
+
+      $ --flagfile $CONDA_PREFIX/share/roq-kucoin-futures/flags/colo1/flags.cfg
+
+   .. include:: flags/colo1/flags.cfg
+     :code: shell
+
+.. tab:: Colo2
+
+   .. code-block:: shell
+
+      $ --flagfile $CONDA_PREFIX/share/roq-kucoin-futures/flags/colo2/flags.cfg
+
+   .. include:: flags/colo2/flags.cfg
+     :code: shell
+
+.. tab:: Colo3
+
+   .. code-block:: shell
+
+      $ --flagfile $CONDA_PREFIX/share/roq-kucoin-futures/flags/colo3/flags.cfg
+
+   .. include:: flags/colo3/flags.cfg
+     :code: shell
+
 
 Configuration
 -------------
