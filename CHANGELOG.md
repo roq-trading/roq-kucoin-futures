@@ -4,6 +4,8 @@ All notable changes will be documented in this file.
 
 ## Head
 
+## 1.1.2 &ndash; 2026-02-08
+
 ### Changed
 
 * Renamed flag: `--ws_api` (from: `--test_wsapi`)
@@ -14,7 +16,7 @@ All notable changes will be documented in this file.
 * postOnly was missing from new order (#544)
 
 
-## 1.1.1 &ndash; 20251214
+## 1.1.1 &ndash; 2025-12-14
 
 ## 1.1.0 &ndash; 2025-11-22
 
