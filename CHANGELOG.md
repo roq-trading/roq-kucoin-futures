@@ -10,7 +10,9 @@ All notable changes will be documented in this file.
 
 ### Fixed
 
+* Fixing market data timestamps (#558)
 * postOnly was missing from new order (#544)
+
 
 ## 1.1.1 &ndash; 20251214
 

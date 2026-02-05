@@ -357,7 +357,7 @@ void MarketData::operator()(Trace<json::TickerV2> const &event) {
         .update_type = UpdateType::SNAPSHOT,
         .exchange_time_utc = data.ts,
         .exchange_sequence = {},
-        .sending_time_utc = ticker_v2.sn,
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, top_of_book, true);
   });
@@ -384,7 +384,7 @@ void MarketData::operator()(Trace<json::Match> const &event) {
         .trades = {&trade, 1},
         .exchange_time_utc = data.ts,
         .exchange_sequence = data.sequence,
-        .sending_time_utc = match.sn,
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
   });
@@ -412,7 +412,7 @@ void MarketData::operator()(Trace<json::Execution> const &event) {
         .symbol = data.symbol,
         .trades = {&trade, 1},
         .exchange_time_utc = data.ts,
-        .exchange_sequence = execution.sn,
+        .exchange_sequence = {},
         .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, trade_summary, true);
@@ -517,7 +517,7 @@ void MarketData::operator()(Trace<json::Level2> const &event) {
             .bids = bids,
             .asks = asks,
             .update_type = update_type,
-            .exchange_time_utc = {},
+            .exchange_time_utc = data.timestamp,
             .exchange_sequence = exchange_sequence,
             .sending_time_utc = {},
             .price_precision = {},

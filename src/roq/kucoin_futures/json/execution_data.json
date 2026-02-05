@@ -24,7 +24,8 @@
     },
     {
       "name": "ts",
-      "type": "std/milliseconds"
+      "type": "std/nanoseconds",
+      "comment": "not sure..."
     }
   ]
 }

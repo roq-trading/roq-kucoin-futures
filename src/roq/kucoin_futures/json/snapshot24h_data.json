@@ -39,6 +39,10 @@
       "type": "std/double"
     },
     {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
       "name": "ts",
       "type": "std/nanoseconds"
     }

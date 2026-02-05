@@ -16,7 +16,8 @@
     },
     {
       "name": "sn",
-      "type": "std/milliseconds"
+      "type": "std/milliseconds",
+      "comment": "looks weird..."
     },
     {
       "name": "data",
