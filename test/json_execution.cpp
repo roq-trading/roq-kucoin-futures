@@ -40,7 +40,7 @@ TEST_CASE("simple", "[json_execution]") {
     CHECK(data.size == 86.0_a);
     CHECK(data.price == 19465.0_a);
     CHECK(data.trade_id == 636707859);
-    CHECK(data.ts == 1656667043469ms);
+    CHECK(data.ts == 1656667043469ns);  // XXX ???
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }

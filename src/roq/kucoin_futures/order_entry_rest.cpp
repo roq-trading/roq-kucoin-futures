@@ -570,6 +570,8 @@ void OrderEntryREST::operator()(Trace<json::OrdersAck> const &event) {
         .external_order_id = item.id,
         .client_order_id = item.client_oid,
         .order_status = order_status,
+        .error = {},
+        .text = {},
         .quantity = item.size,
         .price = item.price,
         .stop_price = item.stop_price,
