@@ -12,6 +12,28 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
+namespace {
+auto create_ref_data() {
+  auto ref_data = server::oms::RefData{
+      .security_type = {},
+      .external_security_id = {},
+      .multiplier = NaN,
+      .quantity = {},
+      .price = {},
+      .has_tick_size_steps = false,
+  };
+  ref_data.quantity = {
+      .increment = 1.0,
+      .precision = Precision::_0,
+  };
+  ref_data.price = {
+      .increment = 0.1,
+      .precision = Precision::_1,
+  };
+  return ref_data;
+}
+}  // namespace
+
 // REST
 
 TEST_CASE("create_market", "[json_encoder]") {
@@ -38,16 +60,9 @@ TEST_CASE("create_market", "[json_encoder]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -84,16 +99,9 @@ TEST_CASE("create_limit", "[json_add_order]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -132,16 +140,9 @@ TEST_CASE("create_ioc", "[json_add_order]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -181,16 +182,9 @@ TEST_CASE("create_post_only", "[json_add_order]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -233,16 +227,9 @@ TEST_CASE("ws_create_market", "[json_encoder]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::ws_add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("id":"1234",)"
@@ -283,16 +270,9 @@ TEST_CASE("ws_create_ioc", "[json_encoder]") {
       .strategy_id = {},
   };
   server::oms::Order order;
-  order.quantity_precision = {
-      .increment = 1.0,
-      .precision = Precision::_0,
-  };
-  order.price_precision = {
-      .increment = 0.1,
-      .precision = Precision::_1,
-  };
+  auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::ws_add_order(buffer, create_order, order, request_id, {});
+  auto message = json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("id":"1234",)"

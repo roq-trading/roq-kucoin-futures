@@ -153,8 +153,8 @@ void OrderEntryREST::operator()(metrics::Writer &writer) const {
 }
 
 uint16_t OrderEntryREST::operator()(
-    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &, std::string_view const &request_id) {
-  create_order(event, order, request_id);
+    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
+  create_order(event, order, ref_data, request_id);
   return stream_id_;
 }
 
@@ -170,10 +170,10 @@ uint16_t OrderEntryREST::operator()(
 uint16_t OrderEntryREST::operator()(
     Event<CancelOrder> const &event,
     server::oms::Order const &order,
-    server::oms::RefData const &,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     std::string_view const &previous_request_id) {
-  cancel_order(event, order, request_id, previous_request_id);
+  cancel_order(event, order, ref_data, request_id, previous_request_id);
   return stream_id_;
 }
 
@@ -696,7 +696,8 @@ void OrderEntryREST::operator()(Trace<json::FillsAck> const &event) {
 
 // create-order
 
-void OrderEntryREST::create_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+void OrderEntryREST::create_order(
+    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   profile_.create_order([&]() {
     if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
@@ -704,7 +705,7 @@ void OrderEntryREST::create_order(Event<CreateOrder> const &event, server::oms::
     auto &[message_info, create_order] = event;
     auto method = web::http::Method::POST;
     auto path = shared_.api.rest_private.add_order;
-    auto body = json::Encoder::add_order(encode_buffer_, create_order, order, request_id, shared_.margin_mode);
+    auto body = json::Encoder::add_order(encode_buffer_, create_order, order, ref_data, request_id, shared_.margin_mode);
     log::debug(R"(body="{}")"sv, body);
     auto headers = account_.create_headers(method, path, {}, body);
     auto request = web::rest::Request{
@@ -771,6 +772,7 @@ void OrderEntryREST::operator()(Trace<json::AddOrderAck> const &event, uint8_t u
 void OrderEntryREST::cancel_order(
     Event<CancelOrder> const &event,
     server::oms::Order const &order,
+    server::oms::RefData const &,
     std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {

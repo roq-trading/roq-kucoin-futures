@@ -16,7 +16,8 @@ namespace json {
 std::string_view Encoder::add_order(
     std::string &buffer,
     CreateOrder const &create_order,
-    server::oms::Order const &order,
+    server::oms::Order const &,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     roq::MarginMode default_margin_mode) {
   buffer.clear();
@@ -54,7 +55,7 @@ std::string_view Encoder::add_order(
           R"(,"reduceOnly":{})"
           R"(,"size":"{}")"sv,
           reduce_only,
-          Decimal{create_order.quantity, order.quantity_precision.precision});
+          Decimal{create_order.quantity, ref_data.quantity.precision});
       break;
     case LIMIT: {
       auto time_in_force = map(create_order.time_in_force).template get<json::TimeInForce>();
@@ -66,8 +67,8 @@ std::string_view Encoder::add_order(
           R"(,"price":"{}")"sv,
           time_in_force.as_raw_text(),
           reduce_only,
-          Decimal{create_order.quantity, order.quantity_precision.precision},
-          Decimal{create_order.price, order.price_precision.precision});
+          Decimal{create_order.quantity, ref_data.quantity.precision},
+          Decimal{create_order.price, ref_data.price.precision});
       break;
     }
   }
@@ -78,8 +79,13 @@ std::string_view Encoder::add_order(
 // WSAPI
 
 std::string_view Encoder::ws_add_order(
-    std::string &buffer, CreateOrder const &create_order, server::oms::Order const &order, std::string_view const &request_id, roq::MarginMode margin_mode) {
-  auto args = add_order(buffer, create_order, order, request_id, margin_mode);
+    std::string &buffer,
+    CreateOrder const &create_order,
+    server::oms::Order const &order,
+    server::oms::RefData const &ref_data,
+    std::string_view const &request_id,
+    roq::MarginMode margin_mode) {
+  auto args = add_order(buffer, create_order, order, ref_data, request_id, margin_mode);
   // note! just overwrite
   buffer = fmt::format(
       R"({{)"
@@ -96,6 +102,7 @@ std::string_view Encoder::ws_cancel_order(
     std::string &buffer,
     CancelOrder const &,
     server::oms::Order const &order,
+    server::oms::RefData const &,
     std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   buffer.clear();
