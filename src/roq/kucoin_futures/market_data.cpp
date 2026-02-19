@@ -318,6 +318,11 @@ void MarketData::operator()(Trace<json::Error> const &event) {
     auto &[trace_info, error] = event;
     log::warn("error={}"sv, error);
     // log::fatal("event={{error={}, trace_info={}}}"sv, error, trace_info);
+    if (error.code == 401 && error.data == "token is expired"sv) {
+      if (shared_.settings.misc.experimental_crash_on_expired_token) {
+        log::fatal("Abort: error={}"sv, error);
+      }
+    }
   });
 }
 

@@ -297,10 +297,12 @@ void DropCopy::operator()(Trace<json::Welcome> const &event) {
 // error={code=401, type=ERROR, data="token is expired", id="6994840b250b9710dca3a3c1"}
 void DropCopy::operator()(Trace<json::Error> const &event) {
   profile_.error([&]() {
-    // XXX HANS DEBUG
     auto &[trace_info, error] = event;
     log::error("error={}"sv, error);
     if (error.code == 401 && error.data == "token is expired"sv) {
+      if (shared_.settings.misc.experimental_crash_on_expired_token) {
+        log::fatal("Abort: error={}"sv, error);
+      }
     }
   });
 }
