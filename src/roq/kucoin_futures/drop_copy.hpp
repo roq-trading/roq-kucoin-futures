@@ -65,6 +65,8 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   void operator()(web::socket::Client::Latency const &) override;
   void operator()(web::socket::Client::Text const &) override;
   void operator()(web::socket::Client::Binary const &) override;
+  //
+  std::string_view get_query() const override { return query_; }
 
  private:
   void operator()(ConnectionStatus);
@@ -110,6 +112,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   uint16_t const stream_id_;
   std::string const name_;
   // web socket
+  std::string query_;
   std::unique_ptr<web::socket::Client> const connection_;
   std::chrono::nanoseconds const ping_frequency_;
   // buffers

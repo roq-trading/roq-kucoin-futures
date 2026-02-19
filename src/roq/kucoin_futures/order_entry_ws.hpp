@@ -73,6 +73,8 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   void operator()(web::socket::Client::Latency const &) override;
   void operator()(web::socket::Client::Text const &) override;
   void operator()(web::socket::Client::Binary const &) override;
+  //
+  std::string_view get_query() const override { return query_; }
 
  private:
   void operator()(ConnectionStatus);
@@ -94,6 +96,7 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   uint16_t const stream_id_;
   std::string const name_;
   // web socket
+  std::string query_;
   std::unique_ptr<web::socket::Client> const connection_;
   // buffers
   core::json::BufferStack decode_buffer_;

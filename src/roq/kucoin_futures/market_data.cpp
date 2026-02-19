@@ -47,7 +47,7 @@ auto create_name(auto stream_id) {
   return fmt::format("{}:{}"sv, stream_id, NAME);
 }
 
-auto create_connection(auto &handler, auto &settings, auto &context, auto const &uri, auto const &query) {
+auto create_connection(auto &handler, auto &settings, auto &context, auto const &uri) {
   io::web::URI uri_{uri};
   auto config = web::socket::Client::Config{
       // connection
@@ -62,7 +62,6 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto const 
       // proxy
       .proxy = {},
       // http
-      .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
       .request_timeout = {},
       .ping_frequency = settings.ws.ping_freq,
@@ -89,9 +88,8 @@ MarketData::MarketData(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index}, ping_frequency_{ping_frequency},
-      connection_{create_connection(*this, shared.settings, context, uri, query)},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index}, ping_frequency_{ping_frequency}, query_{query},
+      connection_{create_connection(*this, shared.settings, context, uri)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),

@@ -41,7 +41,7 @@ auto create_name(auto stream_id, auto &account) {
   return fmt::format("{}:{}:{}"sv, stream_id, NAME, account.name);
 }
 
-auto create_connection(auto &handler, auto &settings, auto &context, auto &uri, auto &query) {
+auto create_connection(auto &handler, auto &settings, auto &context, auto &uri) {
   io::web::URI uri_{uri};
   auto config = web::socket::Client::Config{
       // connection
@@ -56,7 +56,6 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto &uri, 
       // proxy
       .proxy = {},
       // http
-      .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
       .request_timeout = {},
       .ping_frequency = settings.ws.ping_freq,
@@ -83,8 +82,8 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
-      connection_{create_connection(*this, shared.settings, context, uri, query)}, ping_frequency_{ping_frequency},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, query_{query},
+      connection_{create_connection(*this, shared.settings, context, uri)}, ping_frequency_{ping_frequency},
       decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
@@ -288,11 +287,14 @@ void DropCopy::operator()(Trace<json::Welcome> const &event) {
 }
 
 // error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
+// error={code=401, type=ERROR, data="token is expired", id="6994840b250b9710dca3a3c1"}
 void DropCopy::operator()(Trace<json::Error> const &event) {
   profile_.error([&]() {
     // XXX HANS DEBUG
     auto &[trace_info, error] = event;
     log::error("error={}"sv, error);
+    if (error.code == 401 && error.data == "token is expired"sv) {
+    }
   });
 }
 

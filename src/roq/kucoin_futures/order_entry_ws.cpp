@@ -42,9 +42,12 @@ auto create_name(auto stream_id, auto &account) {
   return fmt::format("{}:{}:{}"sv, stream_id, NAME, account.name);
 }
 
-auto create_connection(auto &handler, auto &settings, auto &context, auto &account) {
+auto create_query(auto &account) {
+  return account.create_ws_query();
+}
+
+auto create_connection(auto &handler, auto &settings, auto &context) {
   io::web::URI uri_{settings.ws.uri};
-  auto query = account.create_ws_query();
   auto config = web::socket::Client::Config{
       // connection
       .interface = {},
@@ -58,7 +61,6 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto &accou
       // proxy
       .proxy = {},
       // http
-      .query = query,
       .user_agent = ROQ_PACKAGE_NAME,
       .request_timeout = {},
       .ping_frequency = settings.ws.ping_freq,
@@ -77,9 +79,8 @@ struct create_metrics final : public utils::metrics::Factory {
 // === IMPLEMENTATION ===
 
 OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
-      connection_{create_connection(*this, shared.settings, context, account)},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, query_{create_query(account)},
+      connection_{create_connection(*this, shared.settings, context)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },

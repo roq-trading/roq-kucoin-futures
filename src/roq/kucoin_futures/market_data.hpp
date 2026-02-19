@@ -72,6 +72,8 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
   void operator()(web::socket::Client::Latency const &) override;
   void operator()(web::socket::Client::Text const &) override;
   void operator()(web::socket::Client::Binary const &) override;
+  //
+  std::string_view get_query() const override { return query_; }
 
  private:
   void operator()(ConnectionStatus);
@@ -119,6 +121,7 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
   size_t const index_;
   std::chrono::nanoseconds const ping_frequency_;
   // web socket
+  std::string query_;
   std::unique_ptr<web::socket::Client> const connection_;
   // buffers
   core::json::BufferStack decode_buffer_;
