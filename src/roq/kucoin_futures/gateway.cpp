@@ -184,7 +184,7 @@ void Gateway::ensure_symbol_slices(size_t size) {
   }
 }
 
-void Gateway::operator()(OrderEntryREST::PrivateToken const &private_token) {
+void Gateway::operator()(PrivateToken const &private_token) {
   log::debug(R"(uri="{}", query="{}", ping_frequency={})"sv, private_token.uri, private_token.query, private_token.ping_frequency);
   auto account = private_token.account;
   auto &drop_copy = drop_copy_[account];
@@ -195,6 +195,8 @@ void Gateway::operator()(OrderEntryREST::PrivateToken const &private_token) {
     Start start;
     create_event_and_dispatch(*tmp, message_info, start);
     drop_copy = std::move(tmp);
+  } else {
+    (*drop_copy)(private_token);
   }
 }
 

@@ -145,6 +145,13 @@ void DropCopy::operator()(metrics::Writer &writer) const {
       .write(latency_.heartbeat, metrics::Type::LATENCY);
 }
 
+void DropCopy::operator()(PrivateToken const &private_token) {
+  if (!std::empty(private_token.query) && query_ != private_token.query) {
+    query_ = private_token.query;
+    log::warn(R"(DEBUG private_token="{}")"sv, query_);
+  }
+}
+
 void DropCopy::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();

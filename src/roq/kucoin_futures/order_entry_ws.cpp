@@ -256,7 +256,6 @@ void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
 
 void OrderEntryWS::parse(std::string_view const &message) {
   profile_.parse([&]() {
-    log::warn("DEBUG {}"sv, message);
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;

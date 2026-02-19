@@ -87,7 +87,7 @@ struct Gateway final : public server::Handler,
 
   void ensure_symbol_slices(size_t size);
 
-  void operator()(OrderEntryREST::PrivateToken const &) override;
+  void operator()(PrivateToken const &) override;
 
   // utilities
 

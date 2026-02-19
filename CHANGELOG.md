@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 ## Head
 
+### Fixed
+
+* Refresh private token #563
+
 ## 1.1.2 &ndash; 2026-02-08
 
 ### Changed

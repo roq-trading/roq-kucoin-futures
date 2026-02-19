@@ -125,6 +125,14 @@ void OrderEntryREST::operator()(Event<Stop> const &) {
 
 void OrderEntryREST::operator()(Event<Timer> const &event) {
   (*connection_).refresh(event.value.now);
+  if (!ready()) {
+    return;
+  }
+  auto now = event.value.now;
+  if (next_private_token_refresh_ < now) {
+    next_private_token_refresh_ = now + 1min;  // if we need to retry
+    get_private_token();
+  }
 }
 
 void OrderEntryREST::operator()(metrics::Writer &writer) const {
@@ -238,9 +246,14 @@ uint32_t OrderEntryREST::download(OrderEntryState state) {
     case UNDEFINED:
       assert(false);
       break;
-    case PRIVATE_TOKEN:
-      get_private_token();
-      return 1;
+    case PRIVATE_TOKEN: {
+      auto now = clock::get_system();
+      if (next_private_token_refresh_ < now) {
+        get_private_token();
+        return 1;
+      }
+      return 0;
+    }
     case ACCOUNT:
       get_account();
       return 1;
@@ -296,20 +309,27 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
   profile_.private_token_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
-      download_.retry(STATE);
+      if (download_.downloading()) {
+        download_.retry(STATE);
+      }
     };
     auto handle_success = [&](auto &body) {
-      if (download_.skip(sequence, STATE)) {
+      if (download_.downloading() && download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
         json::Token token{body, decode_buffer_};
         if (token.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, token};
           (*this)(event_2);
+          auto now = clock::get_system();
+          next_private_token_refresh_ = now + shared_.settings.rest.token_refresh_freq;
+          log::warn("DEBUG next_private_token_refresh={}"sv, next_private_token_refresh_);
         } else {
           log::fatal("Unexpected: token={}"sv, token);
         }
-        download_.check(STATE);
+        if (download_.downloading()) {
+          download_.check(STATE);
+        }
       }
     };
     process_response(event, handle_error, handle_success);

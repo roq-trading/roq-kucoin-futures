@@ -23,6 +23,7 @@
 #include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/order_entry.hpp"
 #include "roq/kucoin_futures/order_entry_state.hpp"
+#include "roq/kucoin_futures/private_token.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/token.hpp"
@@ -40,13 +41,6 @@ namespace roq {
 namespace kucoin_futures {
 
 struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handler {
-  struct PrivateToken final {
-    std::string_view account;
-    std::string_view uri;
-    std::string_view query;
-    std::chrono::nanoseconds ping_frequency = {};
-  };
-
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -193,6 +187,8 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
   core::Download<OrderEntryState> download_;
   //
   std::string encode_buffer_;
+  //
+  std::chrono::nanoseconds next_private_token_refresh_ = {};
 };
 
 }  // namespace kucoin_futures

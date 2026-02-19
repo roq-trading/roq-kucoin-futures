@@ -21,6 +21,7 @@
 
 #include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/drop_copy_state.hpp"
+#include "roq/kucoin_futures/private_token.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
@@ -56,6 +57,8 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
+
+  void operator()(PrivateToken const &);
 
  protected:
   void operator()(web::socket::Client::Connected const &) override;
