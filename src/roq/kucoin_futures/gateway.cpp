@@ -27,21 +27,31 @@ R create_accounts(auto const &config) {
 }
 
 template <typename R>
-R create_order_entry_rest(auto &gateway, auto &context, auto &stream_id, auto &account_by_account, Shared &shared) {
+R create_request(auto &config) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
-  for (auto &[name, account] : account_by_account) {
-    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, *account, shared));
+  for (auto &[_, account] : config.accounts) {
+    result.try_emplace(static_cast<std::string_view>(account.name), Request{});
   }
   return result;
 }
 
 template <typename R>
-R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &account_by_account, Shared &shared) {
+R create_order_entry_rest(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared, auto &request) {
+  using result_type = std::remove_cvref_t<R>;
+  result_type result;
+  for (auto &[name, account] : accounts) {
+    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, *account, shared, request[name]));
+  }
+  return result;
+}
+
+template <typename R>
+R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
   if (shared.settings.ws_api && !std::empty(shared.settings.ws.uri)) {
-    for (auto &[name, account] : account_by_account) {
+    for (auto &[name, account] : accounts) {
       result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryWS>(gateway, context, ++stream_id, *account, shared));
     }
   }
@@ -49,10 +59,10 @@ R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &acc
 }
 
 template <typename R>
-R create_drop_copy(auto &account_by_account) {
+R create_drop_copy(auto &accounts) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
-  for (auto &[name, account] : account_by_account) {
+  for (auto &[name, account] : accounts) {
     result.try_emplace(static_cast<std::string_view>(name), nullptr);
   }
   return result;
@@ -62,9 +72,9 @@ R create_drop_copy(auto &account_by_account) {
 // === IMPLEMENTATION ===
 
 Gateway::Gateway(server::Dispatcher &dispatcher, Settings const &settings, Config const &config, io::Context &context)
-    : dispatcher_{dispatcher}, accounts_{create_accounts<decltype(accounts_)>(config)}, context_{context}, shared_{dispatcher, settings},
-      rest_{*this, context_, ++stream_id_, shared_},
-      order_entry_rest_{create_order_entry_rest<decltype(order_entry_rest_)>(*this, context_, stream_id_, accounts_, shared_)},
+    : dispatcher_{dispatcher}, accounts_{create_accounts<decltype(accounts_)>(config)}, request_{create_request<decltype(request_)>(config)}, context_{context},
+      shared_{dispatcher, settings}, rest_{*this, context_, ++stream_id_, shared_},
+      order_entry_rest_{create_order_entry_rest<decltype(order_entry_rest_)>(*this, context_, stream_id_, accounts_, shared_, request_)},
       order_entry_ws_{create_order_entry_ws<decltype(order_entry_ws_)>(*this, context_, stream_id_, accounts_, shared_)},
       drop_copy_{create_drop_copy<decltype(drop_copy_)>(accounts_)} {
 }
@@ -190,7 +200,15 @@ void Gateway::operator()(PrivateToken const &private_token) {
   auto &drop_copy = drop_copy_[account];
   if (!drop_copy) {
     auto tmp = std::make_unique<DropCopy>(
-        *this, context_, ++stream_id_, *accounts_.at(account), shared_, private_token.uri, private_token.query, private_token.ping_frequency);
+        *this,
+        context_,
+        ++stream_id_,
+        *accounts_.at(account),
+        shared_,
+        request_[account],
+        private_token.uri,
+        private_token.query,
+        private_token.ping_frequency);
     MessageInfo message_info;
     Start start;
     create_event_and_dispatch(*tmp, message_info, start);

@@ -24,6 +24,7 @@
 #include "roq/kucoin_futures/order_entry.hpp"
 #include "roq/kucoin_futures/order_entry_state.hpp"
 #include "roq/kucoin_futures/private_token.hpp"
+#include "roq/kucoin_futures/request.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/token.hpp"
@@ -51,7 +52,7 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
     virtual void operator()(PrivateToken const &) = 0;
   };
 
-  OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
+  OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &, Request &);
 
   OrderEntryREST(OrderEntryREST const &) = delete;
 
@@ -145,6 +146,8 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
 
   // helpers
 
+  bool downloading() const { return download_private_token_; }
+
   void process_response(web::rest::Response const &, auto error_handler, auto success_handler);
 
   template <typename... Args>
@@ -182,13 +185,15 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
   Account &account_;
   // cache
   Shared &shared_;
+  Request &request_;
   // state
   ConnectionStatus status_ = {};
   core::Download<OrderEntryState> download_;
   //
   std::string encode_buffer_;
   //
-  std::chrono::nanoseconds next_private_token_refresh_ = {};
+  bool download_private_token_ = false;
+  bool has_downloaded_private_token_ = false;
 };
 
 }  // namespace kucoin_futures

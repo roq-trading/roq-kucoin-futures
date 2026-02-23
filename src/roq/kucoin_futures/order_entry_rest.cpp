@@ -85,7 +85,7 @@ struct create_metrics final : public utils::metrics::Factory {
 
 // === IMPLEMENTATION ===
 
-OrderEntryREST::OrderEntryREST(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
+OrderEntryREST::OrderEntryREST(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared, Request &request)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, connection_{create_connection(*this, shared.settings, context)},
       decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
@@ -112,7 +112,7 @@ OrderEntryREST::OrderEntryREST(Handler &handler, io::Context &context, uint16_t 
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
       },
-      account_{account}, shared_{shared}, download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
+      account_{account}, shared_{shared}, request_{request}, download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
 }
 
 void OrderEntryREST::operator()(Event<Start> const &) {
@@ -124,14 +124,14 @@ void OrderEntryREST::operator()(Event<Stop> const &) {
 }
 
 void OrderEntryREST::operator()(Event<Timer> const &event) {
-  (*connection_).refresh(event.value.now);
+  auto now = event.value.now;
+  (*connection_).refresh(now);
   if (!ready()) {
     return;
   }
-  auto now = event.value.now;
-  if (next_private_token_refresh_ < now) {
-    next_private_token_refresh_ = now + 1min;  // if we need to retry
+  if (!downloading() && request_.respond_private_token < request_.request_private_token) {
     get_private_token();
+    download_private_token_ = true;
   }
 }
 
@@ -247,12 +247,12 @@ uint32_t OrderEntryREST::download(OrderEntryState state) {
       assert(false);
       break;
     case PRIVATE_TOKEN: {
-      auto now = clock::get_system();
-      if (next_private_token_refresh_ < now) {
+      if (!has_downloaded_private_token_) {
         get_private_token();
         return 1;
+      } else {
+        return 0;
       }
-      return 0;
     }
     case ACCOUNT:
       get_account();
@@ -312,6 +312,8 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
       if (download_.downloading()) {
         download_.retry(STATE);
       }
+      request_.respond_private_token = clock::get_system();  // completion
+      download_private_token_ = false;
     };
     auto handle_success = [&](auto &body) {
       if (download_.downloading() && download_.skip(sequence, STATE)) {
@@ -321,15 +323,15 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
         if (token.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, token};
           (*this)(event_2);
-          auto now = clock::get_system();
-          next_private_token_refresh_ = now + shared_.settings.rest.token_refresh_freq;
-          log::warn("DEBUG next_private_token_refresh={}"sv, next_private_token_refresh_);
         } else {
           log::fatal("Unexpected: token={}"sv, token);
         }
         if (download_.downloading()) {
           download_.check(STATE);
         }
+        request_.respond_private_token = clock::get_system();  // completion
+        download_private_token_ = false;
+        has_downloaded_private_token_ = true;
       }
     };
     process_response(event, handle_error, handle_success);

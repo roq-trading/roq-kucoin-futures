@@ -22,6 +22,7 @@
 #include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/drop_copy_state.hpp"
 #include "roq/kucoin_futures/private_token.hpp"
+#include "roq/kucoin_futures/request.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
@@ -44,6 +45,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
       uint16_t stream_id,
       Account &,
       Shared &,
+      Request &,
       std::string_view const &uri,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
@@ -109,6 +111,10 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   void operator()(Trace<json::SymbolOrderChange> const &) override;
   void operator()(Trace<json::OrderChange> const &) override;
 
+  void check_response_private_token();
+
+  void request_private_token();
+
  private:
   Handler &handler_;
   // config
@@ -134,6 +140,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   // account
   Account &account_;
   Shared &shared_;
+  Request &request_;
   // state
   bool welcome_ = false;
   bool ready_ = false;
@@ -141,6 +148,10 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   core::Download<DropCopyState> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
+  //
+  bool download_private_token_ = false;
+  //
+  std::chrono::nanoseconds next_simulated_disconnect_ = {};
 };
 
 }  // namespace kucoin_futures

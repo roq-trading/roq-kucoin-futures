@@ -21,6 +21,13 @@
       "type": "std/bool",
       "default": false,
       "description": "Crash on expired token?"
+    },
+    {
+      "name": "experimental_simulate_expired_token",
+      "type": "std/nanoseconds",
+      "validator": "roq/flags/validators/TimePeriod",
+      "default": "0s",
+      "description": "Simulate disconnect"
     }
   ]
 }
