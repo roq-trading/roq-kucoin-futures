@@ -42,10 +42,6 @@ auto create_name(auto stream_id, auto &account) {
   return fmt::format("{}:{}:{}"sv, stream_id, NAME, account.name);
 }
 
-auto create_query(auto &account) {
-  return account.create_ws_query();
-}
-
 auto create_connection(auto &handler, auto &settings, auto &context) {
   io::web::URI uri_{settings.ws.uri};
   auto config = web::socket::Client::Config{
@@ -79,8 +75,8 @@ struct create_metrics final : public utils::metrics::Factory {
 // === IMPLEMENTATION ===
 
 OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, query_{create_query(account)},
-      connection_{create_connection(*this, shared.settings, context)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, connection_{create_connection(*this, shared.settings, context)},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -218,6 +214,11 @@ void OrderEntryWS::operator()(web::socket::Client::Text const &text) {
 
 void OrderEntryWS::operator()(web::socket::Client::Binary const &) {
   log::fatal("Unexpected"sv);
+}
+
+std::string_view OrderEntryWS::get_query() const {
+  const_cast<OrderEntryWS &>(*this).query_buffer_ = account_.create_ws_query();
+  return query_buffer_;
 }
 
 void OrderEntryWS::operator()(ConnectionStatus status) {
