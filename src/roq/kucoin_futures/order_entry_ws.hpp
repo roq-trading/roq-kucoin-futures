@@ -77,7 +77,7 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   std::string_view get_query() const override;
 
  private:
-  void operator()(ConnectionStatus);
+  void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   void send_ping(std::chrono::nanoseconds now);
 
@@ -118,7 +118,7 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   bool welcome_ = false;
   std::chrono::nanoseconds ping_freq_ = {};
   bool ready_ = false;
-  ConnectionStatus status_ = {};
+  ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   //
