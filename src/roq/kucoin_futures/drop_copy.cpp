@@ -382,6 +382,7 @@ void DropCopy::operator()(Trace<json::WalletBalanceChange> const &event) {
       .balance = data.available_balance,
       .hold = data.hold_balance,
       .borrowed = NaN,
+      .unrealized_pnl = NaN,
       .external_account = {},
       .update_type = UpdateType::INCREMENTAL,
       .exchange_time_utc = data.timestamp,  // ???
