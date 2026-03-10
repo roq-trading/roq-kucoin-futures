@@ -308,7 +308,7 @@ void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
           .quantity = NaN,
           .price = NaN,
       };
-      log::warn("response={}"sv, response);
+      log::debug("response={}"sv, response);
       shared_.update_order(error.id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
     };
     switch (error.op) {
@@ -351,7 +351,7 @@ void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
         .quantity = NaN,
         .price = NaN,
     };
-    log::warn("response={}"sv, response);
+    log::debug("response={}"sv, response);
     shared_.update_order(add_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
@@ -372,7 +372,7 @@ void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
         .quantity = NaN,
         .price = NaN,
     };
-    log::warn("response={}"sv, response);
+    log::debug("response={}"sv, response);
     shared_.update_order(cancel_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
