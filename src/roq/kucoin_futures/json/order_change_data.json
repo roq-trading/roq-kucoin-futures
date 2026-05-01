@@ -93,6 +93,10 @@
     {
       "name": "ts",
       "type": "std/nanoseconds"
+    },
+    {
+      "name": "allCanceledSize",
+      "type": "std/double"
     }
   ]
 }
