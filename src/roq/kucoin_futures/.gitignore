@@ -1,5 +1,2 @@
 !!! THIS FILE HAS BEEN AUTO-GENERATED !!!
 roq-kucoin-futures
-drop_copy_state.hpp
-order_entry_state.hpp
-rest_state.hpp
