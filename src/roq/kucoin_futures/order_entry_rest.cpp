@@ -239,9 +239,9 @@ void OrderEntryREST::operator()(ConnectionStatus connection_status, std::string_
   create_trace_and_dispatch(handler_, trace_info, stream_status);
 }
 
-uint32_t OrderEntryREST::download(OrderEntryState state) {
+uint32_t OrderEntryREST::download(State state) {
   switch (state) {
-    using enum OrderEntryState;
+    using enum State;
     case UNDEFINED:
       assert(false);
       break;
@@ -309,7 +309,7 @@ void OrderEntryREST::get_private_token() {
 }
 
 void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const STATE = OrderEntryState::PRIVATE_TOKEN;
+  auto const STATE = State::PRIVATE_TOKEN;
   profile_.private_token_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -389,7 +389,7 @@ void OrderEntryREST::get_account() {
 }
 
 void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const STATE = OrderEntryState::ACCOUNT;
+  auto const STATE = State::ACCOUNT;
   profile_.account_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -463,7 +463,7 @@ void OrderEntryREST::get_positions() {
 }
 
 void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const STATE = OrderEntryState::POSITIONS;
+  auto const STATE = State::POSITIONS;
   profile_.positions_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -541,7 +541,7 @@ void OrderEntryREST::get_orders() {
 }
 
 void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const STATE = OrderEntryState::ORDERS;
+  auto const STATE = State::ORDERS;
   profile_.orders_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -654,7 +654,7 @@ void OrderEntryREST::get_fills() {
 }
 
 void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const STATE = OrderEntryState::FILLS;
+  auto const STATE = State::FILLS;
   profile_.fills_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);

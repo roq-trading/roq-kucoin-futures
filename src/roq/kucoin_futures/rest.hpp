@@ -22,7 +22,6 @@
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/rest_state.hpp"
 #include "roq/kucoin_futures/shared.hpp"
 
 #include "roq/kucoin_futures/json/token.hpp"
@@ -76,7 +75,14 @@ struct Rest final : public web::rest::Client::Handler {
 
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
-  uint32_t download(RestState);
+  enum class State {
+    UNDEFINED = 0,
+    PUBLIC_TOKEN,
+    CONTRACTS,
+    DONE,
+  };
+
+  uint32_t download(State);
 
   // bullet-public
 
@@ -127,7 +133,7 @@ struct Rest final : public web::rest::Client::Handler {
   Shared &shared_;
   // state
   ConnectionStatus connection_status_ = {};
-  core::Download<RestState> download_;
+  core::Download<State> download_;
 };
 
 }  // namespace kucoin_futures

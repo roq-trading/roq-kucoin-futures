@@ -20,7 +20,6 @@
 #include "roq/server.hpp"
 
 #include "roq/kucoin_futures/account.hpp"
-#include "roq/kucoin_futures/drop_copy_state.hpp"
 #include "roq/kucoin_futures/private_token.hpp"
 #include "roq/kucoin_futures/request.hpp"
 #include "roq/kucoin_futures/shared.hpp"
@@ -76,7 +75,13 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
  private:
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
-  uint32_t download(DropCopyState);
+  enum class State {
+    UNDEFINED = 0,
+    SUBSCRIBE,
+    DONE,
+  };
+
+  uint32_t download(State);
 
   void subscribe();
 
@@ -145,7 +150,7 @@ struct DropCopy final : public web::socket::Client::Handler, public json::Parser
   bool welcome_ = false;
   bool ready_ = false;
   ConnectionStatus connection_status_ = {};
-  core::Download<DropCopyState> download_;
+  core::Download<State> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   //

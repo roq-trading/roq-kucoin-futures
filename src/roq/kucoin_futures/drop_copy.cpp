@@ -228,9 +228,9 @@ void DropCopy::operator()(ConnectionStatus connection_status, std::string_view c
   create_trace_and_dispatch(handler_, trace_info, stream_status);
 }
 
-uint32_t DropCopy::download(DropCopyState state) {
+uint32_t DropCopy::download(State state) {
   switch (state) {
-    using enum DropCopyState;
+    using enum State;
     case UNDEFINED:
       assert(false);
       break;
