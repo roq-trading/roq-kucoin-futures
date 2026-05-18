@@ -38,6 +38,8 @@ struct Gateway final : public server::Handler,
   Gateway(Gateway const &) = delete;
 
  protected:
+  // server::Handler
+
   void operator()(Event<Start> const &) override;
   void operator()(Event<Stop> const &) override;
   void operator()(Event<Timer> const &) override;
@@ -69,7 +71,7 @@ struct Gateway final : public server::Handler,
 
   void operator()(metrics::Writer &) const override;
 
-  // many
+  // streams
 
   void operator()(Trace<StreamStatus> const &) override;
   void operator()(Trace<ExternalLatency> const &) override;
@@ -86,11 +88,11 @@ struct Gateway final : public server::Handler,
   void operator()(Rest::PublicToken const &) override;
   void operator()(Rest::SymbolsUpdate &) override;
 
-  void ensure_symbol_slices(size_t size);
-
   void operator()(PrivateToken const &) override;
 
   // utilities
+
+  void ensure_symbol_slices(size_t size);
 
   template <typename... Args>
   void dispatch(Args &&...);
