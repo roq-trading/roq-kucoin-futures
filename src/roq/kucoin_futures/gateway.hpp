@@ -15,14 +15,15 @@
 
 #include "roq/kucoin_futures/account.hpp"
 #include "roq/kucoin_futures/config.hpp"
+#include "roq/kucoin_futures/request.hpp"
+#include "roq/kucoin_futures/settings.hpp"
+#include "roq/kucoin_futures/shared.hpp"
+
 #include "roq/kucoin_futures/drop_copy.hpp"
 #include "roq/kucoin_futures/market_data.hpp"
 #include "roq/kucoin_futures/order_entry_rest.hpp"
 #include "roq/kucoin_futures/order_entry_ws.hpp"
-#include "roq/kucoin_futures/request.hpp"
 #include "roq/kucoin_futures/rest.hpp"
-#include "roq/kucoin_futures/settings.hpp"
-#include "roq/kucoin_futures/shared.hpp"
 
 namespace roq {
 namespace kucoin_futures {
