@@ -22,7 +22,7 @@
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/shared.hpp"
+#include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/kucoin_futures/json/token.hpp"
 
@@ -31,6 +31,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct Rest final : public web::rest::Client::Handler {
   struct PublicToken final {
@@ -136,5 +137,6 @@ struct Rest final : public web::rest::Client::Handler {
   core::Download<State> download_;
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

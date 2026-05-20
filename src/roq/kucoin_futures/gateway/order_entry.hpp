@@ -8,6 +8,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct OrderEntry {
   OrderEntry() = default;
@@ -35,5 +36,6 @@ struct OrderEntry {
   virtual uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) = 0;
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

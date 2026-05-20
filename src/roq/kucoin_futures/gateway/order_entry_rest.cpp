@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/order_entry_rest.hpp"
+#include "roq/kucoin_futures/gateway/order_entry_rest.hpp"
 
 #include <utility>
 
@@ -20,6 +20,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -1041,5 +1042,6 @@ void OrderEntryREST::operator()(Trace<server::oms::OrderUpdate> const &event, st
   }
 }
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

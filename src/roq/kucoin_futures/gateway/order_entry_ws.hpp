@@ -19,14 +19,15 @@
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/account.hpp"
-#include "roq/kucoin_futures/order_entry.hpp"
-#include "roq/kucoin_futures/shared.hpp"
+#include "roq/kucoin_futures/gateway/account.hpp"
+#include "roq/kucoin_futures/gateway/order_entry.hpp"
+#include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/kucoin_futures/json/ws_parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handler, public json::WSParser::Handler {
   struct Handler {
@@ -125,5 +126,6 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   std::string encode_buffer_;
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

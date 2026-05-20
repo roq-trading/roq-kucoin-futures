@@ -2,9 +2,10 @@
 
 #include "roq/kucoin_futures/application.hpp"
 
-#include "roq/kucoin_futures/config.hpp"
-#include "roq/kucoin_futures/gateway.hpp"
-#include "roq/kucoin_futures/settings.hpp"
+#include "roq/kucoin_futures/flags/settings.hpp"
+
+#include "roq/kucoin_futures/gateway/config.hpp"
+#include "roq/kucoin_futures/gateway/controller.hpp"
 
 using namespace std::literals;
 
@@ -20,10 +21,10 @@ uint8_t const API_2 = {};
 // === IMPLEMENTATION ===
 
 int Application::main(args::Parser const &args) {
-  Settings settings{args};
-  Config config{settings};
+  flags::Settings settings{args};
+  gateway::Config config{settings};
   auto context = server::create_io_context(settings);
-  server::Trading<Gateway>{settings, config, *context, API_2}.dispatch();
+  server::Trading2<gateway::Controller>{settings, config, *context, API_2}.dispatch();
   return EXIT_SUCCESS;
 }
 

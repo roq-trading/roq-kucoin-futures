@@ -6,6 +6,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct Request final {
   // private-token
@@ -13,5 +14,6 @@ struct Request final {
   std::chrono::nanoseconds respond_private_token = {};
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

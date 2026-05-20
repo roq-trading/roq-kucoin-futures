@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/order_entry_ws.hpp"
+#include "roq/kucoin_futures/gateway/order_entry_ws.hpp"
 
 #include "roq/mask.hpp"
 
@@ -20,6 +20,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -377,5 +378,6 @@ void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
   });
 }
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

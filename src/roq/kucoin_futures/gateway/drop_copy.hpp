@@ -4,8 +4,6 @@
 
 #include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -16,45 +14,45 @@
 #include "roq/web/socket/client.hpp"
 
 #include "roq/core/download.hpp"
-#include "roq/core/timer_queue.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/shared.hpp"
+#include "roq/kucoin_futures/gateway/account.hpp"
+#include "roq/kucoin_futures/gateway/private_token.hpp"
+#include "roq/kucoin_futures/gateway/request.hpp"
+#include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/kucoin_futures/json/parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
-struct MarketData final : public web::socket::Client::Handler, public json::Parser::Handler {
+struct DropCopy final : public web::socket::Client::Handler, public json::Parser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
-    virtual void operator()(Trace<MarketStatus> const &, bool is_last) = 0;
-    virtual void operator()(Trace<TopOfBook> const &, bool is_last) = 0;
-    virtual void operator()(Trace<MarketByPriceUpdate> const &, bool is_last) = 0;
-    virtual void operator()(Trace<TradeSummary> const &, bool is_last) = 0;
-    virtual void operator()(Trace<StatisticsUpdate> const &, bool is_last) = 0;
+    virtual void operator()(Trace<TradeUpdate> const &, bool is_last, uint8_t user_id, std::string_view const &request_id) = 0;
+    virtual void operator()(Trace<FundsUpdate> const &, bool is_last) = 0;
+    virtual void operator()(Trace<PositionUpdate> const &, bool is_last) = 0;
   };
 
-  MarketData(
+  DropCopy(
       Handler &,
       io::Context &,
       uint16_t stream_id,
+      Account &,
       Shared &,
-      size_t index,
+      Request &,
       std::string_view const &uri,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
-  MarketData(MarketData const &) = delete;
+  DropCopy(DropCopy const &) = delete;
 
-  uint16_t stream_id() const { return stream_id_; }
-
-  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
+  bool ready() const;
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
@@ -62,7 +60,7 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
 
   void operator()(metrics::Writer &) const;
 
-  void subscribe(size_t start_from = 0);
+  void operator()(PrivateToken const &);
 
  protected:
   void operator()(web::socket::Client::Connected const &) override;
@@ -78,9 +76,17 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
  private:
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
-  void subscribe(std::span<Symbol const> const &symbols);
+  enum class State {
+    UNDEFINED = 0,
+    SUBSCRIBE,
+    DONE,
+  };
 
-  void subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols);
+  uint32_t download(State);
+
+  void subscribe();
+
+  void subscribe(std::string_view const &topic);
 
   void send_ping(std::chrono::nanoseconds now);
 
@@ -111,42 +117,49 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
   void operator()(Trace<json::SymbolOrderChange> const &) override;
   void operator()(Trace<json::OrderChange> const &) override;
 
-  void check_subscribe_queue(std::chrono::nanoseconds now);
+  void check_response_private_token();
+
+  void request_private_token();
 
  private:
   Handler &handler_;
   // config
   uint16_t const stream_id_;
   std::string const name_;
-  size_t const index_;
-  std::chrono::nanoseconds const ping_frequency_;
   // web socket
   std::string query_;
   std::unique_ptr<web::socket::Client> const connection_;
+  std::chrono::nanoseconds const ping_frequency_;
   // buffers
   core::json::BufferStack decode_buffer_;
   // metrics
   struct {
-    utils::metrics::Counter disconnect, total_bytes_received;
+    utils::metrics::Counter disconnect;
   } counter_;
   struct {
-    utils::metrics::Profile parse, welcome, error, pong, ack, ticker_v2, ticker, match, execution, mark_index_price, funding_rate, level2, funding_begin,
-        funding_end, snapshot_24h;
+    utils::metrics::Profile parse,  //
+        welcome, error, pong, ack;
   } profile_;
   struct {
     utils::metrics::Latency ping, heartbeat;
   } latency_;
-  // cache
+  // account
+  Account &account_;
   Shared &shared_;
-  std::vector<Symbol> symbols_;
+  Request &request_;
   // state
   bool welcome_ = false;
+  bool ready_ = false;
   ConnectionStatus connection_status_ = {};
+  core::Download<State> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
-  // queue
-  core::TimerQueue<std::string> subscribe_queue_;
+  //
+  bool download_private_token_ = false;
+  //
+  std::chrono::nanoseconds next_simulated_disconnect_ = {};
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

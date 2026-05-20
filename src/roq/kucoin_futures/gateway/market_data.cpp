@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/market_data.hpp"
+#include "roq/kucoin_futures/gateway/market_data.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -23,6 +23,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -673,5 +674,6 @@ void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
   subscribe_queue_.dispatch([&](auto now) { return shared_.rate_limiter.can_request(now); }, [&](auto &message) { (*connection_).send_text(message); }, now);
 }
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

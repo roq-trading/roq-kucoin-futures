@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/drop_copy.hpp"
+#include "roq/kucoin_futures/gateway/drop_copy.hpp"
 
 #include "roq/mask.hpp"
 
@@ -17,6 +17,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -568,5 +569,6 @@ void DropCopy::request_private_token() {
   download_private_token_ = true;
 }
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

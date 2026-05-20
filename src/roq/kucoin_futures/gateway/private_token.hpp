@@ -7,6 +7,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct PrivateToken final {
   std::string_view account;
@@ -15,5 +16,6 @@ struct PrivateToken final {
   std::chrono::nanoseconds ping_frequency = {};
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

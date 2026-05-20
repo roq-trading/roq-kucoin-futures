@@ -20,11 +20,11 @@
 
 #include "roq/server.hpp"
 
-#include "roq/kucoin_futures/account.hpp"
-#include "roq/kucoin_futures/order_entry.hpp"
-#include "roq/kucoin_futures/private_token.hpp"
-#include "roq/kucoin_futures/request.hpp"
-#include "roq/kucoin_futures/shared.hpp"
+#include "roq/kucoin_futures/gateway/account.hpp"
+#include "roq/kucoin_futures/gateway/order_entry.hpp"
+#include "roq/kucoin_futures/gateway/private_token.hpp"
+#include "roq/kucoin_futures/gateway/request.hpp"
+#include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/kucoin_futures/json/token.hpp"
 
@@ -39,6 +39,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handler {
   struct Handler {
@@ -205,5 +206,6 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
   bool has_downloaded_private_token_ = false;
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

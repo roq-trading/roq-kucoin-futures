@@ -19,11 +19,12 @@
 
 #include "roq/market/mbp/sequencer.hpp"
 
-#include "roq/kucoin_futures/api.hpp"
-#include "roq/kucoin_futures/settings.hpp"
+#include "roq/kucoin_futures/gateway/api.hpp"
+#include "roq/kucoin_futures/gateway/settings.hpp"
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 struct Shared final {
   Shared(server::Dispatcher &, Settings const &);
@@ -73,5 +74,6 @@ struct Shared final {
   core::TimerQueue<std::string> depth_request_queue;
 };
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq

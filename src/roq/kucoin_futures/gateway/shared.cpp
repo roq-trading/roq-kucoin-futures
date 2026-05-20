@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/kucoin_futures/shared.hpp"
+#include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/logging.hpp"
 
@@ -9,6 +9,7 @@
 
 namespace roq {
 namespace kucoin_futures {
+namespace gateway {
 
 // === HELPERS ===
 
@@ -26,5 +27,6 @@ Shared::Shared(server::Dispatcher &dispatcher, Settings const &settings)
       depth_request_queue{settings.ws.mbp_request_delay} {
 }
 
+}  // namespace gateway
 }  // namespace kucoin_futures
 }  // namespace roq
