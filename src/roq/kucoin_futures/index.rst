@@ -13,8 +13,8 @@
 .. |footnote-3| unicode:: U+2778
 
 
-roq-kucoin-futures
-==================
+`roq-kucoin-futures <https://github.com/roq-trading/roq-kucoin-futures/>`__
+===========================================================================
 
 
 .. tab:: Unstable
@@ -540,6 +540,12 @@ Common
 * :ref:`Using Flags <abseil-cpp>`
 * :ref:`Gateway Flags <gateway-flags>`
 * :ref:`Gateway Config <gateway-config>`
+
+
+GitHub
+~~~~~~
+
+* `roq-kucoin-futures <https://github.com/roq-trading/roq-kucoin-futures/>`__
 
 
 Exchange
