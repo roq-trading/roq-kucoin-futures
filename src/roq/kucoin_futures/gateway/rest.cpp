@@ -407,6 +407,8 @@ void Rest::operator()(Trace<json::ContractsAck> const &event) {
           break;
         case OPEN:
           return TradingStatus::OPEN;
+        case BEING_SETTLED:
+          return TradingStatus::UNDEFINED;
       }
       return {};
     }();
