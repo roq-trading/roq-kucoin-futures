@@ -2,13 +2,13 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/kucoin_futures/json/ws_parser.hpp"
+#include "roq/kucoin_futures/protocol/json/ws_parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
 
 template <typename T>
-struct WSParserTester final : public json::WSParser::Handler {
+struct WSParserTester final : public protocol::json::WSParser::Handler {
   using value_type = std::remove_cvref_t<T>;
   using callback_type = std::function<void(value_type const &)>;
 
@@ -21,7 +21,7 @@ struct WSParserTester final : public json::WSParser::Handler {
     // parser
     // XXX FIXME TODO catch2 block ???
     WSParserTester handler{callback};
-    auto res = json::WSParser::dispatch(handler, message, buffers, {}, false);
+    auto res = protocol::json::WSParser::dispatch(handler, message, buffers, {}, false);
     CHECK(res == true);
     CHECK(handler.found_ == true);
   }
@@ -29,12 +29,12 @@ struct WSParserTester final : public json::WSParser::Handler {
  protected:
   explicit WSParserTester(callback_type const &callback) : callback_{callback} {}
 
-  void operator()(Trace<json::WSAuth> const &event, [[maybe_unused]] std::string_view const &message) override { dispatch(event); }
-  void operator()(Trace<json::WSWelcome> const &event) override { dispatch(event); }
-  void operator()(Trace<json::WSError> const &event) override { dispatch(event); }
-  void operator()(Trace<json::WSPong> const &event) override { dispatch(event); }
-  void operator()(Trace<json::WSAddOrderAck> const &event) override { dispatch(event); }
-  void operator()(Trace<json::WSCancelOrderAck> const &event) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSAuth> const &event, [[maybe_unused]] std::string_view const &message) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSWelcome> const &event) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSError> const &event) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSPong> const &event) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSAddOrderAck> const &event) override { dispatch(event); }
+  void operator()(Trace<protocol::json::WSCancelOrderAck> const &event) override { dispatch(event); }
 
   template <typename U>
   void dispatch(Trace<U> const &event) {

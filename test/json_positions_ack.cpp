@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/positions_ack.hpp"
+#include "roq/kucoin_futures/protocol/json/positions_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::PositionsAck;
+using value_type = protocol::json::PositionsAck;
 
 TEST_CASE("empty", "[json_positions_ack]") {
   auto const message = R"({)"

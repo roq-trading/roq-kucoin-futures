@@ -9,7 +9,7 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::Match;
+using value_type = protocol::json::Match;
 
 TEST_CASE("simple", "[json_match]") {
   auto message = R"({)"
@@ -31,7 +31,7 @@ TEST_CASE("simple", "[json_match]") {
                  R"(})";
   auto helper = [](value_type const &obj) {
     CHECK(obj.topic == "/contractMarket/execution:ETHUSDCM"sv);
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }

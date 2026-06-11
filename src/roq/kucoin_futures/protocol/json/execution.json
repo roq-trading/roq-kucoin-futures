@@ -1,0 +1,26 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Execution",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "type",
+      "type": "roq/kucoin_futures/protocol/json/Type"
+    },
+    {
+      "name": "subject",
+      "type": "roq/kucoin_futures/protocol/json/Subject"
+    },
+    {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
+      "name": "sn",
+      "type": "std/uint64"
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/protocol/json/ExecutionData"
+    }
+  ]
+}

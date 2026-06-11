@@ -1,0 +1,22 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/AvailableBalanceChangeData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "availableBalance",
+      "type": "std/double"
+    },
+    {
+      "name": "holdBalance",
+      "type": "std/double"
+    },
+    {
+      "name": "currency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    }
+  ]
+}

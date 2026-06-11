@@ -1,0 +1,18 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/WithdrawHoldChangeData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "withdrawHold",
+      "type": "std/double"
+    },
+    {
+      "name": "currency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Status",
+  "type": "enum",
+  "values": [
+    {
+      "name": "Open"
+    },
+    {
+      "name": "BeingSettled"
+    }
+  ]
+}

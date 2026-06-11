@@ -1,0 +1,22 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/MarkIndexPriceData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "markPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "indexPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "granularity",
+      "type": "std/uint32"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/kucoin_futures/json/encoder.hpp"
+#include "roq/kucoin_futures/protocol/json/encoder.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -63,7 +63,7 @@ TEST_CASE("create_market", "[json_encoder]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -103,7 +103,7 @@ TEST_CASE("create_limit", "[json_add_order]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -145,7 +145,7 @@ TEST_CASE("create_ioc", "[json_add_order]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -188,7 +188,7 @@ TEST_CASE("create_post_only", "[json_add_order]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("clientOid":"1234",)"
@@ -234,7 +234,7 @@ TEST_CASE("ws_create_market", "[json_encoder]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("id":"1234",)"
@@ -278,7 +278,7 @@ TEST_CASE("ws_create_ioc", "[json_encoder]") {
   server::oms::Order order;
   auto ref_data = create_ref_data();
   auto request_id = "1234"sv;
-  auto message = json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
+  auto message = protocol::json::Encoder::ws_add_order(buffer, create_order, order, ref_data, request_id, {});
   CHECK(
       message == R"({)"
                  R"("id":"1234",)"

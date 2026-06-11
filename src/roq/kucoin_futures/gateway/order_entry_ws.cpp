@@ -12,9 +12,9 @@
 
 #include "roq/server/oms/exceptions.hpp"
 
-#include "roq/kucoin_futures/json/encoder.hpp"
-#include "roq/kucoin_futures/json/map.hpp"
-#include "roq/kucoin_futures/json/utils.hpp"
+#include "roq/kucoin_futures/protocol/json/encoder.hpp"
+#include "roq/kucoin_futures/protocol/json/map.hpp"
+#include "roq/kucoin_futures/protocol/json/utils.hpp"
 
 using namespace std::literals;
 
@@ -145,7 +145,7 @@ void OrderEntryWS::operator()(metrics::Writer &writer) const {
 uint16_t OrderEntryWS::operator()(
     Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   auto &[message_info, create_order] = event;
-  auto message = json::Encoder::ws_add_order(encode_buffer_, create_order, order, ref_data, request_id, shared_.margin_mode);
+  auto message = protocol::json::Encoder::ws_add_order(encode_buffer_, create_order, order, ref_data, request_id, shared_.margin_mode);
   (*connection_).send_text(message);
   return stream_id_;
 }
@@ -166,7 +166,7 @@ uint16_t OrderEntryWS::operator()(
     std::string_view const &request_id,
     std::string_view const &previous_request_id) {
   auto &[message_info, cancel_order] = event;
-  auto message = json::Encoder::ws_cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id, previous_request_id);
+  auto message = protocol::json::Encoder::ws_cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id, previous_request_id);
   (*connection_).send_text(message);
   return stream_id_;
 }
@@ -261,7 +261,7 @@ void OrderEntryWS::parse(std::string_view const &message) {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
-      if (!json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+      if (!protocol::json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
         log_message();
       }
     } catch (...) {
@@ -271,7 +271,7 @@ void OrderEntryWS::parse(std::string_view const &message) {
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSAuth> const &event, std::string_view const &message) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSAuth> const &event, std::string_view const &message) {
   profile_.auth([&]() {
     auto &[trace_info, auth] = event;
     log::info<1>("auth={}"sv, auth);
@@ -281,7 +281,7 @@ void OrderEntryWS::operator()(Trace<json::WSAuth> const &event, std::string_view
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSWelcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("welcome={}"sv, welcome);
@@ -292,11 +292,11 @@ void OrderEntryWS::operator()(Trace<json::WSWelcome> const &event) {
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
   profile_.error([&]() {
     auto &[trace_info, error] = event;
     auto helper = [&](auto request_type) {
-      auto error_2 = json::guess_error(error.code);
+      auto error_2 = protocol::json::guess_error(error.code);
       auto response = server::oms::Response{
           .request_type = request_type,
           .origin = Origin::EXCHANGE,
@@ -313,7 +313,7 @@ void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
       shared_.update_order(error.id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
     };
     switch (error.op) {
-      using enum json::WSOp::type_t;
+      using enum protocol::json::WSOp::type_t;
       case UNDEFINED_INTERNAL:
       case UNKNOWN_INTERNAL:
       case PONG:
@@ -329,14 +329,14 @@ void OrderEntryWS::operator()(Trace<json::WSError> const &event) {
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSPong> const &event) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSPong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
     log::info<4>("pong={}"sv, pong);
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSAddOrderAck> const &event) {
   profile_.add_order_ack([&]() {
     auto &[trace_info, add_order_ack] = event;
     log::info<4>("add_order_ack={}"sv, add_order_ack);
@@ -357,7 +357,7 @@ void OrderEntryWS::operator()(Trace<json::WSAddOrderAck> const &event) {
   });
 }
 
-void OrderEntryWS::operator()(Trace<json::WSCancelOrderAck> const &event) {
+void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &event) {
   profile_.cancel_order_ack([&]() {
     auto &[trace_info, cancel_order_ack] = event;
     log::info<4>("cancel_order_ack={}"sv, cancel_order_ack);

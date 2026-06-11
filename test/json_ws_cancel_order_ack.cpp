@@ -9,7 +9,7 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::WSCancelOrderAck;
+using value_type = protocol::json::WSCancelOrderAck;
 
 TEST_CASE("success", "[json_ws_cancel_order_ack]") {
   auto message = R"({)"
@@ -29,7 +29,7 @@ TEST_CASE("success", "[json_ws_cancel_order_ack]") {
                  R"(})";
   auto helper = [](value_type const &obj) {
     CHECK(obj.id == "1AACM_ObhU0AAgAAAAAA"sv);
-    CHECK(obj.op == json::WSOp::CANCEL_ORDER_ACK);
+    CHECK(obj.op == protocol::json::WSOp::CANCEL_ORDER_ACK);
     CHECK(obj.code == 200000);
     CHECK(obj.data.client_oid == "1wACM_ObhU0AAQAAAAAA"sv);
   };

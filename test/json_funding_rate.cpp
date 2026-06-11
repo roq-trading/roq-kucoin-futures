@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/funding_rate.hpp"
+#include "roq/kucoin_futures/protocol/json/funding_rate.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -24,5 +24,5 @@ TEST_CASE("json_funding_rate", "[json_funding_rate]") {
                        R"(})"
                        R"(})";
   core::json::BufferStack buffer{8192, 1};
-  [[maybe_unused]] json::FundingRate obj{message, buffer};
+  [[maybe_unused]] protocol::json::FundingRate obj{message, buffer};
 }

@@ -1,0 +1,102 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/OrderChangeData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "marginMode",
+      "type": "roq/kucoin_futures/protocol/json/MarginMode"
+    },
+    {
+      "name": "status",
+      "type": "roq/kucoin_futures/protocol/json/OrderStatus"
+    },
+    {
+      "name": "type",
+      "type": "roq/kucoin_futures/protocol/json/OrderUpdateType"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "side",
+      "type": "roq/kucoin_futures/protocol/json/Side"
+    },
+    {
+      "name": "tradeType",
+      "type": "roq/kucoin_futures/protocol/json/TradeType"
+    },
+    {
+      "name": "orderType",
+      "type": "roq/kucoin_futures/protocol/json/OrderType"
+    },
+    {
+      "name": "feeType",
+      "type": "roq/kucoin_futures/protocol/json/FeeType"
+    },
+    {
+      "name": "liquidity",
+      "type": "roq/kucoin_futures/protocol/json/Liquidity"
+    },
+    {
+      "name": "orderId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "clientOid",
+      "type": "std/string_view"
+    },
+    {
+      "name": "tradeId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "price",
+      "type": "std/double"
+    },
+    {
+      "name": "size",
+      "type": "std/double"
+    },
+    {
+      "name": "filledSize",
+      "type": "std/double"
+    },
+    {
+      "name": "canceledSize",
+      "type": "std/double"
+    },
+    {
+      "name": "remainSize",
+      "type": "std/double"
+    },
+    {
+      "name": "matchSize",
+      "type": "std/double"
+    },
+    {
+      "name": "matchPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "oldSize",
+      "type": "std/double"
+    },
+    {
+      "name": "positionSide",
+      "type": "roq/kucoin_futures/protocol/json/PositionSide"
+    },
+    {
+      "name": "orderTime",
+      "type": "std/nanoseconds"
+    },
+    {
+      "name": "ts",
+      "type": "std/nanoseconds"
+    },
+    {
+      "name": "allCanceledSize",
+      "type": "std/double"
+    }
+  ]
+}

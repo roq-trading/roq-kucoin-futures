@@ -1,0 +1,27 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/OrdersAckData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "currentPage",
+      "type": "std/int32"
+    },
+    {
+      "name": "pageSize",
+      "type": "std/int32"
+    },
+    {
+      "name": "totalNum",
+      "type": "std/int32"
+    },
+    {
+      "name": "totalPage",
+      "type": "std/int32"
+    },
+    {
+      "name": "items",
+      "type": "roq/kucoin_futures/protocol/json/OrdersAckDataItemsItem",
+      "array": "std/span"
+    }
+  ]
+}

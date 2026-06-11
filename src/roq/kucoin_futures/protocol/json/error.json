@@ -1,0 +1,24 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Error",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "code",
+      "type": "std/int32",
+      "optional": true
+    },
+    {
+      "name": "type",
+      "type": "roq/kucoin_futures/protocol/json/Type"
+    },
+    {
+      "name": "data",
+      "type": "std/string_view"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view",
+      "optional": true
+    }
+  ]
+}

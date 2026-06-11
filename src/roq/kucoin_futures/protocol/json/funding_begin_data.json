@@ -1,0 +1,22 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/FundingBeginData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "fundingTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    }
+  ]
+}

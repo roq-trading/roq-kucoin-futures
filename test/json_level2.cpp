@@ -9,7 +9,7 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::Level2;
+using value_type = protocol::json::Level2;
 
 TEST_CASE("simple", "[json_level2]") {
   auto message = R"({)"
@@ -25,7 +25,7 @@ TEST_CASE("simple", "[json_level2]") {
                  R"(})";
   auto helper = [](value_type const &obj) {
     CHECK(obj.topic == "/contractMarket/level2:XBTUSDTM"sv);
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }

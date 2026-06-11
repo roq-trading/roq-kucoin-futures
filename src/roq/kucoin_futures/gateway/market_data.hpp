@@ -24,13 +24,13 @@
 
 #include "roq/kucoin_futures/gateway/shared.hpp"
 
-#include "roq/kucoin_futures/json/parser.hpp"
+#include "roq/kucoin_futures/protocol/json/parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
 namespace gateway {
 
-struct MarketData final : public web::socket::Client::Handler, public json::Parser::Handler {
+struct MarketData final : public web::socket::Client::Handler, public protocol::json::Parser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -87,30 +87,30 @@ struct MarketData final : public web::socket::Client::Handler, public json::Pars
 
   void parse(std::string_view const &message);
 
-  void operator()(Trace<json::Welcome> const &) override;
-  void operator()(Trace<json::Error> const &) override;
-  void operator()(Trace<json::Pong> const &) override;
-  void operator()(Trace<json::Ack> const &) override;
+  void operator()(Trace<protocol::json::Welcome> const &) override;
+  void operator()(Trace<protocol::json::Error> const &) override;
+  void operator()(Trace<protocol::json::Pong> const &) override;
+  void operator()(Trace<protocol::json::Ack> const &) override;
 
-  void operator()(Trace<json::TickerV2> const &) override;
-  void operator()(Trace<json::Match> const &) override;
-  void operator()(Trace<json::Execution> const &) override;
-  void operator()(Trace<json::MarkIndexPrice> const &) override;
-  void operator()(Trace<json::FundingRate> const &) override;
-  void operator()(Trace<json::Level2> const &) override;
-  void operator()(Trace<json::FundingBegin> const &) override;
-  void operator()(Trace<json::FundingEnd> const &) override;
-  void operator()(Trace<json::Snapshot24h> const &) override;
+  void operator()(Trace<protocol::json::TickerV2> const &) override;
+  void operator()(Trace<protocol::json::Match> const &) override;
+  void operator()(Trace<protocol::json::Execution> const &) override;
+  void operator()(Trace<protocol::json::MarkIndexPrice> const &) override;
+  void operator()(Trace<protocol::json::FundingRate> const &) override;
+  void operator()(Trace<protocol::json::Level2> const &) override;
+  void operator()(Trace<protocol::json::FundingBegin> const &) override;
+  void operator()(Trace<protocol::json::FundingEnd> const &) override;
+  void operator()(Trace<protocol::json::Snapshot24h> const &) override;
 
-  void operator()(Trace<json::WalletBalanceChange> const &) override;
-  void operator()(Trace<json::OrderMarginChange> const &) override;
-  void operator()(Trace<json::AvailableBalanceChange> const &) override;
-  void operator()(Trace<json::WithdrawHoldChange> const &) override;
-  void operator()(Trace<json::PositionChange> const &) override;
-  void operator()(Trace<json::PositionSettlement> const &) override;
-  void operator()(Trace<json::PositionAdjustRiskLimit> const &) override;
-  void operator()(Trace<json::SymbolOrderChange> const &) override;
-  void operator()(Trace<json::OrderChange> const &) override;
+  void operator()(Trace<protocol::json::WalletBalanceChange> const &) override;
+  void operator()(Trace<protocol::json::OrderMarginChange> const &) override;
+  void operator()(Trace<protocol::json::AvailableBalanceChange> const &) override;
+  void operator()(Trace<protocol::json::WithdrawHoldChange> const &) override;
+  void operator()(Trace<protocol::json::PositionChange> const &) override;
+  void operator()(Trace<protocol::json::PositionSettlement> const &) override;
+  void operator()(Trace<protocol::json::PositionAdjustRiskLimit> const &) override;
+  void operator()(Trace<protocol::json::SymbolOrderChange> const &) override;
+  void operator()(Trace<protocol::json::OrderChange> const &) override;
 
   void check_subscribe_queue(std::chrono::nanoseconds now);
 

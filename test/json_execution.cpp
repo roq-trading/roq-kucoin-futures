@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::Execution;
+using value_type = protocol::json::Execution;
 
 TEST_CASE("simple", "[json_execution]") {
   auto message = R"({)"
@@ -30,13 +30,13 @@ TEST_CASE("simple", "[json_execution]") {
                  R"(})"
                  R"(})";
   auto helper = [](value_type const &obj) {
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/futuresMarket/execution:BTCUSDM"sv);
-    CHECK(obj.subject == json::Subject::EXECUTION);
+    CHECK(obj.subject == protocol::json::Subject::EXECUTION);
     CHECK(obj.sn == 636707859);
     auto &data = obj.data;
     CHECK(data.symbol == "BTCUSDM"sv);
-    CHECK(data.match_side == json::Side::SELL);
+    CHECK(data.match_side == protocol::json::Side::SELL);
     CHECK(data.size == 86.0_a);
     CHECK(data.price == 19465.0_a);
     CHECK(data.trade_id == 636707859);

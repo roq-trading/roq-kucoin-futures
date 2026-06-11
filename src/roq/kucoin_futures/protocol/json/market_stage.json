@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/MarketStage",
+  "type": "enum",
+  "values": [
+    {
+      "name": "NORMAL"
+    },
+    {
+      "name": "PRE_MARKET"
+    }
+  ]
+}

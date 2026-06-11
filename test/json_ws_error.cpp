@@ -9,7 +9,7 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::WSError;
+using value_type = protocol::json::WSError;
 
 TEST_CASE("create_order", "[json_ws_parser]") {
   auto message = R"({)"
@@ -22,7 +22,7 @@ TEST_CASE("create_order", "[json_ws_parser]") {
                  R"(})";
   auto helper = [](value_type const &obj) {
     CHECK(obj.id == "_QACfSLXfE0AAQAAAAAA"sv);
-    CHECK(obj.op == json::WSOp::ADD_ORDER_ACK);
+    CHECK(obj.op == protocol::json::WSOp::ADD_ORDER_ACK);
     CHECK(obj.code == 330008);
   };
   WSParserTester<value_type>::dispatch(helper, message, 8192, 1);
@@ -44,7 +44,7 @@ TEST_CASE("cancel_order", "[json_ws_parser]") {
                  R"(})";
   auto helper = [](value_type const &obj) {
     CHECK(obj.id == "FQACOz1kfU0AAgAAAAAA"sv);
-    CHECK(obj.op == json::WSOp::CANCEL_ORDER_ACK);
+    CHECK(obj.op == protocol::json::WSOp::CANCEL_ORDER_ACK);
     CHECK(obj.code == 100004);
   };
   WSParserTester<value_type>::dispatch(helper, message, 8192, 1);

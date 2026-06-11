@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::AvailableBalanceChange;
+using value_type = protocol::json::AvailableBalanceChange;
 
 TEST_CASE("simple", "[json_available_balance_change]") {
   /*
@@ -30,7 +30,7 @@ TEST_CASE("simple", "[json_available_balance_change]") {
   auto helper = [](value_type const &obj) {
     CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
     CHECK(obj.topic == "/contractAccount/wallet"sv);
-    CHECK(obj.subject == json::Subject::AVAILABLE_BALANCE_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::AVAILABLE_BALANCE_CHANGE);
     auto &data = obj.data;
     CHECK(data.available_balance == 5923.0_a);
     CHECK(data.hold_balance == 2312.0_a);

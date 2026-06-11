@@ -4,14 +4,14 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/contracts_ack.hpp"
+#include "roq/kucoin_futures/protocol/json/contracts_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::ContractsAck;
+using value_type = protocol::json::ContractsAck;
 
 // note! truncated
 TEST_CASE("simple", "[json_contracts_ack]") {

@@ -1,0 +1,31 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/ExecutionData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "matchSide",
+      "type": "roq/kucoin_futures/protocol/json/Side"
+    },
+    {
+      "name": "size",
+      "type": "std/double"
+    },
+    {
+      "name": "price",
+      "type": "std/double"
+    },
+    {
+      "name": "tradeId",
+      "type": "std/int64"
+    },
+    {
+      "name": "ts",
+      "type": "std/nanoseconds",
+      "comment": "not sure..."
+    }
+  ]
+}

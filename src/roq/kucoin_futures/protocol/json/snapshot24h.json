@@ -1,0 +1,26 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Snapshot24h",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
+      "name": "type",
+      "type": "roq/kucoin_futures/protocol/json/Type"
+    },
+    {
+      "name": "subject",
+      "type": "roq/kucoin_futures/protocol/json/Subject"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view"
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/protocol/json/Snapshot24hData"
+    }
+  ]
+}

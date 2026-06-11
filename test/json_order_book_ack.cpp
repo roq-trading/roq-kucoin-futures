@@ -4,14 +4,14 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/order_book_ack.hpp"
+#include "roq/kucoin_futures/protocol/json/order_book_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::OrderBookAck;
+using value_type = protocol::json::OrderBookAck;
 
 TEST_CASE("simple", "[json_order_book_ack]") {
   auto message = R"({)"

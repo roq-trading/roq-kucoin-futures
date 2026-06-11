@@ -12,7 +12,7 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/kucoin_futures/json/utils.hpp"
+#include "roq/kucoin_futures/protocol/json/utils.hpp"
 
 #include "roq/kucoin_futures/tools/splitter.hpp"
 
@@ -240,7 +240,7 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::Token token{body, decode_buffer_};
+        protocol::json::Token token{body, decode_buffer_};
         if (token.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, token};
           (*this)(event_2);
@@ -254,7 +254,7 @@ void Rest::get_public_token_ack(Trace<web::rest::Response> const &event, uint32_
   });
 }
 
-void Rest::operator()(Trace<json::Token> const &event) {
+void Rest::operator()(Trace<protocol::json::Token> const &event) {
   auto &[trace_info, token] = event;
   log::info<2>("token={}"sv, token);
   if (std::empty(token.data.instance_servers)) {
@@ -307,13 +307,13 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
       if (download_.skip(sequence, STATE)) {
         log::info("Download state={} has already been processed"sv, STATE);
       } else {
-        json::ContractsAck contracts_ack{body, decode_buffer_};
+        protocol::json::ContractsAck contracts_ack{body, decode_buffer_};
         if (contracts_ack.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, contracts_ack};
           (*this)(event_2);
           download_.check(STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(contracts_ack.code), contracts_ack.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(contracts_ack.code), contracts_ack.msg);
         }
       }
     };
@@ -321,7 +321,7 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
   });
 }
 
-void Rest::operator()(Trace<json::ContractsAck> const &event) {
+void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
   auto &[trace_info, contracts_ack] = event;
   log::info<4>("contracts_ack={}"sv, contracts_ack);
   // reference data
@@ -401,7 +401,7 @@ void Rest::operator()(Trace<json::ContractsAck> const &event) {
     }
     auto trading_status = [&]() -> TradingStatus {
       switch (item.status) {
-        using enum json::Status::type_t;
+        using enum protocol::json::Status::type_t;
         case UNDEFINED_INTERNAL:
         case UNKNOWN_INTERNAL:
           break;
@@ -457,7 +457,7 @@ void Rest::get_order_book_ack(Trace<web::rest::Response> const &event, [[maybe_u
       // XXX WHAT ???
     };
     auto handle_success = [&](auto &body) {
-      json::OrderBookAck order_book_ack{body, decode_buffer_};
+      protocol::json::OrderBookAck order_book_ack{body, decode_buffer_};
       if (order_book_ack.code == SYSTEM_CODE_SUCCESS) {
         Trace event_2{event, order_book_ack};
         (*this)(event_2);
@@ -467,7 +467,7 @@ void Rest::get_order_book_ack(Trace<web::rest::Response> const &event, [[maybe_u
   });
 }
 
-void Rest::operator()(Trace<json::OrderBookAck> const &event) {
+void Rest::operator()(Trace<protocol::json::OrderBookAck> const &event) {
   auto &[trace_info, order_book_ack] = event;
   log::info<4>("order_book_ack={}"sv, order_book_ack);
   auto &data = order_book_ack.data;

@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::WithdrawHoldChange;
+using value_type = protocol::json::WithdrawHoldChange;
 
 TEST_CASE("simple", "[json_withdraw_hold_change]") {
   /*
@@ -29,7 +29,7 @@ TEST_CASE("simple", "[json_withdraw_hold_change]") {
   auto helper = [](value_type const &obj) {
     CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
     CHECK(obj.topic == "/contractAccount/wallet"sv);
-    CHECK(obj.subject == json::Subject::WITHDRAW_HOLD_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::WITHDRAW_HOLD_CHANGE);
     auto &data = obj.data;
     CHECK(data.withdraw_hold == 5923.0_a);
     CHECK(data.currency == "USDT"sv);

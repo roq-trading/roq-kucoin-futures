@@ -1,0 +1,20 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/FillsAck",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "code",
+      "type": "std/int32"
+    },
+    {
+      "name": "msg",
+      "type": "std/string_view",
+      "optional": true
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/protocol/json/FillsAckDataItem",
+      "array": "std/span"
+    }
+  ]
+}

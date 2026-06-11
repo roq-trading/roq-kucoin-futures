@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/token.hpp"
+#include "roq/kucoin_futures/protocol/json/token.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::Token;
+using value_type = protocol::json::Token;
 
 TEST_CASE("simple", "[json_token]") {
   auto message =

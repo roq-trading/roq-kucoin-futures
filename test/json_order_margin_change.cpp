@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::OrderMarginChange;
+using value_type = protocol::json::OrderMarginChange;
 
 TEST_CASE("simple", "[json_order_margin_change]") {
   /*
@@ -29,7 +29,7 @@ TEST_CASE("simple", "[json_order_margin_change]") {
   auto helper = [](value_type const &obj) {
     CHECK(obj.user_id == "xbc453tg732eba53a88ggyt8c"sv);
     CHECK(obj.topic == "/contractAccount/wallet"sv);
-    CHECK(obj.subject == json::Subject::ORDER_MARGIN_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::ORDER_MARGIN_CHANGE);
     auto &data = obj.data;
     CHECK(data.order_margin == 5923.0_a);
     CHECK(data.currency == "USDT"sv);

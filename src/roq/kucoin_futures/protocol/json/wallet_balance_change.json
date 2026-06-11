@@ -1,0 +1,34 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/WalletBalanceChange",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
+      "name": "type",
+      "type": "std/string_view"
+    },
+    {
+      "name": "subject",
+      "type": "roq/kucoin_futures/protocol/json/Subject"
+    },
+    {
+      "name": "id",
+      "type": "std/string_view"
+    },
+    {
+      "name": "userId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "channelType",
+      "type": "std/string_view"
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/protocol/json/WalletBalanceChangeData"
+    }
+  ]
+}

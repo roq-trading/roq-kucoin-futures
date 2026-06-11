@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::OrderChange;
+using value_type = protocol::json::OrderChange;
 
 TEST_CASE("open", "[json_order_change]") {
   auto message = R"({)"
@@ -43,20 +43,20 @@ TEST_CASE("open", "[json_order_change]") {
                  R"(})"
                  R"(})"sv;
   auto helper = [](value_type const &obj) {
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
-    CHECK(obj.subject == json::Subject::ORDER_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
     CHECK(obj.channel_type == "private"sv);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
     CHECK(data.symbol == "XBTUSDM"sv);
-    CHECK(data.type == json::OrderUpdateType::MATCH);
-    CHECK(data.status == json::OrderStatus::OPEN);
+    CHECK(data.type == protocol::json::OrderUpdateType::MATCH);
+    CHECK(data.status == protocol::json::OrderStatus::OPEN);
     CHECK(std::isnan(data.match_size) == true);
     CHECK(std::isnan(data.match_price) == true);
-    CHECK(data.order_type == json::OrderType::LIMIT);
-    CHECK(data.side == json::Side::BUY);
+    CHECK(data.order_type == protocol::json::OrderType::LIMIT);
+    CHECK(data.side == protocol::json::Side::BUY);
     CHECK(data.price == 3600.0_a);
     CHECK(data.size == 20000.0_a);
     CHECK(data.remain_size == 20001.0_a);
@@ -66,7 +66,7 @@ TEST_CASE("open", "[json_order_change]") {
     CHECK(data.client_oid == "5ce24c16b210233c36ee321d"sv);
     CHECK(data.order_time == 1545914149935808589ns);
     CHECK(data.old_size == 15000.0_a);
-    CHECK(data.liquidity == json::Liquidity::MAKER);
+    CHECK(data.liquidity == protocol::json::Liquidity::MAKER);
     CHECK(data.ts == 1545914149935808589ns);
     */
   };
@@ -101,20 +101,20 @@ TEST_CASE("canceled", "[json_order_change]") {
                  R"(})"
                  R"(})"sv;
   auto helper = [](value_type const &obj) {
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
-    CHECK(obj.subject == json::Subject::ORDER_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
     CHECK(obj.channel_type == "private"sv);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
     CHECK(data.symbol == "XBTUSDM"sv);
-    CHECK(data.type == json::OrderUpdateType::MATCH);
-    CHECK(data.status == json::OrderStatus::OPEN);
+    CHECK(data.type == protocol::json::OrderUpdateType::MATCH);
+    CHECK(data.status == protocol::json::OrderStatus::OPEN);
     CHECK(std::isnan(data.match_size) == true);
     CHECK(std::isnan(data.match_price) == true);
-    CHECK(data.order_type == json::OrderType::LIMIT);
-    CHECK(data.side == json::Side::BUY);
+    CHECK(data.order_type == protocol::json::OrderType::LIMIT);
+    CHECK(data.side == protocol::json::Side::BUY);
     CHECK(data.price == 3600.0_a);
     CHECK(data.size == 20000.0_a);
     CHECK(data.remain_size == 20001.0_a);
@@ -124,7 +124,7 @@ TEST_CASE("canceled", "[json_order_change]") {
     CHECK(data.client_oid == "5ce24c16b210233c36ee321d"sv);
     CHECK(data.order_time == 1545914149935808589ns);
     CHECK(data.old_size == 15000.0_a);
-    CHECK(data.liquidity == json::Liquidity::MAKER);
+    CHECK(data.liquidity == protocol::json::Liquidity::MAKER);
     CHECK(data.ts == 1545914149935808589ns);
     */
   };
@@ -164,20 +164,20 @@ TEST_CASE("match", "[json_order_change]") {
                  R"(})"
                  R"(})"sv;
   auto helper = [](value_type const &obj) {
-    CHECK(obj.type == json::Type::MESSAGE);
+    CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
-    CHECK(obj.subject == json::Subject::ORDER_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
     CHECK(obj.channel_type == "private"sv);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
     CHECK(data.symbol == "XBTUSDM"sv);
-    CHECK(data.type == json::OrderUpdateType::MATCH);
-    CHECK(data.status == json::OrderStatus::OPEN);
+    CHECK(data.type == protocol::json::OrderUpdateType::MATCH);
+    CHECK(data.status == protocol::json::OrderStatus::OPEN);
     CHECK(std::isnan(data.match_size) == true);
     CHECK(std::isnan(data.match_price) == true);
-    CHECK(data.order_type == json::OrderType::LIMIT);
-    CHECK(data.side == json::Side::BUY);
+    CHECK(data.order_type == protocol::json::OrderType::LIMIT);
+    CHECK(data.side == protocol::json::Side::BUY);
     CHECK(data.price == 3600.0_a);
     CHECK(data.size == 20000.0_a);
     CHECK(data.remain_size == 20001.0_a);
@@ -187,7 +187,7 @@ TEST_CASE("match", "[json_order_change]") {
     CHECK(data.client_oid == "5ce24c16b210233c36ee321d"sv);
     CHECK(data.order_time == 1545914149935808589ns);
     CHECK(data.old_size == 15000.0_a);
-    CHECK(data.liquidity == json::Liquidity::MAKER);
+    CHECK(data.liquidity == protocol::json::Liquidity::MAKER);
     CHECK(data.ts == 1545914149935808589ns);
     */
   };

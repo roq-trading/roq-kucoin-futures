@@ -1,0 +1,21 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Type",
+  "type": "enum",
+  "values": [
+    {
+      "name": "welcome"
+    },
+    {
+      "name": "error"
+    },
+    {
+      "name": "pong"
+    },
+    {
+      "name": "ack"
+    },
+    {
+      "name": "message"
+    }
+  ]
+}

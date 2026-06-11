@@ -9,7 +9,7 @@ using namespace roq::kucoin_futures;
 
 using namespace std::literals;
 
-using value_type = json::FundingBegin;
+using value_type = protocol::json::FundingBegin;
 
 TEST_CASE("simple", "[json_funding_begin]") {
   /*

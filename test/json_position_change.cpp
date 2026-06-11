@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 using namespace Catch::literals;
 
-using value_type = json::PositionChange;
+using value_type = protocol::json::PositionChange;
 
 TEST_CASE("simple", "[json_position_change]") {
   auto message = R"({ )"
@@ -59,7 +59,7 @@ TEST_CASE("simple", "[json_position_change]") {
                  R"("channelType":"private")"
                  R"(})";
   auto helper = [](value_type const &obj) {
-    CHECK(obj.subject == json::Subject::POSITION_CHANGE);
+    CHECK(obj.subject == protocol::json::Subject::POSITION_CHANGE);
     CHECK(obj.user_id == "67f914adc8d0110001ca099e"sv);
     CHECK(obj.channel_type == "private"sv);
   };

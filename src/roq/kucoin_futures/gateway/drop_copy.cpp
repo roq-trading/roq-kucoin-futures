@@ -10,8 +10,8 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/kucoin_futures/json/map.hpp"
-#include "roq/kucoin_futures/json/utils.hpp"
+#include "roq/kucoin_futures/protocol/json/map.hpp"
+#include "roq/kucoin_futures/protocol/json/utils.hpp"
 
 using namespace std::literals;
 
@@ -287,7 +287,7 @@ void DropCopy::parse(std::string_view const &message) {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
-      if (!json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+      if (!protocol::json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
         log_message();
       }
     } catch (...) {
@@ -297,7 +297,7 @@ void DropCopy::parse(std::string_view const &message) {
   });
 }
 
-void DropCopy::operator()(Trace<json::Welcome> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Welcome> const &event) {
   profile_.welcome([&]() {
     auto &[trace_info, welcome] = event;
     log::info<1>("welcome={}"sv, welcome);
@@ -308,7 +308,7 @@ void DropCopy::operator()(Trace<json::Welcome> const &event) {
 
 // error={code=404, type=ERROR, data="topic /contract/position is not found", id="5750981774747"}
 // error={code=401, type=ERROR, data="token is expired", id="6994840b250b9710dca3a3c1"}
-void DropCopy::operator()(Trace<json::Error> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Error> const &event) {
   profile_.error([&]() {
     auto &[trace_info, error] = event;
     log::error("error={}"sv, error);
@@ -321,57 +321,57 @@ void DropCopy::operator()(Trace<json::Error> const &event) {
   });
 }
 
-void DropCopy::operator()(Trace<json::Pong> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Pong> const &event) {
   profile_.pong([&]() {
     auto &[trace_info, pong] = event;
     log::info<4>("pong={}"sv, pong);
   });
 }
 
-void DropCopy::operator()(Trace<json::Ack> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
     log::info<2>("ack={}"sv, ack);
   });
 }
 
-void DropCopy::operator()(Trace<json::TickerV2> const &) {
+void DropCopy::operator()(Trace<protocol::json::TickerV2> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Match> const &) {
+void DropCopy::operator()(Trace<protocol::json::Match> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Execution> const &) {
+void DropCopy::operator()(Trace<protocol::json::Execution> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::MarkIndexPrice> const &) {
+void DropCopy::operator()(Trace<protocol::json::MarkIndexPrice> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::FundingRate> const &) {
+void DropCopy::operator()(Trace<protocol::json::FundingRate> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Level2> const &) {
+void DropCopy::operator()(Trace<protocol::json::Level2> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::FundingBegin> const &) {
+void DropCopy::operator()(Trace<protocol::json::FundingBegin> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::FundingEnd> const &) {
+void DropCopy::operator()(Trace<protocol::json::FundingEnd> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Snapshot24h> const &) {
+void DropCopy::operator()(Trace<protocol::json::Snapshot24h> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::WalletBalanceChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::WalletBalanceChange> const &event) {
   auto &[trace_info, wallet_balance_change] = event;
   log::info<2>("wallet_balance_change={}"sv, wallet_balance_change);
   auto &data = wallet_balance_change.data;
@@ -393,22 +393,22 @@ void DropCopy::operator()(Trace<json::WalletBalanceChange> const &event) {
   create_trace_and_dispatch(handler_, trace_info, funds_update, true);
 }
 
-void DropCopy::operator()(Trace<json::OrderMarginChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::OrderMarginChange> const &event) {
   auto &[trace_info, order_margin_change] = event;
   log::info<2>("order_margin_change={}"sv, order_margin_change);
 }
 
-void DropCopy::operator()(Trace<json::AvailableBalanceChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::AvailableBalanceChange> const &event) {
   auto &[trace_info, available_balance_change] = event;
   log::info<2>("available_balance_change={}"sv, available_balance_change);
 }
 
-void DropCopy::operator()(Trace<json::WithdrawHoldChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::WithdrawHoldChange> const &event) {
   auto &[trace_info, withdraw_hold_change] = event;
   log::info<2>("withdraw_hold_change={}"sv, withdraw_hold_change);
 }
 
-void DropCopy::operator()(Trace<json::PositionChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::PositionChange> const &event) {
   auto &[trace_info, position_change] = event;
   log::info<2>("position_change={}"sv, position_change);
   auto &data = position_change.data;
@@ -429,27 +429,27 @@ void DropCopy::operator()(Trace<json::PositionChange> const &event) {
   create_trace_and_dispatch(handler_, trace_info, position_update, true);
 }
 
-void DropCopy::operator()(Trace<json::PositionSettlement> const &event) {
+void DropCopy::operator()(Trace<protocol::json::PositionSettlement> const &event) {
   auto &[trace_info, position_settlement] = event;
   log::info<2>("position_settlement={}"sv, position_settlement);
 }
 
-void DropCopy::operator()(Trace<json::PositionAdjustRiskLimit> const &event) {
+void DropCopy::operator()(Trace<protocol::json::PositionAdjustRiskLimit> const &event) {
   auto &[trace_info, position_adjust_risk_limit] = event;
   log::info<2>("position_adjust_risk_limit={}"sv, position_adjust_risk_limit);
 }
 
-void DropCopy::operator()(Trace<json::SymbolOrderChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::SymbolOrderChange> const &event) {
   auto &[trace_info, symbol_order_change] = event;
   log::info<2>("symbol_order_change={}"sv, symbol_order_change);
 }
 
-void DropCopy::operator()(Trace<json::OrderChange> const &event) {
+void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
   auto &[trace_info, order_change] = event;
   log::info<2>("order_change={}"sv, order_change);
   auto &data = order_change.data;
-  auto is_match = data.type == json::OrderUpdateType::MATCH;
-  auto is_canceled = data.type == json::OrderUpdateType::CANCELED;
+  auto is_match = data.type == protocol::json::OrderUpdateType::MATCH;
+  auto is_canceled = data.type == protocol::json::OrderUpdateType::CANCELED;
   auto order_status = [&]() -> OrderStatus {
     if (is_match && utils::is_zero(data.remain_size)) {
       return OrderStatus::COMPLETED;

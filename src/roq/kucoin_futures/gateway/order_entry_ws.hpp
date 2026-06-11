@@ -23,13 +23,13 @@
 #include "roq/kucoin_futures/gateway/order_entry.hpp"
 #include "roq/kucoin_futures/gateway/shared.hpp"
 
-#include "roq/kucoin_futures/json/ws_parser.hpp"
+#include "roq/kucoin_futures/protocol/json/ws_parser.hpp"
 
 namespace roq {
 namespace kucoin_futures {
 namespace gateway {
 
-struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handler, public json::WSParser::Handler {
+struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handler, public protocol::json::WSParser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -84,12 +84,12 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
 
   void parse(std::string_view const &message);
 
-  void operator()(Trace<json::WSAuth> const &, std::string_view const &message) override;
-  void operator()(Trace<json::WSWelcome> const &) override;
-  void operator()(Trace<json::WSError> const &) override;
-  void operator()(Trace<json::WSPong> const &) override;
-  void operator()(Trace<json::WSAddOrderAck> const &) override;
-  void operator()(Trace<json::WSCancelOrderAck> const &) override;
+  void operator()(Trace<protocol::json::WSAuth> const &, std::string_view const &message) override;
+  void operator()(Trace<protocol::json::WSWelcome> const &) override;
+  void operator()(Trace<protocol::json::WSError> const &) override;
+  void operator()(Trace<protocol::json::WSPong> const &) override;
+  void operator()(Trace<protocol::json::WSAddOrderAck> const &) override;
+  void operator()(Trace<protocol::json::WSCancelOrderAck> const &) override;
 
  private:
   Handler &handler_;

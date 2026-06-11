@@ -1,0 +1,26 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/InstanceServer",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "pingInterval",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "endpoint",
+      "type": "std/string_view"
+    },
+    {
+      "name": "protocol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "encrypt",
+      "type": "std/bool"
+    },
+    {
+      "name": "pingTimeout",
+      "type": "std/milliseconds"
+    }
+  ]
+}

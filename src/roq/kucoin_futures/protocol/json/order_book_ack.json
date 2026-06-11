@@ -1,0 +1,14 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/OrderBookAck",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "code",
+      "type": "std/int64"
+    },
+    {
+      "name": "data",
+      "type": "roq/kucoin_futures/protocol/json/OrderBookAckData"
+    }
+  ]
+}

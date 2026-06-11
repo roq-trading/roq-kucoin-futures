@@ -1,9 +1,0 @@
-{
-  "name": "roq/kucoin_futures/json/FairMethod",
-  "type": "enum",
-  "values": [
-    {
-      "name": "FundingRate"
-    }
-  ]
-}

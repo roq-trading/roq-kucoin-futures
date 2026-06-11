@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/MarginMode",
+  "type": "enum",
+  "values": [
+    {
+      "name": "CROSS"
+    },
+    {
+      "name": "ISOLATED"
+    }
+  ]
+}

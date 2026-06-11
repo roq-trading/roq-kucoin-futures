@@ -1,0 +1,17 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/WSOp",
+  "type": "enum",
+  "values": [
+    {
+      "name": "pong"
+    },
+    {
+      "raw": "futures.order",
+      "name": "add_order_ack"
+    },
+    {
+      "raw": "futures.cancel",
+      "name": "cancel_order_ack"
+    }
+  ]
+}

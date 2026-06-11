@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/Stop",
+  "type": "enum",
+  "values": [
+    {
+      "name": "down"
+    },
+    {
+      "name": "up"
+    }
+  ]
+}

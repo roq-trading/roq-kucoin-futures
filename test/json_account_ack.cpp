@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/kucoin_futures/json/account_ack.hpp"
+#include "roq/kucoin_futures/protocol/json/account_ack.hpp"
 
 using namespace roq;
 using namespace roq::kucoin_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::AccountAck;
+using value_type = protocol::json::AccountAck;
 
 TEST_CASE("simple", "[json_account_ack]") {
   auto const message = R"({)"
