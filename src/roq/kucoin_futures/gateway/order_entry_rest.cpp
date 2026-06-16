@@ -769,6 +769,7 @@ void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, u
           .version = version,
           .request_id = {},
           .external_order_id = {},
+          .client_order_id = {},
           .quantity = NaN,
           .price = NaN,
       };
@@ -844,6 +845,7 @@ void OrderEntryREST::cancel_order_ack(Trace<web::rest::Response> const &event, u
           .version = version,
           .request_id = {},
           .external_order_id = {},
+          .client_order_id = {},
           .quantity = NaN,
           .price = NaN,
       };
