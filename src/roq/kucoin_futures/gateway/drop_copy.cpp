@@ -507,7 +507,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
       .update_type = UpdateType::SNAPSHOT,
       .sending_time_utc = data.ts,
   };
-  if (shared_.update_order(data.client_oid, stream_id_, trace_info, order_update, [&](auto &order) {
+  if (shared_.update_order(stream_id_, trace_info, order_update, [&](auto &order) {
         if (!is_match) {
           return;
         }
@@ -544,7 +544,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
             .user = {},
             .strategy_id = order.strategy_id,
         };
-        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id, order.client_order_id);
+        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id);
       })) {
   } else {
     log::warn<1>(R"(*** EXTERNAL ORDER *** (order_id="{}", order_link_id="{}"))"sv, data.order_id, data.client_oid);

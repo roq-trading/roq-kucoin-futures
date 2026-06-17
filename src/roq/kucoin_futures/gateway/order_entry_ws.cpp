@@ -311,7 +311,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
           .price = NaN,
       };
       log::debug("response={}"sv, response);
-      shared_.update_order(error.id, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+      shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
     };
     switch (error.op) {
       using enum protocol::json::WSOp::type_t;
@@ -350,12 +350,12 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSAddOrderAck> const &event)
         .version = {},
         .request_id = add_order_ack.id,
         .external_order_id = add_order_ack.data.order_id,
-        .client_order_id = {},
+        .client_order_id = add_order_ack.data.client_oid,
         .quantity = NaN,
         .price = NaN,
     };
     log::debug("response={}"sv, response);
-    shared_.update_order(add_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+    shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
 
@@ -372,12 +372,12 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &eve
         .version = {},
         .request_id = cancel_order_ack.id,
         .external_order_id = {},
-        .client_order_id = {},
+        .client_order_id = cancel_order_ack.data.client_oid,
         .quantity = NaN,
         .price = NaN,
     };
     log::debug("response={}"sv, response);
-    shared_.update_order(cancel_order_ack.data.client_oid, stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+    shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
   });
 }
 
