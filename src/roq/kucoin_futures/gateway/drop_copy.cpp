@@ -507,48 +507,46 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
       .update_type = UpdateType::SNAPSHOT,
       .sending_time_utc = data.ts,
   };
-  if (shared_.update_order(stream_id_, trace_info, order_update, [&](auto &order) {
-        if (!is_match) {
-          return;
-        }
-        auto fill = Fill{
-            .exchange_time_utc = {},
-            .external_trade_id = data.trade_id,
-            .quantity = data.match_size,
-            .price = data.match_price,
-            .liquidity = last_liquidity,
-            .commission_amount = NaN,
-            .commission_currency = {},
-            .base_amount = NaN,
-            .quote_amount = NaN,
-            .profit_loss_amount = NaN,
-        };
-        auto trade_update = TradeUpdate{
-            .stream_id = stream_id_,
-            .account = order.account,
-            .order_id = order.order_id,
-            .exchange = order.exchange,
-            .symbol = order.symbol,
-            .side = order.side,
-            .position_effect = order.position_effect,
-            .margin_mode = order.margin_mode,
-            .create_time_utc = data.ts,
-            .update_time_utc = data.ts,
-            .external_account = {},
-            .external_order_id = order.external_order_id,
-            .client_order_id = order.client_order_id,
-            .fills = {&fill, 1},
-            .routing_id = order.routing_id,
-            .update_type = UpdateType::INCREMENTAL,  // ???
-            .sending_time_utc = data.ts,
-            .user = {},
-            .strategy_id = order.strategy_id,
-        };
-        create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id);
-      })) {
-  } else {
-    log::warn<1>(R"(*** EXTERNAL ORDER *** (order_id="{}", order_link_id="{}"))"sv, data.order_id, data.client_oid);
-  }
+  auto callback = [&](auto &order) {
+    if (!is_match) {
+      return;
+    }
+    auto fill = Fill{
+        .exchange_time_utc = {},
+        .external_trade_id = data.trade_id,
+        .quantity = data.match_size,
+        .price = data.match_price,
+        .liquidity = last_liquidity,
+        .commission_amount = NaN,
+        .commission_currency = {},
+        .base_amount = NaN,
+        .quote_amount = NaN,
+        .profit_loss_amount = NaN,
+    };
+    auto trade_update = TradeUpdate{
+        .stream_id = stream_id_,
+        .account = order.account,
+        .order_id = order.order_id,
+        .exchange = order.exchange,
+        .symbol = order.symbol,
+        .side = order.side,
+        .position_effect = order.position_effect,
+        .margin_mode = order.margin_mode,
+        .create_time_utc = data.ts,
+        .update_time_utc = data.ts,
+        .external_account = {},
+        .external_order_id = order.external_order_id,
+        .client_order_id = order.client_order_id,
+        .fills = {&fill, 1},
+        .routing_id = order.routing_id,
+        .update_type = UpdateType::INCREMENTAL,  // ???
+        .sending_time_utc = data.ts,
+        .user = {},
+        .strategy_id = order.strategy_id,
+    };
+    create_trace_and_dispatch(handler_, trace_info, trade_update, true, order.user_id);
+  };
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id_, callback);
 }
 
 void DropCopy::check_response_private_token() {

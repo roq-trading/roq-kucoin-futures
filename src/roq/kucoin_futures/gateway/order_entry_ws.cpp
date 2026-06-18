@@ -311,7 +311,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
           .price = NaN,
       };
       log::debug("response={}"sv, response);
-      shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_);
     };
     switch (error.op) {
       using enum protocol::json::WSOp::type_t;
@@ -355,7 +355,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSAddOrderAck> const &event)
         .price = NaN,
     };
     log::debug("response={}"sv, response);
-    shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_);
   });
 }
 
@@ -377,7 +377,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &eve
         .price = NaN,
     };
     log::debug("response={}"sv, response);
-    shared_.update_order(stream_id_, trace_info, response, []([[maybe_unused]] auto &order) {});
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_);
   });
 }
 

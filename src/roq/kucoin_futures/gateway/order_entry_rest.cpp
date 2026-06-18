@@ -623,8 +623,7 @@ void OrderEntryREST::operator()(Trace<protocol::json::OrdersAck> const &event) {
         .update_type = UpdateType::SNAPSHOT,
         .sending_time_utc = {},
     };
-    Trace event_2{trace_info, order_update};
-    (*this)(event_2);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id_);
   }
 }
 
@@ -758,6 +757,7 @@ void OrderEntryREST::create_order(
 
 void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.create_order_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       auto response = server::oms::Response{
@@ -774,8 +774,7 @@ void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, u
           .price = NaN,
       };
       log::warn("response={}, user_id={}, order_id={}"sv, response, user_id, order_id);
-      Trace event_2{event, response};
-      (*this)(event_2, user_id, order_id);
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
       protocol::json::AddOrderAck add_order_ack{body, decode_buffer_};
@@ -834,6 +833,7 @@ void OrderEntryREST::cancel_order(
 
 void OrderEntryREST::cancel_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.cancel_order_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       auto response = server::oms::Response{
@@ -850,8 +850,7 @@ void OrderEntryREST::cancel_order_ack(Trace<web::rest::Response> const &event, u
           .price = NaN,
       };
       log::warn("response={}, user_id={}, order_id={}"sv, response, user_id, order_id);
-      Trace event_2{event, response};
-      (*this)(event_2, user_id, order_id);
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
       protocol::json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
@@ -908,35 +907,34 @@ void OrderEntryREST::cancel_all_orders(Event<CancelAllOrders> const &event, std:
       Trace event_2{trace_info, cancel_all_orders_ack};
       shared_(event_2);
     };
+    auto callback = [&](auto &symbol) {
+      if (!std::empty(cancel_all_orders.symbol) && symbol != cancel_all_orders.symbol) {
+        return;
+      }
+      auto method = web::http::Method::DELETE;
+      auto path = shared_.api.rest_private.cancel_all_orders;
+      auto query = fmt::format("?symbol={}"sv, symbol);
+      auto headers = account_.create_headers(method, path, query, {});
+      auto request = web::rest::Request{
+          .method = method,
+          .path = path,
+          .query = query,
+          .accept = web::http::Accept::APPLICATION_JSON,
+          .content_type = {},
+          .headers = headers,
+          .body = {},
+          .quality_of_service = io::QualityOfService::IMMEDIATE,
+      };
+      auto callback = [this](auto &request_id, auto &response) {
+        TraceInfo trace_info;
+        Trace event{trace_info, response};
+        cancel_all_orders_ack(event, request_id);
+      };
+      (*connection_)(request_id, request, callback);
+      send_ack(symbol);
+    };
     //
-    if (shared_.dispatcher_.get_all_order_symbols(
-            [&](auto &symbol) {
-              if (!std::empty(cancel_all_orders.symbol) && symbol != cancel_all_orders.symbol) {
-                return;
-              }
-              auto method = web::http::Method::DELETE;
-              auto path = shared_.api.rest_private.cancel_all_orders;
-              auto query = fmt::format("?symbol={}"sv, symbol);
-              auto headers = account_.create_headers(method, path, query, {});
-              auto request = web::rest::Request{
-                  .method = method,
-                  .path = path,
-                  .query = query,
-                  .accept = web::http::Accept::APPLICATION_JSON,
-                  .content_type = {},
-                  .headers = headers,
-                  .body = {},
-                  .quality_of_service = io::QualityOfService::IMMEDIATE,
-              };
-              auto callback = [this](auto &request_id, auto &response) {
-                TraceInfo trace_info;
-                Trace event{trace_info, response};
-                cancel_all_orders_ack(event, request_id);
-              };
-              (*connection_)(request_id, request, callback);
-              send_ack(symbol);
-            },
-            account_.name)) {
+    if (shared_.dispatcher.get_all_order_symbols(callback, account_.name)) {
     } else {
       log::warn("*** NOT POSSIBLE TO CANCEL ALL OPEN ORDERS (NO SYMBOLS) ***"sv);
     }
@@ -1024,23 +1022,6 @@ void OrderEntryREST::process_response(web::rest::Response const &response, auto 
   } catch (std::exception &e) {
     log::warn(R"(Exception type={}, what="{}")"sv, typeid(e).name(), e.what());
     error_handler(Origin::EXCHANGE, RequestStatus::ERROR, Error::UNKNOWN, e.what());
-  }
-}
-
-template <typename... Args>
-void OrderEntryREST::operator()(Trace<server::oms::Response> const &event, uint8_t user_id, uint64_t order_id, Args &&...args) {
-  auto &[trace_info, response] = event;
-  if (shared_.update_order(user_id, order_id, stream_id_, trace_info, response, std::forward<Args>(args)..., []([[maybe_unused]] auto &order) {})) {
-  } else {
-    log::warn("Did not find order: user_id={}, order_id={}"sv, user_id, order_id);
-  }
-}
-
-void OrderEntryREST::operator()(Trace<server::oms::OrderUpdate> const &event) {
-  auto &[trace_info, order_update] = event;
-  if (shared_.update_order(stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
-  } else {
-    log::warn("*** EXTERNAL ORDER ***"sv);
   }
 }
 
