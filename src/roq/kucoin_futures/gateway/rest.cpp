@@ -154,7 +154,7 @@ void Rest::operator()(ConnectionStatus connection_status, std::string_view const
       .proxy = (*connection_).get_proxy(),
   };
   log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(handler_, trace_info, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
 }
 
 void Rest::operator()(Trace<web::rest::Client::Connected> const &) {
@@ -180,7 +180,7 @@ void Rest::operator()(Trace<web::rest::Client::Latency> const &event) {
       .account = {},
       .latency = latency.sample,
   };
-  create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -339,7 +339,7 @@ void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
       }
       return {};
     }();
-    auto discard = shared_.discard_symbol(symbol);
+    auto discard = shared_.dispatcher.discard_symbol(symbol);
     auto reference_data = ReferenceData{
         .stream_id = stream_id_,
         .exchange = shared_.settings.exchange,
@@ -374,7 +374,7 @@ void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
         .sending_time_utc = {},
         .discard = discard,
     };
-    create_trace_and_dispatch(handler_, trace_info, reference_data, true);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, reference_data, true);
     if (discard) {
       log::info<1>(R"(Drop symbol="{}")"sv, item.symbol);
       continue;
@@ -421,7 +421,7 @@ void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
         .exchange_sequence = {},
         .sending_time_utc = {},
     };
-    create_trace_and_dispatch(handler_, trace_info, market_status, true);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, market_status, true);
   }
 }
 
@@ -511,7 +511,7 @@ void Rest::operator()(Trace<protocol::json::OrderBookAck> const &event) {
           .checksum = {},
       };
       Trace event{trace_info, market_by_price_update};
-      shared_(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
+      shared_.dispatcher(event, true, [&](auto &market_by_price) { sequencer.apply(market_by_price, sequence, false); });
     };
     auto request_snapshot = [&](auto retries) {
       log::info(R"(DEBUG REQUEST symbol="{}" (retries={}))"sv, symbol, retries);

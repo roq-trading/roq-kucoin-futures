@@ -31,16 +31,18 @@ struct Shared final {
 
   Shared(Shared const &) = delete;
 
-  auto discard_symbol(std::string_view const &name) const { return dispatcher.discard_symbol(name); }
+  server::Dispatcher &dispatcher;
 
-  template <typename... Args>
-  auto operator()(Args &&...args) {
-    return dispatcher(std::forward<Args>(args)...);
-  }
-
- public:
+  Settings const &settings;
   API const api;
   MarginMode const margin_mode = {};
+
+  core::limit::RateLimiter rate_limiter;
+
+  core::Symbols symbols;
+  utils::unordered_set<std::string> all_symbols;
+
+  core::TimerQueue<std::string> depth_request_queue;
 
  private:
   struct {
@@ -56,17 +58,9 @@ struct Shared final {
  public:
   auto &get_mbp() { return mbp.clear(); }
 
+  std::vector<MBPUpdate> final_bids, final_asks;
+
   utils::unordered_map<std::string, market::mbp::Sequencer> mbp_sequencer;
-
- public:
-  server::Dispatcher &dispatcher;
-
- public:
-  Settings const &settings;
-  core::limit::RateLimiter rate_limiter;
-  core::Symbols symbols;
-  utils::unordered_set<std::string> all_symbols;
-  core::TimerQueue<std::string> depth_request_queue;
 };
 
 }  // namespace gateway
