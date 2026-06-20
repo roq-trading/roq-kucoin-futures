@@ -3,8 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
-#include <vector>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -50,13 +48,14 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
 
   OrderEntryREST(OrderEntryREST const &) = delete;
 
-  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
-
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
+
+ protected:
+  // OrderEntry
 
   uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, server::oms::RefData const &, std::string_view const &request_id) override;
   uint16_t operator()(
@@ -74,12 +73,15 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
 
   uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) override;
 
- protected:
   // web::rest::Client::Handler
 
   void operator()(Trace<web::rest::Client::Connected> const &) override;
   void operator()(Trace<web::rest::Client::Disconnected> const &) override;
   void operator()(Trace<web::rest::Client::Latency> const &) override;
+
+  // helpers
+
+  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 

@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -46,8 +45,6 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
 
   DropCopy(DropCopy const &) = delete;
 
-  bool ready() const;
-
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
@@ -57,6 +54,8 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   void operator()(PrivateToken const &);
 
  protected:
+  // web::socket::Client::Handler
+
   void operator()(web::socket::Client::Connected const &) override;
   void operator()(web::socket::Client::Disconnected const &) override;
   void operator()(web::socket::Client::Ready const &) override;
@@ -67,7 +66,10 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   //
   std::string_view get_query() const override { return query_; }
 
- private:
+  // helpers
+
+  bool ready() const;
+
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   enum class State {
@@ -85,6 +87,8 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   void send_ping(std::chrono::nanoseconds now);
 
   void parse(std::string_view const &message);
+
+  // protocol::json::Parser::Handler
 
   void operator()(Trace<protocol::json::Welcome> const &) override;
   void operator()(Trace<protocol::json::Error> const &) override;
@@ -110,6 +114,8 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   void operator()(Trace<protocol::json::PositionAdjustRiskLimit> const &) override;
   void operator()(Trace<protocol::json::SymbolOrderChange> const &) override;
   void operator()(Trace<protocol::json::OrderChange> const &) override;
+
+  // helpers
 
   void check_response_private_token();
 

@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -36,13 +35,14 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
 
   OrderEntryWS(OrderEntryWS const &) = delete;
 
-  bool ready() const override;
-
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
+
+ protected:
+  // OrderEntry
 
   uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, server::oms::RefData const &, std::string_view const &request_id) override;
   uint16_t operator()(
@@ -61,6 +61,8 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   uint16_t operator()(Event<CancelAllOrders> const &, std::string_view const &request_id) override;
 
  protected:
+  // web::socket::Client::Handler
+
   void operator()(web::socket::Client::Connected const &) override;
   void operator()(web::socket::Client::Disconnected const &) override;
   void operator()(web::socket::Client::Ready const &) override;
@@ -71,12 +73,17 @@ struct OrderEntryWS final : public OrderEntry, public web::socket::Client::Handl
   //
   std::string_view get_query() const override;
 
- private:
+  // helpers
+
+  bool ready() const override;
+
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   void send_ping(std::chrono::nanoseconds now);
 
   void parse(std::string_view const &message);
+
+  // protocol::json::WSParser::Handler
 
   void operator()(Trace<protocol::json::WSAuth> const &, std::string_view const &message) override;
   void operator()(Trace<protocol::json::WSWelcome> const &) override;
