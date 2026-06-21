@@ -487,8 +487,7 @@ void MarketData::operator()(Trace<protocol::json::FundingRate> const &event) {
 
 void MarketData::operator()(Trace<protocol::json::Level2> const &event) {
   profile_.level2([&]() {
-    auto &trace_info = event.trace_info;
-    auto &level2 = event.value;
+    auto &[trace_info, level2] = event;
     log::info<4>("level2={}"sv, level2);
     (*connection_).touch(trace_info.source_receive_time);
     auto symbol = protocol::json::strip_symbol_from_topic(level2.topic);
