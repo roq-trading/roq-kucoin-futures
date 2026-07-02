@@ -8,24 +8,25 @@ set(AUTOGEN_SCHEMAS
     account_ack_data.json
     account_ack.json
     ack.json
-    add_order_ack_data.json
     add_order_ack.json
-    available_balance_change_data.json
+    add_order_ack_data.json
     available_balance_change.json
-    cancel_all_orders_ack_data.json
+    available_balance_change_data.json
     cancel_all_orders_ack.json
-    cancel_order_ack_data.json
+    cancel_all_orders_ack_data.json
     cancel_order_ack.json
-    contracts_ack_data_item.json
+    cancel_order_ack_data.json
+    channel_type.json
     contracts_ack.json
+    contracts_ack_data_item.json
     display_type.json
     error.json
-    execution_data.json
     execution.json
+    execution_data.json
     fair_method.json
     fee_type.json
-    fills_ack_data_item.json
     fills_ack.json
+    fills_ack_data_item.json
     funding_begin_data.json
     funding_begin.json
     funding_end_data.json

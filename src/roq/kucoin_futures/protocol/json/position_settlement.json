@@ -18,6 +18,14 @@
     {
       "name": "data",
       "type": "roq/kucoin_futures/protocol/json/PositionSettlementData"
+    },
+    {
+      "name": "channelType",
+      "type": "roq/kucoin_futures/protocol/json/ChannelType"
+    },
+    {
+      "name": "type",
+      "type": "roq/kucoin_futures/protocol/json/Type"
     }
   ]
 }

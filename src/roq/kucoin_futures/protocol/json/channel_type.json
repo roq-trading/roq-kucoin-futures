@@ -1,0 +1,9 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/ChannelType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "private"
+    }
+  ]
+}

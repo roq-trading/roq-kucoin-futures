@@ -29,6 +29,18 @@
     {
       "name": "settleCurrency",
       "type": "std/string_view"
+    },
+    {
+      "name": "marginMode",
+      "type": "roq/kucoin_futures/protocol/json/MarginMode"
+    },
+    {
+      "name": "positionSide",
+      "type": "roq/kucoin_futures/protocol/json/PositionSide"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
     }
   ]
 }
