@@ -20,7 +20,7 @@
     },
     {
       "name": "channelType",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/protocol/json/ChannelType"
     },
     {
       "name": "data",
