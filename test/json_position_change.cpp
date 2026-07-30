@@ -61,7 +61,7 @@ TEST_CASE("simple", "[json_position_change]") {
   auto helper = [](value_type const &obj) {
     CHECK(obj.subject == protocol::json::Subject::POSITION_CHANGE);
     CHECK(obj.user_id == "67f914adc8d0110001ca099e"sv);
-    CHECK(obj.channel_type == "private"sv);
+    CHECK(obj.channel_type == protocol::json::ChannelType::PRIVATE);
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }

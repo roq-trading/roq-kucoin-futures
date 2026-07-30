@@ -46,7 +46,7 @@ TEST_CASE("open", "[json_order_change]") {
     CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
     CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
-    CHECK(obj.channel_type == "private"sv);
+    CHECK(obj.channel_type == protocol::json::ChannelType::PRIVATE);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
@@ -104,7 +104,7 @@ TEST_CASE("canceled", "[json_order_change]") {
     CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
     CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
-    CHECK(obj.channel_type == "private"sv);
+    CHECK(obj.channel_type == protocol::json::ChannelType::PRIVATE);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
@@ -167,7 +167,7 @@ TEST_CASE("match", "[json_order_change]") {
     CHECK(obj.type == protocol::json::Type::MESSAGE);
     CHECK(obj.topic == "/contractMarket/tradeOrders"sv);
     CHECK(obj.subject == protocol::json::Subject::ORDER_CHANGE);
-    CHECK(obj.channel_type == "private"sv);
+    CHECK(obj.channel_type == protocol::json::ChannelType::PRIVATE);
     /*
     auto &data = obj.data;
     CHECK(data.order_id == "5cdfc138b21023a909e5ad55"sv);
