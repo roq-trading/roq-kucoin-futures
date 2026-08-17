@@ -327,6 +327,10 @@
     {
       "name": "marketType",
       "type": "std/string_view"
+    },
+    {
+      "name": "lastTimeFundingRate",
+      "type": "std/double"
     }
   ]
 }
