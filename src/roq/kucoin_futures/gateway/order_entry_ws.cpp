@@ -316,11 +316,11 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
       case UNDEFINED_INTERNAL:
         if (protocol::json::is_auth_error(error.code)) {
           if (shared_.settings.experimental.retry_logon) {
-            log::error("error={}"sv, error);
+            log::error("[{}] error={}"sv, account_.name, error);
             log::warn("Disconnecting..."sv);
             (*connection_).close();
           } else {
-            log::fatal("error={}"sv, error);
+            log::fatal("[{}] error={}"sv, account_.name, error);
           }
           return;  // note!
         }
