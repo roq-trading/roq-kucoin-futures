@@ -314,6 +314,17 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
     switch (error.op) {
       using enum protocol::json::WSOp::type_t;
       case UNDEFINED_INTERNAL:
+        if (protocol::json::is_auth_error(error.code)) {
+          if (shared_.settings.experimental.retry_logon) {
+            log::error("error={}"sv, error);
+            log::warn("Disconnecting..."sv);
+            (*connection_).close();
+          } else {
+            log::fatal("error={}"sv, error);
+          }
+          return;  // note!
+        }
+        break;
       case UNKNOWN_INTERNAL:
       case PONG:
         break;

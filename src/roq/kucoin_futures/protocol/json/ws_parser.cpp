@@ -38,10 +38,8 @@ bool WSParser::dispatch(
     switch (message_2.op) {
       using enum protocol::json::WSOp::type_t;
       case UNDEFINED_INTERNAL:
-        if (allow_unknown_event_types) {
-          return false;
-        }
-        break;
+        dispatch_helper<WSError>(handler, message, buffer_stack, trace_info);
+        return true;
       case UNKNOWN_INTERNAL:
         break;
       case PONG:

@@ -11,6 +11,23 @@ using namespace std::literals;
 
 using value_type = protocol::json::WSError;
 
+TEST_CASE("auth", "[json_ws_parser]") {
+  auto message = R"({)"
+                 R"("code":"400003",)"
+                 R"("msg":"KC-API-KEY not exists.",)"
+                 R"("inTime":1787643272974,)"
+                 R"("outTime":1787643275974)"
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.code == 400003);
+    CHECK(obj.msg == "KC-API-KEY not exists."sv);
+    //
+    CHECK(std::empty(obj.id));
+    CHECK(obj.op == protocol::json::WSOp{});
+  };
+  WSParserTester<value_type>::dispatch(helper, message, 8192, 1);
+}
+
 TEST_CASE("create_order", "[json_ws_parser]") {
   auto message = R"({)"
                  R"("id":"_QACfSLXfE0AAQAAAAAA",)"
