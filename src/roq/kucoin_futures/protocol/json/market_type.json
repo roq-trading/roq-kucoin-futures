@@ -1,0 +1,10 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/AssetClass",
+  "type": "enum",
+  "values": [
+    { "name": "CRYPTO" },
+    { "name": "METAL" },
+    { "name": "COMMODITY" },
+    { "name": "STOCK" }
+  ]
+}
