@@ -1,10 +1,12 @@
 {
-  "name": "roq/kucoin_futures/protocol/json/AssetClass",
+  "name": "roq/kucoin_futures/protocol/json/MarketType",
   "type": "enum",
   "values": [
-    { "name": "CRYPTO" },
-    { "name": "METAL" },
-    { "name": "COMMODITY" },
-    { "name": "STOCK" }
+    {
+      "name": "CRYPTO"
+    },
+    {
+      "name": "NASDAQ"
+    }
   ]
 }
