@@ -594,6 +594,7 @@ void OrderEntryREST::operator()(Trace<protocol::json::OrdersAck> const &event) {
         .order_type = map(item.type),
         .time_in_force = map(item.time_in_force),
         .execution_instructions = {},
+        .execution_destination = {},
         .create_time_utc = item.created_at,
         .update_time_utc = item.updated_at,
         .external_account = {},
