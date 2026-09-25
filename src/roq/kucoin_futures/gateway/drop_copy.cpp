@@ -561,7 +561,7 @@ void DropCopy::request_private_token() {
   }
   log::warn("REQUEST PRIVATE TOKEN"sv);
   query_.clear();
-  (*connection_).suspend(60s);
+  (*connection_).suspend_for(60s);
   request_.request_private_token = clock::get_system();
   download_private_token_ = true;
 }
