@@ -46,7 +46,7 @@ auto create_name(auto stream_id) {
   return fmt::format("{}:{}"sv, stream_id, NAME);
 }
 
-auto create_connection(auto &handler, auto &settings, auto &context, auto const &uri) {
+auto create_connection(auto &handler, auto &settings, auto &context, auto &shared, auto const &uri) {
   io::web::URI uri_{uri};
   auto config = web::socket::Client::Config{
       // connection
@@ -68,7 +68,7 @@ auto create_connection(auto &handler, auto &settings, auto &context, auto const 
       .decode_buffer_size = settings.misc.decode_buffer_size,
       .encode_buffer_size = settings.misc.encode_buffer_size,
   };
-  return web::socket::Client::create(handler, context, config, []() { return std::string(); });
+  return web::socket::Client::create(handler, context, config, shared.rate_limit, []() { return std::string(); });
 }
 
 struct create_metrics final : public utils::metrics::Factory {
@@ -88,7 +88,8 @@ MarketData::MarketData(
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index}, ping_frequency_{ping_frequency}, query_{query},
-      connection_{create_connection(*this, shared.settings, context, uri)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+      connection_{create_connection(*this, shared.settings, context, shared, uri)},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),

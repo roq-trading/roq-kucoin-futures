@@ -22,6 +22,8 @@
 #include "roq/kucoin_futures/gateway/api.hpp"
 #include "roq/kucoin_futures/gateway/settings.hpp"
 
+#include "roq/kucoin_futures/tools/rate_limit.hpp"
+
 namespace roq {
 namespace kucoin_futures {
 namespace gateway {
@@ -36,6 +38,8 @@ struct Shared final {
   Settings const &settings;
   API const api;
   MarginMode const margin_mode = {};
+
+  tools::RateLimit rate_limit;
 
   core::limit::RateLimiter rate_limiter;
 
