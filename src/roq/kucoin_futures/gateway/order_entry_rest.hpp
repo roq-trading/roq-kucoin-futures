@@ -154,7 +154,7 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
 
   bool downloading() const { return download_private_token_; }
 
-  void process_response(web::rest::Response const &, auto error_handler, auto success_handler);
+  void process_response(Trace<web::rest::Response> const &, auto error_handler, auto success_handler);
 
  private:
   Handler &handler_;
