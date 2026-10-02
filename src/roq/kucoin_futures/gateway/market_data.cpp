@@ -374,6 +374,8 @@ void MarketData::operator()(Trace<protocol::json::Match> const &event) {
     (*connection_).touch(trace_info.source_receive_time);
     auto &data = match.data;
     auto trade = Trade{
+        .trade_conditions = {},
+        .trade_type = {},
         .side = map(data.side),
         .price = data.price,
         .quantity = data.size,
@@ -403,6 +405,8 @@ void MarketData::operator()(Trace<protocol::json::Execution> const &event) {
     auto &data = execution.data;
     auto trade_id = fmt::format("{}"sv, data.trade_id);  // alloc
     auto trade = Trade{
+        .trade_conditions = {},
+        .trade_type = {},
         .side = map(data.match_side),
         .price = data.price,
         .quantity = data.size,
