@@ -12,14 +12,15 @@
 
 #include "roq/web/rest/client.hpp"
 
-#include "roq/core/download.hpp"
+#include "roq/core/download_2.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
 #include "roq/server.hpp"
 
+#include "roq/server/stream.hpp"
+
 #include "roq/kucoin_futures/gateway/account.hpp"
-#include "roq/kucoin_futures/gateway/order_entry.hpp"
 #include "roq/kucoin_futures/gateway/private_token.hpp"
 #include "roq/kucoin_futures/gateway/request.hpp"
 #include "roq/kucoin_futures/gateway/shared.hpp"
@@ -39,14 +40,21 @@ namespace roq {
 namespace kucoin_futures {
 namespace gateway {
 
-struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handler {
+struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderActionStream, public web::rest::Client::Handler {
   struct Handler {
     virtual void operator()(PrivateToken const &) = 0;
   };
 
   OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &, Request &);
 
-  OrderEntryREST(OrderEntryREST const &) = delete;
+  // protected:
+  friend base_type;
+
+  // server::Stream
+
+  uint16_t stream_id() const override { return stream_id_; }
+
+  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
@@ -54,8 +62,9 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
 
   void operator()(metrics::Writer &) const;
 
- protected:
-  // OrderEntry
+  void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
+
+  // server::OrderActionStream
 
   uint16_t operator()(Event<CreateOrder> const &, server::oms::Order const &, server::oms::RefData const &, std::string_view const &request_id) override;
   uint16_t operator()(
@@ -79,11 +88,7 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
   void operator()(Trace<web::rest::Disconnected> const &) override;
   void operator()(Trace<web::rest::Latency> const &) override;
 
-  // helpers
-
-  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
-
-  void operator()(ConnectionStatus, std::string_view const &reason = {});
+  // core::Download
 
   enum class State {
     UNDEFINED = 0,
@@ -95,7 +100,7 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
     DONE,
   };
 
-  uint32_t download(State);
+  int32_t download(Trace<State> const &);
 
   // bullet-private
 
@@ -189,7 +194,7 @@ struct OrderEntryREST final : public OrderEntry, public web::rest::Client::Handl
   Request &request_;
   // state
   ConnectionStatus connection_status_ = {};
-  core::Download<State> download_;
+  core::Download2<State> download_;
   //
   std::string encode_buffer_;
   //

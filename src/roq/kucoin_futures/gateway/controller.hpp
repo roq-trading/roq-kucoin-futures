@@ -97,9 +97,9 @@ struct Controller final : public server::Handler,
   template <typename... Args>
   static void dispatch_helper(auto &self, Args &&...);
 
-  OrderEntry &get_order_entry_rest(std::string_view const &account);
-  OrderEntry &get_order_entry_ws(std::string_view const &account);
-  OrderEntry &get_order_entry(std::string_view const &account);
+  server::OrderActionStream &get_order_entry_rest(std::string_view const &account);
+  server::OrderActionStream &get_order_entry_ws(std::string_view const &account);
+  server::OrderActionStream &get_order_entry(std::string_view const &account);
 
  private:
   server::Dispatcher &dispatcher_;
@@ -114,10 +114,10 @@ struct Controller final : public server::Handler,
   uint16_t stream_id_ = {};
   // streams
   Rest rest_;
-  utils::unordered_map<std::string, std::unique_ptr<OrderEntryREST>> order_entry_rest_;
-  utils::unordered_map<std::string, std::unique_ptr<OrderEntryWS>> order_entry_ws_;
+  utils::unordered_map<std::string, std::unique_ptr<server::OrderActionStream>> order_entry_rest_;
+  utils::unordered_map<std::string, std::unique_ptr<server::OrderActionStream>> order_entry_ws_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
-  std::vector<std::unique_ptr<MarketData>> market_data_;
+  std::vector<std::unique_ptr<server::MarketDataStream>> market_data_;
   // websocket uri's
   std::string public_ws_uri_;
   std::string public_ws_query_;

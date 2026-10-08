@@ -109,8 +109,10 @@ OrderEntryREST::OrderEntryREST(Handler &handler, io::Context &context, uint16_t 
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
       },
-      account_{account}, shared_{shared}, request_{request}, download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
+      account_{account}, shared_{shared}, request_{request}, download_{shared.settings.rest.request_timeout, [this](auto &event) { return download(event); }} {
 }
+
+// server::Stream
 
 void OrderEntryREST::operator()(Event<Start> const &) {
   (*connection_).start();
@@ -157,6 +159,30 @@ void OrderEntryREST::operator()(metrics::Writer &writer) const {
       .write(latency_.ping, metrics::Type::LATENCY);
 }
 
+void OrderEntryREST::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
+  auto &[trace_info, connection_status] = event;
+  connection_status_ = connection_status;
+  auto stream_status = StreamStatus{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .supports = SUPPORTS,
+      .transport = Transport::TCP,
+      .protocol = Protocol::HTTP,
+      .encoding = {Encoding::JSON},
+      .priority = Priority::PRIMARY,
+      .connection_status = connection_status_,
+      .reason = reason,
+      .interface = (*connection_).get_interface(),
+      .authority = (*connection_).get_current_authority(),
+      .path = (*connection_).get_current_path(),
+      .proxy = (*connection_).get_proxy(),
+  };
+  log::info("stream_status={}"sv, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+}
+
+// server::OrderActionStream
+
 uint16_t OrderEntryREST::operator()(
     Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   create_order(event, order, ref_data, request_id);
@@ -187,17 +213,21 @@ uint16_t OrderEntryREST::operator()(Event<CancelAllOrders> const &event, std::st
   return stream_id_;
 }
 
-void OrderEntryREST::operator()(Trace<web::rest::Connected> const &) {
+// web::rest::Client::Handler
+
+void OrderEntryREST::operator()(Trace<web::rest::Connected> const &event) {
+  auto &[trace_info, disconnected] = event;
   if (download_.downloading()) {
-    download_.bump();
+    download_.bump(trace_info);
   } else {
-    download_.begin();
+    download_.begin(trace_info);
   }
 }
 
-void OrderEntryREST::operator()(Trace<web::rest::Disconnected> const &) {
+void OrderEntryREST::operator()(Trace<web::rest::Disconnected> const &event) {
+  auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  (*this)(ConnectionStatus::DISCONNECTED);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   if (!download_.downloading()) {
     download_.reset();
   }
@@ -214,29 +244,10 @@ void OrderEntryREST::operator()(Trace<web::rest::Latency> const &event) {
   latency_.ping.update(latency.sample);
 }
 
-void OrderEntryREST::operator()(ConnectionStatus connection_status, std::string_view const &reason) {
-  connection_status_ = connection_status;
-  TraceInfo trace_info;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = account_.name,
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::HTTP,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-      .proxy = (*connection_).get_proxy(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
-}
+// core::Download
 
-uint32_t OrderEntryREST::download(State state) {
+int32_t OrderEntryREST::download(Trace<State> const &event) {
+  auto &[trace_info, state] = event;
   switch (state) {
     using enum State;
     case UNDEFINED:
@@ -244,7 +255,7 @@ uint32_t OrderEntryREST::download(State state) {
       break;
     case PRIVATE_TOKEN: {
       if (!has_downloaded_private_token_) {
-        (*this)(ConnectionStatus::DOWNLOADING, "private-token"sv);
+        create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "private-token"sv);
         get_private_token();
         return 1;
       } else {
@@ -252,27 +263,27 @@ uint32_t OrderEntryREST::download(State state) {
       }
     }
     case ACCOUNT:
-      (*this)(ConnectionStatus::DOWNLOADING, "account"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "account"sv);
       get_account();
       return 1;
     case POSITIONS:
-      (*this)(ConnectionStatus::DOWNLOADING, "positions"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "positions"sv);
       get_positions();
       return 1;
     case ORDERS:
-      (*this)(ConnectionStatus::DOWNLOADING, "orders"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "orders"sv);
       get_orders();
       return 1;
     case FILLS:
       if (shared_.settings.download.trades_lookback.count()) {
-        (*this)(ConnectionStatus::DOWNLOADING, "fills"sv);
+        create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "fills"sv);
         get_fills();
         return 1;
       } else {
         return 0;
       }
     case DONE:
-      (*this)(ConnectionStatus::READY);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
       return 0;
   }
   assert(false);
@@ -308,6 +319,7 @@ void OrderEntryREST::get_private_token() {
 void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const STATE = State::PRIVATE_TOKEN;
   profile_.private_token_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       if (download_.downloading()) {
@@ -328,7 +340,7 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
           log::fatal("Unexpected: token={}"sv, token);
         }
         if (download_.downloading()) {
-          download_.check(STATE);
+          download_.check(trace_info, STATE);
         }
         request_.respond_private_token = clock::get_system();  // completion
         download_private_token_ = false;
@@ -388,6 +400,7 @@ void OrderEntryREST::get_account() {
 void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const STATE = State::ACCOUNT;
   profile_.account_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(STATE);
@@ -400,7 +413,7 @@ void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event, ui
         if (account_ack.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, account_ack};
           (*this)(event_2);
-          download_.check(STATE);
+          download_.check(trace_info, STATE);
         } else {
           handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(account_ack.code), account_ack.msg);
         }
@@ -462,6 +475,7 @@ void OrderEntryREST::get_positions() {
 void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const STATE = State::POSITIONS;
   profile_.positions_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(STATE);
@@ -474,7 +488,7 @@ void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event, 
         if (positions_ack.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, positions_ack};
           (*this)(event_2);
-          download_.check(STATE);
+          download_.check(trace_info, STATE);
         } else {
           handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(positions_ack.code), positions_ack.msg);
         }
@@ -540,6 +554,7 @@ void OrderEntryREST::get_orders() {
 void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const STATE = State::ORDERS;
   profile_.orders_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(STATE);
@@ -552,7 +567,7 @@ void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event, uin
         if (orders_ack.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, orders_ack};
           (*this)(event_2);
-          download_.check(STATE);
+          download_.check(trace_info, STATE);
         } else {
           handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(orders_ack.code), orders_ack.msg);
         }
@@ -653,6 +668,7 @@ void OrderEntryREST::get_fills() {
 void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const STATE = State::FILLS;
   profile_.fills_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(STATE);
@@ -665,7 +681,7 @@ void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event, uint
         if (fills_ack.code == SYSTEM_CODE_SUCCESS) {
           Trace event_2{event, fills_ack};
           (*this)(event_2);
-          download_.check(STATE);
+          download_.check(trace_info, STATE);
         } else {
           handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(fills_ack.code), fills_ack.msg);
         }

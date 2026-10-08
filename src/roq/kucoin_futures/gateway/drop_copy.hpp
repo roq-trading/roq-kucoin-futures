@@ -12,11 +12,13 @@
 
 #include "roq/web/socket/client.hpp"
 
-#include "roq/core/download.hpp"
+#include "roq/core/download_2.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
 #include "roq/server.hpp"
+
+#include "roq/server/stream.hpp"
 
 #include "roq/kucoin_futures/gateway/account.hpp"
 #include "roq/kucoin_futures/gateway/private_token.hpp"
@@ -29,7 +31,7 @@ namespace roq {
 namespace kucoin_futures {
 namespace gateway {
 
-struct DropCopy final : public web::socket::Client::Handler, public protocol::json::Parser::Handler {
+struct DropCopy final : public Base<DropCopy>, public server::Stream, public web::socket::Client::Handler, public protocol::json::Parser::Handler {
   struct Handler {};
 
   DropCopy(
@@ -43,15 +45,24 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
-  DropCopy(DropCopy const &) = delete;
-
-  void operator()(Event<Start> const &);
-  void operator()(Event<Stop> const &);
-  void operator()(Event<Timer> const &);
-
-  void operator()(metrics::Writer &) const;
-
   void operator()(PrivateToken const &);
+
+  // protected:
+  friend base_type;
+
+  // server::Stream
+
+  uint16_t stream_id() const override { return stream_id_; }
+
+  bool ready() const;
+
+  void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
+
+  void operator()(Event<Start> const &) override;
+  void operator()(Event<Stop> const &) override;
+  void operator()(Event<Timer> const &) override;
+
+  void operator()(metrics::Writer &) const override;
 
  protected:
   // web::socket::Client::Handler
@@ -66,11 +77,7 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   //
   std::string_view get_query() const override { return query_; }
 
-  // helpers
-
-  bool ready() const;
-
-  void operator()(ConnectionStatus, std::string_view const &reason = {});
+  // core::Download
 
   enum class State {
     UNDEFINED = 0,
@@ -78,15 +85,7 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
     DONE,
   };
 
-  uint32_t download(State);
-
-  void subscribe();
-
-  void subscribe(std::string_view const &topic);
-
-  void send_ping(std::chrono::nanoseconds now);
-
-  void parse(std::string_view const &message);
+  int32_t download(Trace<State> const &);
 
   // protocol::json::Parser::Handler
 
@@ -121,6 +120,14 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
 
   void request_private_token();
 
+  void subscribe();
+
+  void subscribe(std::string_view const &topic);
+
+  void send_ping(std::chrono::nanoseconds now);
+
+  void parse(std::string_view const &message);
+
  private:
   [[maybe_unused]] Handler &handler_;
   // config
@@ -151,7 +158,7 @@ struct DropCopy final : public web::socket::Client::Handler, public protocol::js
   bool welcome_ = false;
   bool ready_ = false;
   ConnectionStatus connection_status_ = {};
-  core::Download<State> download_;
+  core::Download2<State> download_;
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   //

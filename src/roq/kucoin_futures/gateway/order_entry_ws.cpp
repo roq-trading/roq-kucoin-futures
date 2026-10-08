@@ -95,6 +95,8 @@ OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stre
       account_{account}, shared_{shared} {
 }
 
+// server::Stream
+
 bool OrderEntryWS::ready() const {
   return (*connection_).ready();
 }
@@ -140,6 +142,30 @@ void OrderEntryWS::operator()(metrics::Writer &writer) const {
       .write(latency_.heartbeat, metrics::Type::LATENCY);
 }
 
+void OrderEntryWS::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
+  auto &[trace_info, connection_status] = event;
+  connection_status_ = connection_status;
+  auto stream_status = StreamStatus{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .supports = SUPPORTS,
+      .transport = Transport::TCP,
+      .protocol = Protocol::WS,
+      .encoding = {Encoding::JSON},
+      .priority = Priority::PRIMARY,
+      .connection_status = connection_status_,
+      .reason = reason,
+      .interface = (*connection_).get_interface(),
+      .authority = (*connection_).get_current_authority(),
+      .path = (*connection_).get_current_path(),
+      .proxy = (*connection_).get_proxy(),
+  };
+  log::info("stream_status={}"sv, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+}
+
+// server::OrderActionStream
+
 uint16_t OrderEntryWS::operator()(
     Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   auto &[message_info, create_order] = event;
@@ -173,15 +199,19 @@ uint16_t OrderEntryWS::operator()(Event<CancelAllOrders> const &, [[maybe_unused
   throw server::oms::NotSupported{"not supported"sv};
 }
 
-void OrderEntryWS::operator()(Trace<web::socket::Connected> const &) {
+// web::socket::Client::Handler
+
+void OrderEntryWS::operator()(Trace<web::socket::Connected> const &event) {
+  auto &[trace_info, connected] = event;
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();
   logon_timeout_ = now + shared_.settings.ws.request_timeout;
 }
 
-void OrderEntryWS::operator()(Trace<web::socket::Disconnected> const &) {
+void OrderEntryWS::operator()(Trace<web::socket::Disconnected> const &event) {
+  auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  (*this)(ConnectionStatus::DISCONNECTED);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   welcome_ = false;
   ping_freq_ = {};
   ready_ = false;
@@ -193,7 +223,9 @@ void OrderEntryWS::operator()(Trace<web::socket::Ready> const &) {
   // note! wait for welcome
 }
 
-void OrderEntryWS::operator()(Trace<web::socket::Close> const &) {
+void OrderEntryWS::operator()(Trace<web::socket::Close> const &event) {
+  auto &[trace_info, close] = event;
+  log::warn("close={}"sv, close);
 }
 
 void OrderEntryWS::operator()(Trace<web::socket::Latency> const &event) {
@@ -216,59 +248,7 @@ void OrderEntryWS::operator()(Trace<web::socket::Binary> const &) {
   log::fatal("Unexpected"sv);
 }
 
-std::string_view OrderEntryWS::get_query() const {
-  const_cast<OrderEntryWS &>(*this).query_buffer_ = account_.create_ws_query();
-  return query_buffer_;
-}
-
-void OrderEntryWS::operator()(ConnectionStatus connection_status, std::string_view const &reason) {
-  connection_status_ = connection_status;
-  TraceInfo trace_info;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = account_.name,
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-      .proxy = (*connection_).get_proxy(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
-}
-
-void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
-  assert(ping_freq_.count() > 0);
-  next_ping_ = now + ping_freq_ / 2;
-  auto message = fmt::format(
-      R"({{)"
-      R"("id":"{}",)"
-      R"("op":"ping")"
-      R"(}})"sv,
-      now.count());
-  (*connection_).send_text(message);
-}
-
-void OrderEntryWS::parse(std::string_view const &message) {
-  profile_.parse([&]() {
-    auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
-    try {
-      TraceInfo trace_info;
-      if (!protocol::json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
-        log_message();
-      }
-    } catch (...) {
-      log_message();
-      utils::exceptions::Unhandled::terminate();
-    }
-  });
-}
+// protocol::json::WSParser::Handler
 
 void OrderEntryWS::operator()(Trace<protocol::json::WSAuth> const &event, std::string_view const &message) {
   profile_.auth([&]() {
@@ -276,7 +256,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSAuth> const &event, std::s
     log::info<1>("auth={}"sv, auth);
     auto response = account_.create_ws_auth(message);
     (*connection_).send_text(response);
-    (*this)(ConnectionStatus::LOGIN_SENT);
+    create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
   });
 }
 
@@ -287,7 +267,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSWelcome> const &event) {
     welcome_ = true;
     assert(welcome.ping_interval.count());
     ping_freq_ = welcome.ping_interval;
-    (*this)(ConnectionStatus::READY);
+    create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
   });
 }
 
@@ -388,6 +368,40 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &eve
     };
     log::debug("response={}"sv, response);
     create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id_);
+  });
+}
+
+// helpers
+
+std::string_view OrderEntryWS::get_query() const {
+  const_cast<OrderEntryWS &>(*this).query_buffer_ = account_.create_ws_query();
+  return query_buffer_;
+}
+
+void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
+  assert(ping_freq_.count() > 0);
+  next_ping_ = now + ping_freq_ / 2;
+  auto message = fmt::format(
+      R"({{)"
+      R"("id":"{}",)"
+      R"("op":"ping")"
+      R"(}})"sv,
+      now.count());
+  (*connection_).send_text(message);
+}
+
+void OrderEntryWS::parse(std::string_view const &message) {
+  profile_.parse([&]() {
+    auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
+    try {
+      TraceInfo trace_info;
+      if (!protocol::json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+        log_message();
+      }
+    } catch (...) {
+      log_message();
+      utils::exceptions::Unhandled::terminate();
+    }
   });
 }
 

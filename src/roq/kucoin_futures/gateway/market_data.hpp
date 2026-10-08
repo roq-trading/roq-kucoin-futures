@@ -19,6 +19,8 @@
 
 #include "roq/server.hpp"
 
+#include "roq/server/stream.hpp"
+
 #include "roq/kucoin_futures/gateway/shared.hpp"
 
 #include "roq/kucoin_futures/protocol/json/parser.hpp"
@@ -27,7 +29,10 @@ namespace roq {
 namespace kucoin_futures {
 namespace gateway {
 
-struct MarketData final : public web::socket::Client::Handler, public protocol::json::Parser::Handler {
+struct MarketData final : public Base<MarketData>,
+                          public server::MarketDataStream,
+                          public web::socket::Client::Handler,
+                          public protocol::json::Parser::Handler {
   struct Handler {};
 
   MarketData(
@@ -40,13 +45,24 @@ struct MarketData final : public web::socket::Client::Handler, public protocol::
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
-  MarketData(MarketData const &) = delete;
+  // protected:
+  friend base_type;
+
+  // server::Stream
+
+  uint16_t stream_id() const override { return stream_id_; }
+
+  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
+
+  void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
+
+  // server::MarketDataStream
 
   void subscribe(size_t start_from = 0);
 
@@ -62,21 +78,6 @@ struct MarketData final : public web::socket::Client::Handler, public protocol::
   void operator()(Trace<web::socket::Binary> const &) override;
   //
   std::string_view get_query() const override { return query_; }
-
-  // helpers
-
-  uint16_t stream_id() const { return stream_id_; }
-
-  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
-  void operator()(ConnectionStatus, std::string_view const &reason = {});
-
-  void subscribe(std::span<Symbol const> const &symbols);
-
-  void subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols);
-
-  void send_ping(std::chrono::nanoseconds now);
-
-  void parse(std::string_view const &message);
 
   // protocol::json::Parser::Handler
 
@@ -105,7 +106,17 @@ struct MarketData final : public web::socket::Client::Handler, public protocol::
   void operator()(Trace<protocol::json::SymbolOrderChange> const &) override;
   void operator()(Trace<protocol::json::OrderChange> const &) override;
 
+  // helpers
+
   void check_subscribe_queue(std::chrono::nanoseconds now);
+
+  void subscribe(std::span<Symbol const> const &symbols);
+
+  void subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols);
+
+  void send_ping(std::chrono::nanoseconds now);
+
+  void parse(std::string_view const &message);
 
  private:
   [[maybe_unused]] Handler &handler_;
