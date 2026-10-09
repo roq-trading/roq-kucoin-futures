@@ -52,19 +52,19 @@ struct MarketData final : public Base<MarketData>,
 
   uint16_t stream_id() const override { return stream_id_; }
 
-  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
+  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
-  void operator()(Event<Start> const &);
-  void operator()(Event<Stop> const &);
-  void operator()(Event<Timer> const &);
+  void operator()(Event<Start> const &) override;
+  void operator()(Event<Stop> const &) override;
+  void operator()(Event<Timer> const &) override;
 
-  void operator()(metrics::Writer &) const;
+  void operator()(metrics::Writer &) const override;
 
   void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
 
   // server::MarketDataStream
 
-  void subscribe(size_t start_from = 0);
+  void subscribe(size_t start_from = 0) override;
 
  protected:
   // web::socket::Client::Handler

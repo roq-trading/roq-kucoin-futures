@@ -56,11 +56,11 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
 
   bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
-  void operator()(Event<Start> const &);
-  void operator()(Event<Stop> const &);
-  void operator()(Event<Timer> const &);
+  void operator()(Event<Start> const &) override;
+  void operator()(Event<Stop> const &) override;
+  void operator()(Event<Timer> const &) override;
 
-  void operator()(metrics::Writer &) const;
+  void operator()(metrics::Writer &) const override;
 
   void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
 

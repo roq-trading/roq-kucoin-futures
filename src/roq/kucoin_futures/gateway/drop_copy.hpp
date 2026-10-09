@@ -54,7 +54,7 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   uint16_t stream_id() const override { return stream_id_; }
 
-  bool ready() const;
+  bool ready() const override;
 
   void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
 
