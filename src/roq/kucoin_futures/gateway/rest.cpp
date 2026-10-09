@@ -225,12 +225,8 @@ void Rest::get_public_token() {
         .body = {},
         .quality_of_service = {},
     };
-    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_public_token_ack(event, sequence);
-    };
-    (*connection_)("public_token"sv, request, callback);
+    auto callback = [this, sequence = download_.sequence()](auto &event, [[maybe_unused]] auto &request_id) { get_public_token_ack(event, sequence); };
+    (*connection_)(request, callback, "public_token"sv);
   });
 }
 
@@ -293,12 +289,8 @@ void Rest::get_contracts() {
         .body = {},
         .quality_of_service = {},
     };
-    auto callback = [this, sequence = download_.sequence()]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_contracts_ack(event, sequence);
-    };
-    (*connection_)("contracts"sv, request, callback);
+    auto callback = [this, sequence = download_.sequence()](auto &event, [[maybe_unused]] auto &request_id) { get_contracts_ack(event, sequence); };
+    (*connection_)(request, callback, "contracts"sv);
   });
 }
 
@@ -448,12 +440,8 @@ void Rest::get_order_book(std::string_view const &symbol) {
         .body = {},
         .quality_of_service = {},
     };
-    auto callback = [this, symbol = std::string{symbol}]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_order_book_ack(event, symbol);
-    };
-    (*connection_)("order_book"sv, request, callback);
+    auto callback = [this, symbol = std::string{symbol}](auto &event, [[maybe_unused]] auto &request_id) { get_order_book_ack(event, symbol); };
+    (*connection_)(request, callback, "order_book"sv);
   });
 }
 
