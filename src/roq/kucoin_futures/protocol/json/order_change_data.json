@@ -97,6 +97,10 @@
     {
       "name": "allCanceledSize",
       "type": "std/double"
+    },
+    {
+      "name": "userId",
+      "type": "std/string_view"
     }
   ]
 }
