@@ -90,35 +90,19 @@ Controller::Controller(server::Dispatcher &dispatcher, Settings const &settings,
 
 // server::Handler
 
-void Controller::operator()(Event<Start> const &event) {
+void Controller::operator()(Trace<Start> const &event) {
   log::info("Starting..."sv);
   assert(std::empty(market_data_));
   dispatch(event);
 }
 
-void Controller::operator()(Event<Stop> const &event) {
+void Controller::operator()(Trace<Stop> const &event) {
   log::info("Stopping..."sv);
   dispatch(event);
 }
 
-void Controller::operator()(Event<Timer> const &event) {
+void Controller::operator()(Trace<Timer> const &event) {
   dispatch(event);
-}
-
-void Controller::operator()(Event<Control> const &event) {
-  auto &[message_info, control] = event;
-  switch (control.action) {
-    using enum Action;
-    case UNDEFINED:
-      assert(false);
-      break;
-    case ENABLE:
-      dispatcher_(State::ENABLED);
-      break;
-    case DISABLE:
-      dispatcher_(State::DISABLED);
-      break;
-  }
 }
 
 void Controller::operator()(Event<Connected> const &) {
@@ -145,6 +129,22 @@ void Controller::operator()(Event<Subscribe> const &event) {
       .symbols = symbols,
   };
   (*this)(symbols_update);
+}
+
+void Controller::operator()(Event<Control> const &event) {
+  auto &[message_info, control] = event;
+  switch (control.action) {
+    using enum Action;
+    case UNDEFINED:
+      assert(false);
+      break;
+    case ENABLE:
+      dispatcher_(State::ENABLED);
+      break;
+    case DISABLE:
+      dispatcher_(State::DISABLED);
+      break;
+  }
 }
 
 uint16_t Controller::operator()(
@@ -227,9 +227,9 @@ void Controller::operator()(PrivateToken const &private_token) {
         private_token.uri,
         private_token.query,
         private_token.ping_frequency);
-    MessageInfo message_info;
+    TraceInfo trace_info;  // XXX FIXME TODO
     Start start;
-    create_event_and_dispatch(*tmp, message_info, start);
+    create_trace_and_dispatch(*tmp, trace_info, start);
     drop_copy = std::move(tmp);
   } else {
     (*drop_copy)(private_token);
@@ -244,9 +244,9 @@ void Controller::ensure_symbol_slices(size_t size) {
     auto index = std::size(market_data_);
     log::debug("Create MarketData (stream_id={}, index={})"sv, stream_id, index);
     auto market_data = std::make_unique<MarketData>(*this, context_, stream_id, shared_, index, public_ws_uri_, public_ws_query_, public_ws_ping_frequency_);
-    MessageInfo message_info;
+    TraceInfo trace_info;  // XXX FIXME TODO
     Start start;
-    create_event_and_dispatch(*market_data, message_info, start);
+    create_trace_and_dispatch(*market_data, trace_info, start);
     market_data_.emplace_back(std::move(market_data));
   }
 }
