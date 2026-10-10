@@ -188,11 +188,10 @@ void DropCopy::operator()(PrivateToken const &private_token) {
 void DropCopy::operator()(Trace<web::socket::Connected> const &event) {
   auto &[trace_info, connected] = event;
   assert(logon_timeout_.count() == 0);
-  auto now = clock::get_system();
-  logon_timeout_ = now + shared_.settings.ws.request_timeout;
+  logon_timeout_ = trace_info.origin_create_time + shared_.settings.ws.request_timeout;
   // DEBUG
   if (shared_.settings.misc.experimental_simulate_expired_token.count()) {
-    next_simulated_disconnect_ = now + shared_.settings.misc.experimental_simulate_expired_token;
+    next_simulated_disconnect_ = trace_info.origin_create_time + shared_.settings.misc.experimental_simulate_expired_token;
   }
 }
 
