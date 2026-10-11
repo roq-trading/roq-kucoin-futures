@@ -240,7 +240,7 @@ void OrderEntryWS::operator()(Trace<web::socket::Latency> const &event) {
 
 void OrderEntryWS::operator()(Trace<web::socket::Text> const &event) {
   auto &[trace_info, text] = event;
-  parse(text.payload);
+  parse(trace_info, text.payload);
 }
 
 void OrderEntryWS::operator()(Trace<web::socket::Binary> const &) {
@@ -389,11 +389,10 @@ void OrderEntryWS::send_ping(std::chrono::nanoseconds now) {
   (*connection_).send_text(message);
 }
 
-void OrderEntryWS::parse(std::string_view const &message) {
+void OrderEntryWS::parse(TraceInfo const &trace_info, std::string_view const &message) {
   profile_.parse([&]() {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
-      TraceInfo trace_info;
       if (!protocol::json::WSParser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
         log_message();
       }

@@ -1,0 +1,20 @@
+/* Copyright (c) 2017-2026, Hans Erik Thrane */
+
+#pragma once
+
+#include <chrono>
+#include <string_view>
+
+namespace roq {
+namespace kucoin_futures {
+namespace gateway {
+
+struct PublicToken final {
+  std::string_view uri;
+  std::string_view query;
+  std::chrono::nanoseconds ping_frequency = {};
+};
+
+}  // namespace gateway
+}  // namespace kucoin_futures
+}  // namespace roq

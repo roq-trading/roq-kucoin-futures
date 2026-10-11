@@ -42,7 +42,7 @@ namespace gateway {
 
 struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderActionStream, public web::rest::Client::Handler {
   struct Handler {
-    virtual void operator()(PrivateToken const &) = 0;
+    virtual void operator()(Trace<PrivateToken> const &) = 0;
   };
 
   OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &, Request &);
