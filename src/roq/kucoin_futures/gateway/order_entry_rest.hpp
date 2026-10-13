@@ -104,31 +104,31 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
 
   // bullet-private
 
-  void get_private_token();
+  void get_private_token(TraceInfo const &);
   void get_private_token_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::Token> const &);
 
   // account
 
-  void get_account();
+  void get_account(TraceInfo const &);
   void get_account_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::AccountAck> const &);
 
   // positions
 
-  void get_positions();
+  void get_positions(TraceInfo const &);
   void get_positions_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::PositionsAck> const &);
 
   // orders
 
-  void get_orders();
+  void get_orders(TraceInfo const &);
   void get_orders_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::OrdersAck> const &);
 
   // fills
 
-  void get_fills();
+  void get_fills(TraceInfo const &);
   void get_fills_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::FillsAck> const &);
 

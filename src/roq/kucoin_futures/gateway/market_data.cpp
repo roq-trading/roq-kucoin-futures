@@ -36,6 +36,8 @@ auto const SUPPORTS = Mask{
     SupportType::STATISTICS,
 };
 
+uint64_t const REQUEST_ID = 1'000'000;
+
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 }  // namespace
 
@@ -89,7 +91,7 @@ MarketData::MarketData(
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index}, ping_frequency_{ping_frequency}, query_{query},
       connection_{create_connection(*this, shared.settings, context, shared, uri)},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH}, request_id_{stream_id_ * REQUEST_ID},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),
@@ -115,7 +117,7 @@ MarketData::MarketData(
           .ping = create_metrics(shared.settings, name_, "ping"sv),
           .heartbeat = create_metrics(shared.settings, name_, "heartbeat"sv),
       },
-      shared_{shared} {
+      shared_{shared}, subscribe_queue_{shared_.rate_limiter} {
   if (ping_frequency_.count() == 0) {
     log::fatal("Unexpected"sv);
   }
@@ -140,7 +142,7 @@ void MarketData::operator()(Trace<Timer> const &event) {
       if (next_ping_ < timer.now) {
         send_ping(timer.now);
       }
-      check_subscribe_queue(timer.now);
+      check_subscribe_queue(trace_info);
     }
   } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
     assert(!welcome_);
@@ -627,8 +629,9 @@ void MarketData::operator()(Trace<protocol::json::OrderChange> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::check_subscribe_queue(std::chrono::nanoseconds now) {
-  subscribe_queue_.dispatch([&](auto now) { return shared_.rate_limiter.can_request(now); }, [&](auto &message) { (*connection_).send_text(message); }, now);
+void MarketData::check_subscribe_queue(TraceInfo const &trace_info) {
+  auto callback = [&]([[maybe_unused]] auto &trace_info, auto &message) { (*connection_).send_text(message); };
+  subscribe_queue_.dispatch(trace_info, callback);
 }
 
 // helpers
@@ -648,7 +651,6 @@ void MarketData::subscribe(std::span<Symbol const> const &symbols) {
 void MarketData::subscribe(std::string_view const &topic, std::span<Symbol const> const &symbols) {
   assert(!std::empty(symbols));
   for (auto &item : symbols) {
-    auto now = clock::get_system();
     auto message = fmt::format(
         R"({{)"
         R"("id":"{}",)"
@@ -656,7 +658,7 @@ void MarketData::subscribe(std::string_view const &topic, std::span<Symbol const
         R"("topic":"{}:{}",)"
         R"("response":true)"
         R"(}})"sv,
-        now.count(),
+        ++request_id_,
         topic,
         item);
     subscribe_queue_.emplace_back(message);

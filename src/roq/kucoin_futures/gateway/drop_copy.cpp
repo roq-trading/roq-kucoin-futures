@@ -30,6 +30,8 @@ auto const SUPPORTS = Mask{
     SupportType::POSITION,
 };
 
+uint64_t const REQUEST_ID = 1'000'000;
+
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 }  // namespace
 
@@ -84,7 +86,7 @@ DropCopy::DropCopy(
     std::chrono::nanoseconds ping_frequency)
     : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, query_{query},
       connection_{create_connection(*this, shared.settings, context, shared, uri)}, ping_frequency_{ping_frequency},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH}, request_id_{stream_id_ * REQUEST_ID},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -134,7 +136,7 @@ void DropCopy::operator()(Trace<Timer> const &event) {
   // DEBUG
   if (next_simulated_disconnect_.count() && next_simulated_disconnect_ < timer.now) {
     next_simulated_disconnect_ = {};
-    request_private_token();
+    request_private_token(trace_info);
   }
 }
 
@@ -280,7 +282,7 @@ void DropCopy::operator()(Trace<protocol::json::Error> const &event) {
       if (shared_.settings.misc.experimental_crash_on_expired_token) {
         log::fatal("Abort: error={}"sv, error);
       }
-      request_private_token();
+      request_private_token(trace_info);
     }
   });
 }
@@ -523,14 +525,14 @@ void DropCopy::check_response_private_token() {
   }
 }
 
-void DropCopy::request_private_token() {
+void DropCopy::request_private_token(TraceInfo const &trace_info) {
   if (std::empty(query_)) {
     return;
   }
   log::warn("REQUEST PRIVATE TOKEN"sv);
   query_.clear();
   (*connection_).suspend_for(60s);
-  request_.request_private_token = clock::get_system();
+  request_.request_private_token = trace_info.origin_create_time;
   download_private_token_ = true;
 }
 
@@ -541,7 +543,6 @@ void DropCopy::subscribe() {
 }
 
 void DropCopy::subscribe(std::string_view const &topic) {
-  auto now = clock::get_system();
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
@@ -550,7 +551,7 @@ void DropCopy::subscribe(std::string_view const &topic) {
       R"("response":true,)"
       R"("privateChannel":true)"
       R"(}})"sv,
-      now.count(),
+      ++request_id_,
       topic);
   (*connection_).send_text(message);
 }

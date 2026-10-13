@@ -118,7 +118,7 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   void check_response_private_token();
 
-  void request_private_token();
+  void request_private_token(TraceInfo const &);
 
   void subscribe();
 
@@ -139,6 +139,8 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
   std::chrono::nanoseconds const ping_frequency_;
   // buffers
   core::json::BufferStack decode_buffer_;
+  //
+  uint64_t request_id_ = {};
   // metrics
   struct {
     utils::metrics::Counter disconnect;

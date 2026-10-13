@@ -373,7 +373,9 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &eve
 // helpers
 
 std::string_view OrderEntryWS::get_query() const {
-  const_cast<OrderEntryWS &>(*this).query_buffer_ = account_.create_ws_query();
+  auto &self = const_cast<OrderEntryWS &>(*this);
+  TraceInfo trace_info;  // XXX FIXME TODO
+  self.query_buffer_ = account_.create_ws_query(trace_info);
   return query_buffer_;
 }
 

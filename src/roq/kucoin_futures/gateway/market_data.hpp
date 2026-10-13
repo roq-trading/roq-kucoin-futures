@@ -13,7 +13,7 @@
 
 #include "roq/web/socket/client.hpp"
 
-#include "roq/core/timer_queue.hpp"
+#include "roq/core/limit/queue.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
@@ -108,7 +108,7 @@ struct MarketData final : public Base<MarketData>,
 
   // helpers
 
-  void check_subscribe_queue(std::chrono::nanoseconds now);
+  void check_subscribe_queue(TraceInfo const &);
 
   void subscribe(std::span<Symbol const> const &symbols);
 
@@ -130,6 +130,8 @@ struct MarketData final : public Base<MarketData>,
   std::unique_ptr<web::socket::Client> const connection_;
   // buffers
   core::json::BufferStack decode_buffer_;
+  //
+  uint64_t request_id_ = {};
   // metrics
   struct {
     utils::metrics::Counter disconnect, total_bytes_received;
@@ -150,7 +152,7 @@ struct MarketData final : public Base<MarketData>,
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   // queue
-  core::TimerQueue<std::string> subscribe_queue_;
+  core::limit::Queue<std::string> subscribe_queue_;
 };
 
 }  // namespace gateway
