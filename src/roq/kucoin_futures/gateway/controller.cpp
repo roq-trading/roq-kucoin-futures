@@ -28,21 +28,31 @@ R create_accounts(auto const &config) {
 }
 
 template <typename R>
-R create_request(auto &config) {
+R create_requests(auto &config, auto &shared) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[_, account] : config.accounts) {
-    result.try_emplace(static_cast<std::string_view>(account.name), Request{});
+    auto request = std::make_unique<Request>(shared);
+    result.try_emplace(static_cast<std::string_view>(account.name), std::move(request));
   }
   return result;
 }
 
+Request &get_request(auto &requests, auto &account) {
+  auto iter = requests.find(account);
+  if (iter == std::end(requests)) {
+    log::fatal("Unexpected"sv);
+  }
+  return *(*iter).second;
+}
+
 template <typename R>
-R create_order_entry_rest(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared, auto &request) {
+R create_order_entry_rest(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared, auto &requests) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[name, account] : accounts) {
-    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, *account, shared, request[name]));
+    auto &request = get_request(requests, name);
+    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, *account, shared, request));
   }
   return result;
 }
@@ -81,9 +91,9 @@ uint8_t Controller::parse_api(Settings const &) {
 }
 
 Controller::Controller(server::Dispatcher &dispatcher, Settings const &settings, Config const &config, io::Context &context)
-    : dispatcher_{dispatcher}, accounts_{create_accounts<decltype(accounts_)>(config)}, request_{create_request<decltype(request_)>(config)}, context_{context},
-      shared_{dispatcher, settings}, rest_{*this, context_, ++stream_id_, shared_},
-      order_entry_rest_{create_order_entry_rest<decltype(order_entry_rest_)>(*this, context_, stream_id_, accounts_, shared_, request_)},
+    : dispatcher_{dispatcher}, context_{context}, shared_{dispatcher, settings}, accounts_{create_accounts<decltype(accounts_)>(config)},
+      requests_{create_requests<decltype(requests_)>(config, shared_)}, rest_{*this, context_, ++stream_id_, shared_},
+      order_entry_rest_{create_order_entry_rest<decltype(order_entry_rest_)>(*this, context_, stream_id_, accounts_, shared_, requests_)},
       order_entry_ws_{create_order_entry_ws<decltype(order_entry_ws_)>(*this, context_, stream_id_, accounts_, shared_)},
       drop_copy_{create_drop_copy<decltype(drop_copy_)>(accounts_)} {
 }
@@ -224,16 +234,9 @@ void Controller::operator()(Trace<PrivateToken> const &event) {
   auto account = private_token.account;
   auto &drop_copy = drop_copy_[account];
   if (!drop_copy) {
+    auto &request = get_request(requests_, account);
     auto tmp = std::make_unique<DropCopy>(
-        *this,
-        context_,
-        ++stream_id_,
-        *accounts_.at(account),
-        shared_,
-        request_[account],
-        private_token.uri,
-        private_token.query,
-        private_token.ping_frequency);
+        *this, context_, ++stream_id_, *accounts_.at(account), shared_, request, private_token.uri, private_token.query, private_token.ping_frequency);
     Start start;
     create_trace_and_dispatch(*tmp, trace_info, start);
     drop_copy = std::move(tmp);

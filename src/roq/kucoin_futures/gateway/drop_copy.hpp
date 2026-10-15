@@ -164,8 +164,6 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   //
-  bool download_private_token_ = false;
-  //
   std::chrono::nanoseconds next_simulated_disconnect_ = {};
 };
 

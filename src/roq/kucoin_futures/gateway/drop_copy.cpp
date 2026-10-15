@@ -519,8 +519,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
 // helpers
 
 void DropCopy::check_response_private_token() {
-  if (download_private_token_ && request_.request_private_token < request_.respond_private_token) {
-    download_private_token_ = false;
+  if (request_.private_token.has_response()) {
     log::warn("GOT PRIVATE TOKEN"sv);
   }
 }
@@ -532,8 +531,7 @@ void DropCopy::request_private_token(TraceInfo const &trace_info) {
   log::warn("REQUEST PRIVATE TOKEN"sv);
   query_.clear();
   (*connection_).suspend_for(60s);
-  request_.request_private_token = trace_info.origin_create_time;
-  download_private_token_ = true;
+  request_.private_token.request(trace_info);
 }
 
 void DropCopy::subscribe() {

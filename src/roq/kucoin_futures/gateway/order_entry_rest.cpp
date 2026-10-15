@@ -124,13 +124,14 @@ void OrderEntryREST::operator()(Trace<Stop> const &) {
 
 void OrderEntryREST::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
-  if (!ready()) {
-    return;
-  }
-  if (!downloading() && request_.respond_private_token < request_.request_private_token) {
-    get_private_token(trace_info);
-    download_private_token_ = true;
+  if ((*connection_).refresh(timer.now)) {
+    if (ready()) {
+      try {
+        check_request_queue(trace_info);
+      } catch (NotConnected &) {
+        // note! ok
+      }
+    }
   }
 }
 
@@ -254,7 +255,7 @@ int32_t OrderEntryREST::download(Trace<State> const &event) {
       assert(false);
       break;
     case PRIVATE_TOKEN: {
-      if (!has_downloaded_private_token_) {
+      if (!has_downloaded_private_token_) {  // note! initial download
         create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "private-token"sv);
         get_private_token(trace_info);
         return 1;
@@ -321,8 +322,6 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
       if (download_.downloading()) {
         download_.retry(STATE);
       }
-      request_.respond_private_token = trace_info.origin_create_time;
-      download_private_token_ = false;
     };
     auto handle_success = [&](auto &body) {
       if (download_.downloading() && download_.skip(sequence, STATE)) {
@@ -336,14 +335,13 @@ void OrderEntryREST::get_private_token_ack(Trace<web::rest::Response> const &eve
           log::fatal("Unexpected: token={}"sv, token);
         }
         if (download_.downloading()) {
-          download_.check(trace_info, STATE);
+          download_.check_relaxed(trace_info, STATE);
         }
-        request_.respond_private_token = trace_info.origin_create_time;
-        download_private_token_ = false;
         has_downloaded_private_token_ = true;
       }
     };
     process_response(event, handle_error, handle_success);
+    request_.private_token.commit(trace_info);
   });
 }
 
@@ -969,6 +967,10 @@ void OrderEntryREST::operator()(Trace<protocol::json::CancelAllOrdersAck> const 
 }
 
 // helpers
+
+void OrderEntryREST::check_request_queue(TraceInfo const &trace_info) {
+  request_.private_token.check_pending(trace_info, [this](auto &trace_info) { get_private_token(trace_info); });
+}
 
 void OrderEntryREST::process_response(Trace<web::rest::Response> const &event, auto error_handler, auto success_handler) {
   auto &[trace_info, response] = event;
