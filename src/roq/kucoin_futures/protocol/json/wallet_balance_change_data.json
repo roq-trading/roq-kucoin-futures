@@ -69,6 +69,14 @@
     {
       "name": "availableMargin",
       "type": "std/double"
+    },
+    {
+      "name": "relationEvent",
+      "type": "std/string_view"
+    },
+    {
+      "name": "relationEventId",
+      "type": "std/string_view"
     }
   ]
 }
