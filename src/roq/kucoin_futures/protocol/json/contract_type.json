@@ -1,0 +1,14 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/ContractType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "FFWCSX",
+      "comment": "swap"
+    },
+    {
+      "name": "FFICSX",
+      "comment": "futures"
+    }
+  ]
+}

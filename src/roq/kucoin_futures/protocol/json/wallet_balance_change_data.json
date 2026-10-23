@@ -72,7 +72,7 @@
     },
     {
       "name": "relationEvent",
-      "type": "std/string_view"
+      "type": "roq/kucoin_futures/protocol/json/RelationEvent"
     },
     {
       "name": "relationEventId",

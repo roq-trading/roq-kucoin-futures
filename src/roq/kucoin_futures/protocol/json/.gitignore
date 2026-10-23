@@ -13,6 +13,7 @@ cancel_all_orders_ack_data.hpp
 cancel_order_ack.hpp
 cancel_order_ack_data.hpp
 channel_type.hpp
+contract_type.hpp
 contracts_ack.hpp
 contracts_ack_data_item.hpp
 display_type.hpp
@@ -66,6 +67,7 @@ position_settlement_data.hpp
 position_side.hpp
 positions_ack.hpp
 positions_ack_data_item.hpp
+relation_event.hpp
 self_trade_prevention.hpp
 side.hpp
 snapshot24h.hpp
@@ -73,6 +75,7 @@ snapshot24h_data.hpp
 status.hpp
 stop.hpp
 stop_price_type.hpp
+sub_market_type.hpp
 subject.hpp
 symbol_order_change.hpp
 ticker_v2.hpp
@@ -111,6 +114,7 @@ cancel_all_orders_ack_data.cpp
 cancel_order_ack.cpp
 cancel_order_ack_data.cpp
 channel_type.cpp
+contract_type.cpp
 contracts_ack.cpp
 contracts_ack_data_item.cpp
 display_type.cpp
@@ -164,6 +168,7 @@ position_settlement_data.cpp
 position_side.cpp
 positions_ack.cpp
 positions_ack_data_item.cpp
+relation_event.cpp
 self_trade_prevention.cpp
 side.cpp
 snapshot24h.cpp
@@ -171,6 +176,7 @@ snapshot24h_data.cpp
 status.cpp
 stop.cpp
 stop_price_type.cpp
+sub_market_type.cpp
 subject.cpp
 symbol_order_change.cpp
 ticker_v2.cpp

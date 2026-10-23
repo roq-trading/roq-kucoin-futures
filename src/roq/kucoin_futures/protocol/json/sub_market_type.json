@@ -1,0 +1,22 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/SubMarketType",
+  "type": "enum",
+  "values": [
+    {
+      "raw": "US.STOCK",
+      "name": "US_STOCK"
+    },
+    {
+      "raw": "HK.STOCK",
+      "name": "HK_STOCK"
+    },
+    {
+      "raw": "JP.STOCK",
+      "name": "JP_STOCK"
+    },
+    {
+      "raw": "KR.STOCK",
+      "name": "KR_STOCK"
+    }
+  ]
+}

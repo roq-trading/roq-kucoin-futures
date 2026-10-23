@@ -1,0 +1,12 @@
+{
+  "name": "roq/kucoin_futures/protocol/json/RelationEvent",
+  "type": "enum",
+  "values": [
+    {
+      "name": "RECEIPT"
+    },
+    {
+      "name": "PAY"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ set(AUTOGEN_SCHEMAS
     cancel_order_ack.json
     cancel_order_ack_data.json
     channel_type.json
+    contract_type.json
     contracts_ack.json
     contracts_ack_data_item.json
     display_type.json
@@ -71,6 +72,7 @@ set(AUTOGEN_SCHEMAS
     position_side.json
     positions_ack.json
     positions_ack_data_item.json
+    relation_event.json
     self_trade_prevention.json
     side.json
     snapshot24h.json
@@ -78,6 +80,7 @@ set(AUTOGEN_SCHEMAS
     status.json
     stop.json
     stop_price_type.json
+    sub_market_type.json
     subject.json
     symbol_order_change.json
     ticker_v2.json

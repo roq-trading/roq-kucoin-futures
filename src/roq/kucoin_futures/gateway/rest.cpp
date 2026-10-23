@@ -31,9 +31,6 @@ auto const SUPPORTS = Mask{
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 
 int32_t const SYSTEM_CODE_SUCCESS = 200000;
-
-auto const CFI_CODE_SWAP = "FFWCSX"sv;
-auto const CFI_CODE_FUTURES = "FFICSX"sv;
 }  // namespace
 
 // === HELPERS ===
@@ -330,11 +327,15 @@ void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
     log::info<2>("item={}"sv, item);
     auto &symbol = item.symbol;
     auto security_type = [&]() -> SecurityType {
-      if (item.type == CFI_CODE_SWAP) {
-        return SecurityType::SWAP;
-      }
-      if (item.type == CFI_CODE_FUTURES) {
-        return SecurityType::FUTURES;
+      switch (item.type) {
+        using enum protocol::json::ContractType::type_t;
+        case UNDEFINED_INTERNAL:
+        case UNKNOWN_INTERNAL:
+          break;
+        case FFWCSX:
+          return SecurityType::SWAP;
+        case FFICSX:
+          return SecurityType::FUTURES;
       }
       return {};
     }();
@@ -347,7 +348,7 @@ void Rest::operator()(Trace<protocol::json::ContractsAck> const &event) {
         .security_type = security_type,
         .external_security_id = {},
         .market_segment = {},
-        .cfi_code = item.type,
+        .cfi_code = item.type.as_raw_text(),
         .base_currency = item.base_currency,
         .quote_currency = item.quote_currency,
         .settlement_currency = item.settle_currency,
