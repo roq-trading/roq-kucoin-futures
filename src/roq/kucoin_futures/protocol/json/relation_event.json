@@ -7,6 +7,12 @@
     },
     {
       "name": "PAY"
+    },
+    {
+      "name": "CHANGE_USER_LEVERAGE"
+    },
+    {
+      "name": "ORDER"
     }
   ]
 }
