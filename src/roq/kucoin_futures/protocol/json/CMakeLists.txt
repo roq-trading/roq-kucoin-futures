@@ -49,6 +49,8 @@ set(AUTOGEN_SCHEMAS
     match.json
     match_data.json
     message.json
+    order_ack.json
+    order_ack_data.json
     order_book_ack.json
     order_book_ack_data.json
     order_book_ack_data_bids_asks_item.json

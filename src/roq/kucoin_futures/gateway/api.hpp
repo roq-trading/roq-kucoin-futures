@@ -21,6 +21,8 @@ struct API final {
     std::string_view get_account_list;
     std::string_view get_position_list;
     std::string_view get_order_list;
+    std::string_view get_order_by_order_id;
+    std::string_view get_order_by_client_order_id;
     std::string_view get_recent_fills;
     std::string_view add_order;
     std::string_view cancel_order;

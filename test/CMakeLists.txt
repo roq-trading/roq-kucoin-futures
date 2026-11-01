@@ -17,14 +17,15 @@ set(SOURCES
     json_level2.cpp
     json_mark_index_price.cpp
     json_match.cpp
+    json_order_ack.cpp
     json_order_book_ack.cpp
     json_order_change.cpp
     json_order_margin_change.cpp
     json_orders_ack.cpp
     json_position_adjust_risk_limit.cpp
     json_position_change.cpp
-    json_positions_ack.cpp
     json_position_settlement.cpp
+    json_positions_ack.cpp
     json_snapshot24h.cpp
     json_ticker_v2.cpp
     json_token.cpp

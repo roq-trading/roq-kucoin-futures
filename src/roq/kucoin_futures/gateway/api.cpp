@@ -24,6 +24,8 @@ API API::create(Settings const &) {
           .get_account_list = "/api/v1/account-overview"sv,
           .get_position_list = "/api/v1/positions"sv,
           .get_order_list = "/api/v1/orders"sv,
+          .get_order_by_order_id = "/api/v1/orders/"sv,
+          .get_order_by_client_order_id = "/api/v1/orders/byClientOid"sv,
           .get_recent_fills = "/api/v1/recentFills"sv,
           .add_order = "/api/v1/orders"sv,
           .cancel_order = "/api/v1/orders"sv,

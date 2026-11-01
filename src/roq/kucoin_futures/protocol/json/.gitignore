@@ -44,6 +44,8 @@ market_type.hpp
 match.hpp
 match_data.hpp
 message.hpp
+order_ack.hpp
+order_ack_data.hpp
 order_book_ack.hpp
 order_book_ack_data.hpp
 order_book_ack_data_bids_asks_item.hpp
@@ -145,6 +147,8 @@ market_type.cpp
 match.cpp
 match_data.cpp
 message.cpp
+order_ack.cpp
+order_ack_data.cpp
 order_book_ack.cpp
 order_book_ack_data.cpp
 order_book_ack_data_bids_asks_item.cpp

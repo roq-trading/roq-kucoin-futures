@@ -23,16 +23,17 @@ namespace {
 auto const NAME = "ex"sv;
 
 auto const SUPPORTS = Mask{
-    SupportType::ORDER_ACK,
-    SupportType::ORDER,
-    SupportType::TRADE,
     SupportType::FUNDS,
     SupportType::POSITION,
+    SupportType::ORDER,
+    SupportType::TRADE,
 };
 
 uint64_t const REQUEST_ID = 1'000'000;
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
+
+auto const CHECK_STALE_ORDERS_FREQ = 10s;
 }  // namespace
 
 // === HELPERS ===
@@ -106,10 +107,6 @@ DropCopy::DropCopy(
 
 // server::Stream
 
-bool DropCopy::ready() const {
-  return (*connection_).ready();
-}
-
 void DropCopy::operator()(Trace<Start> const &) {
   (*connection_).start();
 }
@@ -120,23 +117,28 @@ void DropCopy::operator()(Trace<Stop> const &) {
 
 void DropCopy::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
-  if ((*connection_).ready()) {
-    if (welcome_) {
-      if (next_ping_ < timer.now) {
-        send_ping(timer.now);
+  if ((*connection_).refresh(timer.now)) {
+    if ((*connection_).ready()) {
+      if (welcome_) {
+        if (next_ping_ < timer.now) {
+          send_ping(timer.now);
+        }
       }
+      check_request_queue(trace_info);
+      if (ready()) {
+        check_stale_orders(trace_info);
+      }
+    } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
+      assert(!welcome_);
+      log::warn("Did not receive the welcome message, disconnecting now..."sv);
+      (*connection_).close();
     }
-  } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
-    assert(!welcome_);
-    log::warn("Did not receive the welcome message, disconnecting now..."sv);
-    (*connection_).close();
-  }
-  check_response_private_token();
-  // DEBUG
-  if (next_simulated_disconnect_.count() && next_simulated_disconnect_ < timer.now) {
-    next_simulated_disconnect_ = {};
-    request_private_token(trace_info);
+    check_response_private_token();
+    // DEBUG
+    if (next_simulated_disconnect_.count() && next_simulated_disconnect_ < timer.now) {
+      next_simulated_disconnect_ = {};
+      request_private_token(trace_info);
+    }
   }
 }
 
@@ -209,7 +211,9 @@ void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
   next_ping_ = {};
 }
 
-void DropCopy::operator()(Trace<web::socket::Ready> const &) {
+void DropCopy::operator()(Trace<web::socket::Ready> const &event) {
+  auto &[trace_info, ready] = event;
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
   // note! wait for welcome
 }
 
@@ -242,15 +246,52 @@ void DropCopy::operator()(Trace<web::socket::Binary> const &) {
 
 int32_t DropCopy::download(Trace<State> const &event) {
   auto &[trace_info, state] = event;
+  auto publish_downloading = [&]() { create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, magic_enum::enum_name(state)); };
   switch (state) {
     using enum State;
     case UNDEFINED:
       assert(false);
       break;
-    case SUBSCRIBE:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "subscribe"sv);
-      subscribe();
-      return 0;
+    case SUBSCRIBE_BALANCES:
+      publish_downloading();
+      subscribe(state, "/contractAccount/wallet"sv);
+      return 1;
+    case GET_BALANCES:
+      publish_downloading();
+      request_.balances.request(trace_info);
+      return 1;
+    case SUBSCRIBE_POSITIONS:
+      publish_downloading();
+      subscribe(state, "/contract/positionAll"sv);
+      return 1;
+    case GET_POSITIONS:
+      publish_downloading();
+      request_.positions.request(trace_info);
+      return 1;
+    case SUBSCRIBE_ORDERS:
+      publish_downloading();
+      subscribe(state, "/contractMarket/tradeOrders"sv);
+      return 1;
+    case GET_OPEN_ORDERS:
+      publish_downloading();
+      request_.open_orders.request(trace_info);
+      return 1;
+    case GET_LOST_ORDERS:
+      if (std::empty(request_.details_lost_orders)) {
+        return 0;
+      } else {
+        publish_downloading();
+        request_.lost_orders.request(trace_info);
+        return 1;
+      }
+    case GET_TRADES:
+      if (shared_.settings.download.trades_lookback.count()) {
+        publish_downloading();
+        request_.trades.request(trace_info);
+        return 1;
+      } else {
+        return 0;
+      }
     case DONE:
       create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
       assert(!ready_);
@@ -298,6 +339,13 @@ void DropCopy::operator()(Trace<protocol::json::Ack> const &event) {
   profile_.ack([&]() {
     auto &[trace_info, ack] = event;
     log::info<2>("ack={}"sv, ack);
+    auto request_id = magic_enum::enum_cast<State>(ack.id);
+    if (request_id.has_value()) {
+      auto state = request_id.value();
+      download_.check(trace_info, state);
+    } else {
+      log::warn(R"(Unexpected: request_id="{}")"sv, ack.id);
+    }
   });
 }
 
@@ -534,13 +582,7 @@ void DropCopy::request_private_token(TraceInfo const &trace_info) {
   request_.private_token.request(trace_info);
 }
 
-void DropCopy::subscribe() {
-  subscribe("/contractAccount/wallet"sv);
-  subscribe("/contractMarket/tradeOrders"sv);
-  subscribe("/contract/positionAll"sv);
-}
-
-void DropCopy::subscribe(std::string_view const &topic) {
+void DropCopy::subscribe(State state, std::string_view const &topic) {
   auto message = fmt::format(
       R"({{)"
       R"("id":"{}",)"
@@ -549,7 +591,7 @@ void DropCopy::subscribe(std::string_view const &topic) {
       R"("response":true,)"
       R"("privateChannel":true)"
       R"(}})"sv,
-      ++request_id_,
+      state,
       topic);
   (*connection_).send_text(message);
 }
@@ -564,6 +606,87 @@ void DropCopy::send_ping(std::chrono::nanoseconds now) {
       R"(}})"sv,
       now.count());
   (*connection_).send_text(message);
+}
+
+void DropCopy::check_request_queue(TraceInfo const &trace_info) {
+  auto state = download_.state();
+  switch (state) {
+    using enum State;
+    case UNDEFINED:
+      break;
+    case SUBSCRIBE_BALANCES:
+      break;
+    case GET_BALANCES:
+      if (request_.balances.has_response()) {
+        download_.check(trace_info, state);
+      }
+      break;
+    case SUBSCRIBE_POSITIONS:
+      break;
+    case GET_POSITIONS:
+      if (request_.positions.has_response()) {
+        download_.check(trace_info, state);
+      }
+      break;
+    case SUBSCRIBE_ORDERS:
+      break;
+    case GET_OPEN_ORDERS:
+      if (request_.open_orders.has_response()) {
+        check_stale_orders();  // note! *before* updating download
+        download_.check(trace_info, state);
+      }
+      break;
+    case GET_LOST_ORDERS:
+      if (request_.lost_orders.has_response()) {
+        if (!std::empty(request_.details_lost_orders)) {
+          log::fatal("Unexpected"sv);
+        }
+        download_.check(trace_info, state);
+      }
+      break;
+    case GET_TRADES:
+      if (request_.trades.has_response()) {
+        download_.check(trace_info, state);
+      }
+      break;
+    case DONE:
+      break;
+  }
+}
+
+bool DropCopy::check_stale_orders() {
+  size_t counter = 0;
+  auto helper = [&](auto &order) {
+    auto key = std::make_pair(order.user_id, order.order_id);
+    auto res = request_.details_lost_orders.insert(key);
+    if (res.second) {
+      log::warn(
+          R"(DEBUG stale order: )"
+          R"(order_id={}, client_order_id="{}", external_order_id="{}")"sv,
+          order.order_id,
+          order.client_order_id,
+          order.external_order_id);
+      ++counter;
+    }
+  };
+  if (shared_.dispatcher.get_all_stale_orders(helper, account_.name)) {
+  } else {
+  }
+  if (counter) {
+    log::info("Found {} new lost order(s)"sv, counter);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void DropCopy::check_stale_orders(TraceInfo const &trace_info) {
+  if (next_check_stale_orders_ < trace_info.origin_create_time) {
+    next_check_stale_orders_ = trace_info.origin_create_time + CHECK_STALE_ORDERS_FREQ;
+    if (check_stale_orders()) {
+      request_.lost_orders.request(trace_info);
+    }
+  }
 }
 
 void DropCopy::parse(TraceInfo const &trace_info, std::string_view const &message) {

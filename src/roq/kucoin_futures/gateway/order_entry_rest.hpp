@@ -29,6 +29,7 @@
 
 #include "roq/kucoin_futures/protocol/json/account_ack.hpp"
 #include "roq/kucoin_futures/protocol/json/fills_ack.hpp"
+#include "roq/kucoin_futures/protocol/json/order_ack.hpp"
 #include "roq/kucoin_futures/protocol/json/orders_ack.hpp"
 #include "roq/kucoin_futures/protocol/json/positions_ack.hpp"
 
@@ -93,10 +94,6 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
   enum class State {
     UNDEFINED = 0,
     PRIVATE_TOKEN,
-    ACCOUNT,
-    POSITIONS,
-    ORDERS,
-    FILLS,
     DONE,
   };
 
@@ -105,31 +102,37 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
   // bullet-private
 
   void get_private_token(TraceInfo const &);
-  void get_private_token_ack(Trace<web::rest::Response> const &, uint32_t sequence);
+  void get_private_token_ack(Trace<web::rest::Response> const &);
   void operator()(Trace<protocol::json::Token> const &);
 
   // account
 
   void get_account(TraceInfo const &);
-  void get_account_ack(Trace<web::rest::Response> const &, uint32_t sequence);
+  void get_account_ack(Trace<web::rest::Response> const &);
   void operator()(Trace<protocol::json::AccountAck> const &);
 
   // positions
 
   void get_positions(TraceInfo const &);
-  void get_positions_ack(Trace<web::rest::Response> const &, uint32_t sequence);
+  void get_positions_ack(Trace<web::rest::Response> const &);
   void operator()(Trace<protocol::json::PositionsAck> const &);
 
   // orders
 
   void get_orders(TraceInfo const &);
-  void get_orders_ack(Trace<web::rest::Response> const &, uint32_t sequence);
+  void get_orders_ack(Trace<web::rest::Response> const &);
   void operator()(Trace<protocol::json::OrdersAck> const &);
+
+  // order
+
+  void get_order(TraceInfo const &, std::string_view const &client_order_id, std::string_view const &external_order_id);
+  void get_order_ack(Trace<web::rest::Response> const &, std::string_view const &client_order_id);
+  void operator()(Trace<protocol::json::OrderAck> const &);
 
   // fills
 
   void get_fills(TraceInfo const &);
-  void get_fills_ack(Trace<web::rest::Response> const &, uint32_t sequence);
+  void get_fills_ack(Trace<web::rest::Response> const &);
   void operator()(Trace<protocol::json::FillsAck> const &);
 
   // add-order
@@ -179,6 +182,7 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
         account, account_ack,                                  //
         positions, positions_ack,                              //
         orders, orders_ack,                                    //
+        order, order_ack,                                      //
         fills, fills_ack,                                      //
         create_order, create_order_ack,                        //
         cancel_order, cancel_order_ack,                        //
@@ -199,6 +203,8 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
   std::string encode_buffer_;
   //
   bool has_downloaded_private_token_ = false;
+  //
+  size_t download_lost_orders_counter_ = {};
 };
 
 }  // namespace gateway

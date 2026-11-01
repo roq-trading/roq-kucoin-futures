@@ -32,8 +32,8 @@ R create_requests(auto &config, auto &shared) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
   for (auto &[_, account] : config.accounts) {
-    auto request = std::make_unique<Request>(shared);
-    result.try_emplace(static_cast<std::string_view>(account.name), std::move(request));
+    auto obj = std::make_unique<Request>(shared);
+    result.try_emplace(account.name, std::move(obj));
   }
   return result;
 }
@@ -50,9 +50,11 @@ template <typename R>
 R create_order_entry_rest(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared, auto &requests) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
-  for (auto &[name, account] : accounts) {
-    auto &request = get_request(requests, name);
-    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, *account, shared, request));
+  for (auto &[_, item] : accounts) {
+    auto &account = *item;
+    auto &request = get_request(requests, account.name);
+    auto obj = std::make_unique<OrderEntryREST>(gateway, context, ++stream_id, account, shared, request);
+    result.try_emplace(account.name, std::move(obj));
   }
   return result;
 }
@@ -62,8 +64,10 @@ R create_order_entry_ws(auto &gateway, auto &context, auto &stream_id, auto &acc
   using result_type = std::remove_cvref_t<R>;
   result_type result;
   if (shared.settings.ws_api && !std::empty(shared.settings.ws.uri)) {
-    for (auto &[name, account] : accounts) {
-      result.try_emplace(static_cast<std::string_view>(name), std::make_unique<OrderEntryWS>(gateway, context, ++stream_id, *account, shared));
+    for (auto &[_, item] : accounts) {
+      auto &account = *item;
+      auto obj = std::make_unique<OrderEntryWS>(gateway, context, ++stream_id, account, shared);
+      result.try_emplace(account.name, std::move(obj));
     }
   }
   return result;
@@ -73,8 +77,9 @@ template <typename R>
 R create_drop_copy(auto &accounts) {
   using result_type = std::remove_cvref_t<R>;
   result_type result;
-  for (auto &[name, account] : accounts) {
-    result.try_emplace(static_cast<std::string_view>(name), nullptr);
+  for (auto &[_, item] : accounts) {
+    auto &account = *item;
+    result.try_emplace(account.name, nullptr);
   }
   return result;
 }

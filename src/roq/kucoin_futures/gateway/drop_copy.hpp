@@ -54,7 +54,7 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   uint16_t stream_id() const override { return stream_id_; }
 
-  bool ready() const override;
+  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
   void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
 
@@ -81,7 +81,14 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   enum class State {
     UNDEFINED = 0,
-    SUBSCRIBE,
+    SUBSCRIBE_BALANCES,
+    GET_BALANCES,
+    SUBSCRIBE_POSITIONS,
+    GET_POSITIONS,
+    SUBSCRIBE_ORDERS,
+    GET_OPEN_ORDERS,
+    GET_LOST_ORDERS,
+    GET_TRADES,
     DONE,
   };
 
@@ -116,15 +123,18 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   // helpers
 
+  void send_ping(std::chrono::nanoseconds now);
+
   void check_response_private_token();
 
   void request_private_token(TraceInfo const &);
 
-  void subscribe();
+  void subscribe(State, std::string_view const &topic);
 
-  void subscribe(std::string_view const &topic);
+  void check_request_queue(TraceInfo const &);
 
-  void send_ping(std::chrono::nanoseconds now);
+  bool check_stale_orders();
+  void check_stale_orders(TraceInfo const &);
 
   void parse(TraceInfo const &, std::string_view const &message);
 
@@ -165,6 +175,8 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
   std::chrono::nanoseconds next_ping_ = {};
   //
   std::chrono::nanoseconds next_simulated_disconnect_ = {};
+  //
+  std::chrono::nanoseconds next_check_stale_orders_ = {};
 };
 
 }  // namespace gateway
