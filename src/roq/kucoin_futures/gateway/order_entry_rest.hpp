@@ -204,7 +204,7 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
   //
   bool has_downloaded_private_token_ = false;
   //
-  size_t download_lost_orders_counter_ = {};
+  size_t download_stale_orders_counter_ = {};
 };
 
 }  // namespace gateway

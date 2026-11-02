@@ -87,7 +87,7 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
     GET_POSITIONS,
     SUBSCRIBE_ORDERS,
     GET_OPEN_ORDERS,
-    GET_LOST_ORDERS,
+    GET_STALE_ORDERS,
     GET_TRADES,
     DONE,
   };
