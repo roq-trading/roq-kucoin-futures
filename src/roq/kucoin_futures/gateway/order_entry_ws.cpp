@@ -113,17 +113,18 @@ void OrderEntryWS::operator()(Trace<Stop> const &) {
 
 void OrderEntryWS::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
-  if ((*connection_).ready()) {
-    if (welcome_) {
-      if (next_ping_ < timer.now) {
-        send_ping(timer.now);
+  if ((*connection_).refresh(trace_info)) {
+    if ((*connection_).ready()) {
+      if (welcome_) {
+        if (next_ping_ < timer.now) {
+          send_ping(timer.now);
+        }
       }
+    } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
+      assert(!welcome_);
+      log::warn("Did not receive the welcome message, disconnecting now..."sv);
+      (*connection_).close();
     }
-  } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
-    assert(!welcome_);
-    log::warn("Did not receive the welcome message, disconnecting now..."sv);
-    (*connection_).close();
   }
 }
 
