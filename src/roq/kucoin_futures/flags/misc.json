@@ -28,6 +28,12 @@
       "validator": "roq/flags/validators/TimePeriod",
       "default": "0s",
       "description": "Simulate disconnect"
+    },
+    {
+      "name": "disable_ws_api",
+      "type": "std/bool",
+      "default": false,
+      "description": "Disable WebSocket API?"
     }
   ]
 }

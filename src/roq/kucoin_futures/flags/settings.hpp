@@ -23,7 +23,6 @@ struct ROQ_PUBLIC Settings : public server::flags::Settings {
   explicit Settings(args::Parser const &);
 
   std::string_view exchange;
-  bool ws_api = {};
   std::string_view margin_mode;
 
   flags::Misc misc;
