@@ -339,6 +339,13 @@
     {
       "name": "lastTimeFundingRate",
       "type": "std/double"
+    },
+    {
+      "name": "commonConfigItems"
+    },
+    {
+      "name": "st",
+      "type": "std/bool"
     }
   ]
 }
