@@ -71,8 +71,6 @@ inline std::string_view strip_symbol_from_topic(std::string_view const &topic) {
   return pos == topic.npos ? topic : topic.substr(pos + 1);
 }
 
-extern Error guess_error(int32_t code);
-
 extern bool is_auth_error(int32_t code);
 
 }  // namespace json

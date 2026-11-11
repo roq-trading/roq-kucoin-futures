@@ -2,6 +2,8 @@
 
 #include "roq/kucoin_futures/protocol/json/map.hpp"
 
+#include "roq/logging.hpp"
+
 using namespace std::literals;
 
 namespace roq {
@@ -12,6 +14,28 @@ using Helper = detail::MapHelper<Args...>;
 }
 
 // kucoin_futures::json => roq
+
+// int32_t => roq::Error
+
+template <>
+template <>
+constexpr Helper<int32_t>::operator std::optional<roq::Error>() const {
+  auto value = std::get<0>(args_);
+  switch (value) {
+    case 200'000:
+      return Error::UNDEFINED;
+  }
+  log::warn("DEBUG unable to map error_code={}"sv, value);
+  return Error::UNKNOWN;
+}
+
+static_assert(Helper{int32_t{200'000}} == roq::Error::UNDEFINED);
+
+template <>
+template <>
+std::optional<roq::Error> Map<int32_t>::helper() const {
+  return Helper{args_};
+}
 
 // kucoin_futures::protocol::json::Liquidity => roq::Liquidity
 

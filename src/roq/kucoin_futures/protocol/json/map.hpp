@@ -24,6 +24,10 @@ namespace roq {
 
 template <>
 template <>
+std::optional<Error> Map<int32_t>::helper() const;
+
+template <>
+template <>
 std::optional<Liquidity> Map<kucoin_futures::protocol::json::Liquidity>::helper() const;
 
 template <>

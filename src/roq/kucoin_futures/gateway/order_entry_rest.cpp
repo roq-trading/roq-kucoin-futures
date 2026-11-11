@@ -373,7 +373,8 @@ void OrderEntryREST::get_account_ack(Trace<web::rest::Response> const &event) {
         Trace event_2{event, account_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(account_ack.code), account_ack.msg);
+        auto error = map(account_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, account_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -438,7 +439,8 @@ void OrderEntryREST::get_positions_ack(Trace<web::rest::Response> const &event) 
         Trace event_2{event, positions_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(positions_ack.code), positions_ack.msg);
+        auto error = map(positions_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, positions_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -507,7 +509,8 @@ void OrderEntryREST::get_orders_ack(Trace<web::rest::Response> const &event) {
         Trace event_2{event, orders_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(orders_ack.code), orders_ack.msg);
+        auto error = map(orders_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, orders_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -661,7 +664,8 @@ void OrderEntryREST::get_order_ack(Trace<web::rest::Response> const &event, std:
         Trace event_2{event, order_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(order_ack.code), order_ack.msg);
+        auto error = map(order_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, order_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -772,7 +776,8 @@ void OrderEntryREST::get_fills_ack(Trace<web::rest::Response> const &event) {
         Trace event_2{event, fills_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(fills_ack.code), fills_ack.msg);
+        auto error = map(fills_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, fills_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -882,7 +887,8 @@ void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, u
         Trace event_2{event, add_order_ack};
         (*this)(event_2, user_id, order_id, version);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(add_order_ack.code), add_order_ack.msg);
+        auto error = map(add_order_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, add_order_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -960,7 +966,8 @@ void OrderEntryREST::cancel_order_ack(Trace<web::rest::Response> const &event, u
           (*this)(event_2, user_id, order_id, version);
         }
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(cancel_order_ack.code), cancel_order_ack.msg);
+        auto error = map(cancel_order_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, cancel_order_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -1065,7 +1072,8 @@ void OrderEntryREST::cancel_all_orders_ack(Trace<web::rest::Response> const &eve
         Trace event_2{event, cancel_all_orders_ack};
         (*this)(event_2);
       } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(cancel_all_orders_ack.code), cancel_all_orders_ack.msg);
+        auto error = map(cancel_all_orders_ack.code).template get<Error>();
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, cancel_all_orders_ack.msg);
       }
     };
     process_response(event, handle_error, handle_success);

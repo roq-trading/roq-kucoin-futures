@@ -8,6 +8,7 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
+#include "roq/kucoin_futures/protocol/json/map.hpp"
 #include "roq/kucoin_futures/protocol/json/utils.hpp"
 
 #include "roq/kucoin_futures/tools/splitter.hpp"
@@ -30,7 +31,7 @@ auto const SUPPORTS = Mask{
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 
-int32_t const SYSTEM_CODE_SUCCESS = 200000;
+int32_t const SYSTEM_CODE_SUCCESS = 200'000;
 }  // namespace
 
 // === HELPERS ===
@@ -310,7 +311,8 @@ void Rest::get_contracts_ack(Trace<web::rest::Response> const &event, uint32_t s
           (*this)(event_2);
           download_.check(trace_info, STATE);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(contracts_ack.code), contracts_ack.msg);
+          auto error = map(contracts_ack.code).template get<Error>();
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, contracts_ack.msg);
         }
       }
     };

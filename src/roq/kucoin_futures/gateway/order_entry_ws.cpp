@@ -279,12 +279,11 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
   profile_.error([&]() {
     auto &[trace_info, error] = event;
     auto helper = [&](auto request_type) {
-      auto error_2 = protocol::json::guess_error(error.code);
       auto response = server::oms::Response{
           .request_type = request_type,
           .origin = Origin::EXCHANGE,
           .request_status = RequestStatus::REJECTED,
-          .error = error_2,
+          .error = map(error.code),
           .text = error.msg,
           .version = {},
           .request_id = error.id,

@@ -12,8 +12,6 @@ CONFIG="${CONFIG:-$NAME-test}"
 
 CONFIG_FILE="$ROQ_CONFIG_PATH/roq-kucoin-futures/$CONFIG.toml"
 
-API="v2"
-
 FLAGFILE="../../../share/flags/test/flags.cfg"
 
 $PREFIX ./roq-kucoin-futures \
@@ -24,5 +22,4 @@ $PREFIX ./roq-kucoin-futures \
   --event_log_dir "$HOME/var/lib/roq/data" \
   --client_listen_address "$HOME/run/$NAME.sock" \
   --service_listen_address "$HOME/run/metrics/${NAME}.sock" \
-  --api="$API" \
   $@
