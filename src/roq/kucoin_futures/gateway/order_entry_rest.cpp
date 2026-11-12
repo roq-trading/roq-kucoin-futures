@@ -883,21 +883,22 @@ void OrderEntryREST::create_order_ack(Trace<web::rest::Response> const &event, u
     };
     auto handle_success = [&](auto &body) {
       protocol::json::AddOrderAck add_order_ack{body, decode_buffer_};
-      if (add_order_ack.code == SYSTEM_CODE_SUCCESS) {
-        Trace event_2{event, add_order_ack};
-        (*this)(event_2, user_id, order_id, version);
-      } else {
+      log::info<2>("add_order_ack={}"sv, add_order_ack);
+      if (add_order_ack.code != SYSTEM_CODE_SUCCESS) {
         auto error = map(add_order_ack.code).template get<Error>();
         handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, add_order_ack.msg);
+      } else if (shared_.settings.oms.unsafe_order_ack) {
+        Trace event_2{event, add_order_ack};
+        (*this)(event_2, user_id, order_id, version);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void OrderEntryREST::operator()(Trace<protocol::json::AddOrderAck> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
-  auto &[trace_info, add_order_ack] = event;
-  log::info<2>("add_order_ack={}, user_id={}, order_id={}, version={}"sv, add_order_ack, user_id, order_id, version);
+void OrderEntryREST::operator()(
+    Trace<protocol::json::AddOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
+  [[maybe_unused]] auto &[trace_info, add_order_ack] = event;
   // XXX FIXME TODO we only have the order-id, then what?
 }
 
@@ -956,27 +957,29 @@ void OrderEntryREST::cancel_order_ack(Trace<web::rest::Response> const &event, u
     };
     auto handle_success = [&](auto &body) {
       protocol::json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
-      if (cancel_order_ack.code == SYSTEM_CODE_SUCCESS) {
-        if (std::empty(cancel_order_ack.data.cancelled_order_ids)) {
-          auto error = Error::UNKNOWN_ORDER_ID;
-          auto msg = std::empty(cancel_order_ack.msg) ? magic_enum::enum_name(error) : cancel_order_ack.msg;
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN_ORDER_ID, msg);
-        } else {
-          Trace event_2{event, cancel_order_ack};
-          (*this)(event_2, user_id, order_id, version);
-        }
-      } else {
+      log::info<2>("cancel_order_ack={}"sv, cancel_order_ack);
+      if (cancel_order_ack.code != SYSTEM_CODE_SUCCESS) {
         auto error = map(cancel_order_ack.code).template get<Error>();
         handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, cancel_order_ack.msg);
+      } else if (std::empty(cancel_order_ack.data.cancelled_order_ids)) {
+        auto error = Error::UNKNOWN_ORDER_ID;
+        auto msg = std::empty(cancel_order_ack.msg) ? magic_enum::enum_name(error) : cancel_order_ack.msg;
+        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN_ORDER_ID, msg);
+      } else if (shared_.settings.oms.unsafe_order_ack) {
+        Trace event_2{event, cancel_order_ack};
+        (*this)(event_2, user_id, order_id, version);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void OrderEntryREST::operator()(Trace<protocol::json::CancelOrderAck> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
-  auto &[trace_info, cancel_order_ack] = event;
-  log::info<2>("cancel_order_ack={}, user_id={}, order_id={}, version={}"sv, cancel_order_ack, user_id, order_id, version);
+void OrderEntryREST::operator()(
+    Trace<protocol::json::CancelOrderAck> const &event,
+    [[maybe_unused]] uint8_t user_id,
+    [[maybe_unused]] uint64_t order_id,
+    [[maybe_unused]] uint32_t version) {
+  [[maybe_unused]] auto &[trace_info, cancel_order_ack] = event;
 }
 
 // cancel_all_orders
@@ -1068,12 +1071,12 @@ void OrderEntryREST::cancel_all_orders_ack(Trace<web::rest::Response> const &eve
     };
     auto handle_success = [&](auto &body) {
       protocol::json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
-      if (cancel_all_orders_ack.code == SYSTEM_CODE_SUCCESS) {
-        Trace event_2{event, cancel_all_orders_ack};
-        (*this)(event_2);
-      } else {
+      if (cancel_all_orders_ack.code != SYSTEM_CODE_SUCCESS) {
         auto error = map(cancel_all_orders_ack.code).template get<Error>();
         handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, error, cancel_all_orders_ack.msg);
+      } else {
+        Trace event_2{event, cancel_all_orders_ack};
+        (*this)(event_2);
       }
     };
     process_response(event, handle_error, handle_success);
