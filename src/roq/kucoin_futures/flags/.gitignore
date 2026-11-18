@@ -1,18 +1,15 @@
 !!! THIS FILE HAS BEEN AUTO-GENERATED !!!
 roq-kucoin-futures-flags
-mbp.rstinc
 misc.rstinc
 request.rstinc
 rest.rstinc
 ws.rstinc
 flags.rstinc
-mbp.hpp
 misc.hpp
 request.hpp
 rest.hpp
 ws.hpp
 flags.hpp
-mbp.cpp
 misc.cpp
 request.cpp
 rest.cpp

@@ -36,7 +36,7 @@ bool WSParser::dispatch(
     std::string_view const &message,
     core::json::BufferStack &buffer_stack,
     TraceInfo const &trace_info,
-    [[maybe_unused]] bool allow_unknown_event_types) {
+    [[maybe_unused]] bool disable_strict_parsing) {
   WSMessage message_2{message, buffer_stack};
   if (std::empty(message_2.session_id)) {
     switch (message_2.op) {

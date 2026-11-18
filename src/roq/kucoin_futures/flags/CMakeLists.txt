@@ -2,7 +2,7 @@ set(TARGET_NAME ${PROJECT_NAME}-flags)
 
 set(SOURCES settings.cpp)
 
-set(AUTOGEN_SCHEMAS mbp.json misc.json request.json rest.json ws.json flags.json)
+set(AUTOGEN_SCHEMAS misc.json request.json rest.json ws.json flags.json)
 
 include(RoqAutogen)
 

@@ -35,13 +35,6 @@
       "validator": "roq/flags/validators/TimePeriod",
       "default": "30s",
       "description": "Request timeout"
-    },
-    {
-      "name": "token_refresh_freq",
-      "type": "std/nanoseconds",
-      "validator": "roq/flags/validators/TimePeriod",
-      "default": "8h",
-      "description": "Token refresh frequency"
     }
   ]
 }

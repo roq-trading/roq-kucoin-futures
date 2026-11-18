@@ -9,7 +9,6 @@
 #include "roq/server/flags/settings.hpp"
 
 #include "roq/kucoin_futures/flags/flags.hpp"
-#include "roq/kucoin_futures/flags/mbp.hpp"
 #include "roq/kucoin_futures/flags/misc.hpp"
 #include "roq/kucoin_futures/flags/request.hpp"
 #include "roq/kucoin_futures/flags/rest.hpp"
@@ -28,7 +27,6 @@ struct ROQ_PUBLIC Settings : public server::flags::Settings {
   flags::Misc misc;
   flags::REST rest;
   flags::WS ws;
-  flags::MBP mbp;
   flags::Request request;
 
  private:
@@ -52,7 +50,6 @@ struct fmt::formatter<roq::kucoin_futures::flags::Settings> {
         R"(misc={}, )"
         R"(rest={}, )"
         R"(ws={}, )"
-        R"(mbp={}, )"
         R"(request={}, )"
         R"(server={})"
         R"(}})"sv,
@@ -61,7 +58,6 @@ struct fmt::formatter<roq::kucoin_futures::flags::Settings> {
         value.misc,
         value.rest,
         value.ws,
-        value.mbp,
         value.request,
         static_cast<roq::server::Settings const &>(value));
   }

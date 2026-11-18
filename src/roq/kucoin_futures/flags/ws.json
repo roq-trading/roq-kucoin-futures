@@ -31,12 +31,6 @@
       "description": "Maximum number of symbols per connection"
     },
     {
-      "name": "subscribe_ticker_v2",
-      "type": "std/bool",
-      "default": false,
-      "description": "Subscribe ticker v2?"
-    },
-    {
       "name": "mbp_request_delay",
       "type": "std/nanoseconds",
       "validator": "roq/flags/validators/TimePeriod",
@@ -48,6 +42,12 @@
       "type": "std/uint32",
       "default": 0,
       "description": "Request max retries"
+    },
+    {
+      "name": "subscribe_ticker_v2",
+      "type": "std/bool",
+      "default": false,
+      "description": "Subscribe ticker v2?"
     }
   ]
 }
