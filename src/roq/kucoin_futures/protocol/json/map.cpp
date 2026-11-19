@@ -32,6 +32,8 @@ constexpr Helper<int32_t>::operator std::optional<roq::Error>() const {
       return Error::TOO_LATE_TO_MODIFY_OR_CANCEL;
     case 200'000:
       return Error::UNDEFINED;
+    case 330'008:
+      return Error::RISK_LIMIT_REACHED;
   }
   LOG_ONCE("error_code"sv, value);
   return Error::UNKNOWN;
