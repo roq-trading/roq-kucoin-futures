@@ -236,7 +236,7 @@ void OrderEntryWS::operator()(Trace<web::socket::Disconnected> const &event) {
 
 void OrderEntryWS::operator()(Trace<web::socket::Ready> const &event) {
   auto &[trace_info, ready] = event;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::AUTHENTICATING);
   // note! wait for welcome
 }
 
@@ -273,7 +273,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSAuth> const &event, std::s
     log::info<1>("auth={}"sv, auth);
     auto response = account_.create_ws_auth(message);
     (*connection_).send_text(response);
-    create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
+    create_trace_and_dispatch_2(trace_info, ConnectionStatus::AUTHENTICATING);
   });
 }
 

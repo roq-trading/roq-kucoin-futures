@@ -212,7 +212,7 @@ void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
 
 void DropCopy::operator()(Trace<web::socket::Ready> const &event) {
   auto &[trace_info, ready] = event;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::AUTHENTICATING);
   // note! wait for welcome
 }
 
