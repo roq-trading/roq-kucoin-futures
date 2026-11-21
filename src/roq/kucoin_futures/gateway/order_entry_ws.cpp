@@ -229,7 +229,6 @@ void OrderEntryWS::operator()(Trace<web::socket::Disconnected> const &event) {
   create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   welcome_ = false;
   ping_freq_ = {};
-  ready_ = false;
   logon_timeout_ = {};
   next_ping_ = {};
 }

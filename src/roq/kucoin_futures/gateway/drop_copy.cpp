@@ -29,8 +29,6 @@ auto const SUPPORTS = Mask{
     SupportType::TRADE,
 };
 
-uint64_t const REQUEST_ID = 1'000'000;
-
 size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 }  // namespace
 
@@ -83,9 +81,9 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, query_{query},
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
       connection_{create_connection(*this, shared.settings, context, shared, uri)}, ping_frequency_{ping_frequency},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH}, request_id_{stream_id_ * REQUEST_ID},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -100,7 +98,7 @@ DropCopy::DropCopy(
           .ping = create_metrics(shared.settings, name_, "ping"sv),
           .heartbeat = create_metrics(shared.settings, name_, "heartbeat"sv),
       },
-      account_{account}, shared_{shared}, request_{request}, download_{{}, [this](auto &event) { return download(event); }} {
+      account_{account}, shared_{shared}, request_{request}, download_{{}, [this](auto &event) { return download(event); }}, query_{query} {
 }
 
 // server::Stream
@@ -202,7 +200,6 @@ void DropCopy::operator()(Trace<web::socket::Connected> const &event) {
 void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
   auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  ready_ = false;
   create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   download_.reset();
   welcome_ = false;
@@ -293,8 +290,6 @@ int32_t DropCopy::download(Trace<State> const &event) {
       }
     case DONE:
       create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
-      assert(!ready_);
-      ready_ = true;
       return 0;
   }
   assert(false);

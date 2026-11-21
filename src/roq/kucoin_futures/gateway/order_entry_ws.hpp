@@ -104,37 +104,33 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
 
  private:
   [[maybe_unused]] Handler &handler_;
-  // config
+  //
   uint16_t const stream_id_;
   std::string const name_;
-  // web socket
-  std::string query_buffer_;
   std::unique_ptr<web::socket::Client> const connection_;
-  // buffers
+  //
   core::json::BufferStack decode_buffer_;
-  // metrics
   struct {
     utils::metrics::Counter disconnect;
   } counter_;
   struct {
-    utils::metrics::Profile parse,  //
-        auth, welcome, error, pong, add_order_ack, cancel_order_ack;
+    utils::metrics::Profile parse,   //
+        auth, welcome, error, pong,  //
+        add_order_ack, cancel_order_ack;
   } profile_;
   struct {
     utils::metrics::Latency ping, heartbeat;
   } latency_;
-  // account
   Account &account_;
   Shared &shared_;
-  // state
   bool welcome_ = false;
   std::chrono::nanoseconds ping_freq_ = {};
-  bool ready_ = false;
   ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
-  //
   std::string encode_buffer_;
+  //
+  std::string query_buffer_;
 };
 
 }  // namespace gateway
