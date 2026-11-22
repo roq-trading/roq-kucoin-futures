@@ -35,7 +35,7 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
 
   OrderEntryWS(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
 
-  // protected:
+ protected:
   friend base_type;
 
   // server::Stream
@@ -74,7 +74,6 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
 
   uint16_t operator()(Trace<CancelAllOrders> const &, std::string_view const &request_id) override;
 
- protected:
   // web::socket::Client::Handler
 
   void operator()(Trace<web::socket::Connected> const &) override;

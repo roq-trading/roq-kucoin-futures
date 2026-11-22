@@ -45,7 +45,7 @@ struct MarketData final : public Base<MarketData>,
       std::string_view const &query,
       std::chrono::nanoseconds ping_frequency);
 
-  // protected:
+ protected:
   friend base_type;
 
   // server::Stream
@@ -66,7 +66,6 @@ struct MarketData final : public Base<MarketData>,
 
   void subscribe(size_t start_from = 0) override;
 
- protected:
   // web::socket::Client::Handler
 
   void operator()(Trace<web::socket::Connected> const &) override;

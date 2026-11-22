@@ -110,17 +110,15 @@ struct Controller final : public Base<Controller>,
 
  private:
   server::Dispatcher &dispatcher_;
-  // io
+  //
   io::Context &context_;
-  // shared
   Shared shared_;
-  // accounts
+  uint16_t stream_id_ = {};
+  //
   utils::unordered_map<std::string, std::unique_ptr<Account>> const accounts_;
   utils::unordered_map<std::string, std::unique_ptr<Request>> const requests_;
-  // seed
-  uint16_t stream_id_ = {};
-  // streams
-  Rest rest_;
+  //
+  std::unique_ptr<Rest> rest_;
   utils::unordered_map<std::string, std::unique_ptr<server::OrderActionStream>> order_entry_rest_;
   utils::unordered_map<std::string, std::unique_ptr<server::OrderActionStream>> order_entry_ws_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
@@ -128,7 +126,7 @@ struct Controller final : public Base<Controller>,
   // websocket uri's
   std::string public_ws_uri_;
   std::string public_ws_query_;
-  std::chrono::nanoseconds public_ws_ping_frequency_;
+  std::chrono::nanoseconds public_ws_ping_frequency_ = {};
 };
 
 }  // namespace gateway

@@ -48,7 +48,7 @@ struct OrderEntryREST final : public Base<OrderEntryREST>, public server::OrderA
 
   OrderEntryREST(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &, Request &);
 
-  // protected:
+ protected:
   friend base_type;
 
   // server::Stream
