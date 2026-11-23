@@ -89,9 +89,9 @@ MarketData::MarketData(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index}, ping_frequency_{ping_frequency}, query_{query},
+    : server::MarketDataStream{stream_id}, handler_{handler}, name_{create_name(stream_id)}, index_{index}, ping_frequency_{ping_frequency}, query_{query},
       connection_{create_connection(*this, shared.settings, context, shared, uri)},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH}, request_id_{stream_id_ * REQUEST_ID},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH}, request_id_{stream_id * REQUEST_ID},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
           .total_bytes_received = create_metrics(shared.settings, name_, "total_bytes_received"sv),
@@ -180,25 +180,26 @@ void MarketData::operator()(metrics::Writer &writer) const {
 
 void MarketData::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
   auto &[trace_info, connection_status] = event;
-  connection_status_ = connection_status;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = {},
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .proxy = (*connection_).get_proxy(),
-      .peer = (*connection_).get_current_peer(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  if (update(connection_status, reason)) {
+    auto stream_status = StreamStatus{
+        .stream_id = stream_id(),
+        .account = {},
+        .supports = SUPPORTS,
+        .transport = Transport::TCP,
+        .protocol = Protocol::WS,
+        .encoding = {Encoding::JSON},
+        .priority = Priority::PRIMARY,
+        .connection_status = connection_status,
+        .reason = reason,
+        .interface = (*connection_).get_interface(),
+        .proxy = (*connection_).get_proxy(),
+        .peer = (*connection_).get_current_peer(),
+        .authority = (*connection_).get_current_authority(),
+        .path = (*connection_).get_current_path(),
+    };
+    log::info("stream_status={}"sv, stream_status);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  }
 }
 
 // server::MarketDataStream
@@ -220,7 +221,7 @@ void MarketData::operator()(Trace<web::socket::Connected> const &event) {
 void MarketData::operator()(Trace<web::socket::Disconnected> const &event) {
   auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
+  publish(trace_info, ConnectionStatus::DISCONNECTED);
   welcome_ = false;
   logon_timeout_ = {};
   next_ping_ = {};
@@ -240,7 +241,7 @@ void MarketData::operator()(Trace<web::socket::Close> const &event) {
 void MarketData::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id_,
+      .stream_id = stream_id(),
       .account = {},
       .latency = latency.sample,
   };
@@ -266,7 +267,7 @@ void MarketData::operator()(Trace<protocol::json::Welcome> const &event) {
     log::info<1>("welcome={}"sv, welcome);
     (*connection_).touch(trace_info.source_receive_time);
     welcome_ = true;
-    create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
+    publish(trace_info, ConnectionStatus::READY);
     subscribe();
   });
 }
@@ -307,7 +308,7 @@ void MarketData::operator()(Trace<protocol::json::TickerV2> const &event) {
     auto &data = ticker_v2.data;
     auto symbol = data.symbol;
     auto top_of_book = TopOfBook{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .layer{
@@ -342,7 +343,7 @@ void MarketData::operator()(Trace<protocol::json::Match> const &event) {
         .maker_order_id = data.maker_order_id,
     };
     auto trade_summary = TradeSummary{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .trades = {&trade, 1},
@@ -373,7 +374,7 @@ void MarketData::operator()(Trace<protocol::json::Execution> const &event) {
         .maker_order_id = {},
     };
     auto trade_summary = TradeSummary{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .trades = {&trade, 1},
@@ -407,7 +408,7 @@ void MarketData::operator()(Trace<protocol::json::MarkIndexPrice> const &event) 
         },
     }};
     auto statistics_update = StatisticsUpdate{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .statistics = statistics,
@@ -436,7 +437,7 @@ void MarketData::operator()(Trace<protocol::json::FundingRate> const &event) {
         },
     }};
     auto statistics_update = StatisticsUpdate{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = symbol,
         .statistics = statistics,
@@ -476,7 +477,7 @@ void MarketData::operator()(Trace<protocol::json::Level2> const &event) {
     try {
       auto create_update = [&](auto &bids, auto &asks, auto update_type, auto exchange_sequence) -> MarketByPriceUpdate {
         return {
-            .stream_id = stream_id_,
+            .stream_id = stream_id(),
             .exchange = shared_.settings.exchange,
             .symbol = symbol,
             .bids = bids,
@@ -533,7 +534,7 @@ void MarketData::operator()(Trace<protocol::json::FundingBegin> const &event) {
         },
     }};
     auto statistics_update = StatisticsUpdate{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .statistics = statistics,
@@ -582,7 +583,7 @@ void MarketData::operator()(Trace<protocol::json::Snapshot24h> const &event) {
         },
     }};
     auto statistics_update = StatisticsUpdate{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .statistics = statistics,

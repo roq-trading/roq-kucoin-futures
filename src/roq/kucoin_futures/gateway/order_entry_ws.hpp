@@ -40,10 +40,6 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
 
   // server::Stream
 
-  uint16_t stream_id() const override { return stream_id_; }
-
-  bool ready() const override;
-
   void operator()(Trace<Start> const &) override;
   void operator()(Trace<Stop> const &) override;
   void operator()(Trace<Timer> const &) override;
@@ -104,7 +100,6 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
  private:
   [[maybe_unused]] Handler &handler_;
   //
-  uint16_t const stream_id_;
   std::string const name_;
   std::unique_ptr<web::socket::Client> const connection_;
   //
@@ -124,7 +119,6 @@ struct OrderEntryWS final : public Base<OrderEntryWS>,
   Shared &shared_;
   bool welcome_ = false;
   std::chrono::nanoseconds ping_freq_ = {};
-  ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
   std::string encode_buffer_;

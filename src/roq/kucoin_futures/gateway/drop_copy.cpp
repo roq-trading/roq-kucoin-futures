@@ -81,7 +81,7 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)},
+    : server::Stream{stream_id}, handler_{handler}, name_{create_name(stream_id, account)},
       connection_{create_connection(*this, shared.settings, context, shared, uri)}, ping_frequency_{ping_frequency},
       decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
@@ -155,25 +155,26 @@ void DropCopy::operator()(metrics::Writer &writer) const {
 
 void DropCopy::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
   auto &[trace_info, connection_status] = event;
-  connection_status_ = connection_status;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = account_.name,
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .proxy = (*connection_).get_proxy(),
-      .peer = (*connection_).get_current_peer(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  if (update(connection_status, reason)) {
+    auto stream_status = StreamStatus{
+        .stream_id = stream_id(),
+        .account = account_.name,
+        .supports = SUPPORTS,
+        .transport = Transport::TCP,
+        .protocol = Protocol::WS,
+        .encoding = {Encoding::JSON},
+        .priority = Priority::PRIMARY,
+        .connection_status = connection_status,
+        .reason = reason,
+        .interface = (*connection_).get_interface(),
+        .proxy = (*connection_).get_proxy(),
+        .peer = (*connection_).get_current_peer(),
+        .authority = (*connection_).get_current_authority(),
+        .path = (*connection_).get_current_path(),
+    };
+    log::info("stream_status={}"sv, stream_status);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  }
 }
 
 void DropCopy::operator()(Trace<PrivateToken> const &event) {
@@ -200,7 +201,7 @@ void DropCopy::operator()(Trace<web::socket::Connected> const &event) {
 void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
   auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
+  publish(trace_info, ConnectionStatus::DISCONNECTED);
   download_.reset();
   welcome_ = false;
   logon_timeout_ = {};
@@ -209,7 +210,7 @@ void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
 
 void DropCopy::operator()(Trace<web::socket::Ready> const &event) {
   auto &[trace_info, ready] = event;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::AUTHENTICATING);
+  publish(trace_info, ConnectionStatus::AUTHENTICATING);
   // note! wait for welcome
 }
 
@@ -221,7 +222,7 @@ void DropCopy::operator()(Trace<web::socket::Close> const &event) {
 void DropCopy::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id_,
+      .stream_id = stream_id(),
       .account = account_.name,
       .latency = latency.sample,
   };
@@ -242,54 +243,53 @@ void DropCopy::operator()(Trace<web::socket::Binary> const &) {
 
 int32_t DropCopy::download(Trace<State> const &event) {
   auto &[trace_info, state] = event;
-  auto publish_downloading = [&]() { create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, magic_enum::enum_name(state)); };
   switch (state) {
     using enum State;
     case UNDEFINED:
       assert(false);
       break;
     case SUBSCRIBE_BALANCES:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       subscribe(state, "/contractAccount/wallet"sv);
       return 1;
     case GET_BALANCES:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       request_.balances.request(trace_info);
       return 1;
     case SUBSCRIBE_POSITIONS:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       subscribe(state, "/contract/positionAll"sv);
       return 1;
     case GET_POSITIONS:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       request_.positions.request(trace_info);
       return 1;
     case SUBSCRIBE_ORDERS:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       subscribe(state, "/contractMarket/tradeOrders"sv);
       return 1;
     case GET_OPEN_ORDERS:
-      publish_downloading();
+      publish(trace_info, ConnectionStatus::DOWNLOADING, state);
       request_.open_orders.request(trace_info);
       return 1;
     case GET_STALE_ORDERS:
       if (std::empty(request_.details_stale_orders)) {
         return 0;
       } else {
-        publish_downloading();
+        publish(trace_info, ConnectionStatus::DOWNLOADING, state);
         request_.stale_orders.request(trace_info);
         return 1;
       }
     case GET_TRADES:
       if (shared_.settings.download.trades_lookback.count()) {
-        publish_downloading();
+        publish(trace_info, ConnectionStatus::DOWNLOADING, state);
         request_.trades.request(trace_info);
         return 1;
       } else {
         return 0;
       }
     case DONE:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
+      publish(trace_info, ConnectionStatus::READY);
       return 0;
   }
   assert(false);
@@ -384,7 +384,7 @@ void DropCopy::operator()(Trace<protocol::json::WalletBalanceChange> const &even
   log::info<2>("wallet_balance_change={}"sv, wallet_balance_change);
   auto &data = wallet_balance_change.data;
   auto funds_update = FundsUpdate{
-      .stream_id = stream_id_,
+      .stream_id = stream_id(),
       .account = account_.name,
       .currency = data.currency,
       .margin_mode = {},
@@ -421,7 +421,7 @@ void DropCopy::operator()(Trace<protocol::json::PositionChange> const &event) {
   log::info<2>("position_change={}"sv, position_change);
   auto &data = position_change.data;
   auto position_update = PositionUpdate{
-      .stream_id = stream_id_,
+      .stream_id = stream_id(),
       .account = account_.name,
       .exchange = shared_.settings.exchange,
       .symbol = data.symbol,
@@ -534,7 +534,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
         .profit_loss_amount = NaN,
     };
     auto trade_update = TradeUpdate{
-        .stream_id = stream_id_,
+        .stream_id = stream_id(),
         .account = order.account,
         .order_id = order.order_id,
         .exchange = order.exchange,
@@ -556,7 +556,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
     };
     create_trace_and_dispatch(shared_.dispatcher, trace_info, trade_update, true, order.user_id);
   };
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id_, callback);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id(), callback);
 }
 
 // helpers
