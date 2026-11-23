@@ -99,17 +99,17 @@ OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stre
 
 // server::Stream
 
-void OrderEntryWS::operator()(Trace<Start> const &) {
-  (*connection_).start();
+void OrderEntryWS::operator()(Trace<Start> const &event) {
+  (*connection_)(event);
 }
 
-void OrderEntryWS::operator()(Trace<Stop> const &) {
-  (*connection_).stop();
+void OrderEntryWS::operator()(Trace<Stop> const &event) {
+  (*connection_)(event);
 }
 
 void OrderEntryWS::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  if ((*connection_).refresh(trace_info)) {
+  if ((*connection_)(event)) {
     if (welcome_) {
       if (next_ping_ < timer.now) {
         send_ping(timer.now);
@@ -177,15 +177,14 @@ void OrderEntryWS::operator()(Trace<server::oms::OrderActionBatchRollback> const
   throw server::oms::NotSupported{"not supported"sv};
 }
 
-uint16_t OrderEntryWS::operator()(
+void OrderEntryWS::operator()(
     Trace<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   auto &[trace_info, create_order] = event;
   auto message = protocol::json::Encoder::ws_add_order(encode_buffer_, create_order, order, ref_data, request_id, shared_.margin_mode);
   (*connection_).send_text(message);
-  return stream_id();
 }
 
-uint16_t OrderEntryWS::operator()(
+void OrderEntryWS::operator()(
     Trace<ModifyOrder> const &,
     server::oms::Order const &,
     server::oms::RefData const &,
@@ -194,7 +193,7 @@ uint16_t OrderEntryWS::operator()(
   throw server::oms::NotSupported{"not supported"sv};
 }
 
-uint16_t OrderEntryWS::operator()(
+void OrderEntryWS::operator()(
     Trace<CancelOrder> const &event,
     server::oms::Order const &order,
     server::oms::RefData const &ref_data,
@@ -203,10 +202,9 @@ uint16_t OrderEntryWS::operator()(
   auto &[trace_info, cancel_order] = event;
   auto message = protocol::json::Encoder::ws_cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id, previous_request_id);
   (*connection_).send_text(message);
-  return stream_id();
 }
 
-uint16_t OrderEntryWS::operator()(Trace<CancelAllOrders> const &, [[maybe_unused]] std::string_view const &request_id) {
+void OrderEntryWS::operator()(Trace<CancelAllOrders> const &, [[maybe_unused]] std::string_view const &request_id) {
   throw server::oms::NotSupported{"not supported"sv};
 }
 

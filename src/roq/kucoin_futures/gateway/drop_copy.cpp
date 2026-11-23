@@ -103,17 +103,17 @@ DropCopy::DropCopy(
 
 // server::Stream
 
-void DropCopy::operator()(Trace<Start> const &) {
-  (*connection_).start();
+void DropCopy::operator()(Trace<Start> const &event) {
+  (*connection_)(event);
 }
 
-void DropCopy::operator()(Trace<Stop> const &) {
-  (*connection_).stop();
+void DropCopy::operator()(Trace<Stop> const &event) {
+  (*connection_)(event);
 }
 
 void DropCopy::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  if ((*connection_).refresh(trace_info)) {
+  if ((*connection_)(event)) {
     if ((*connection_).ready()) {
       if (welcome_) {
         if (next_ping_ < timer.now) {
