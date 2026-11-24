@@ -76,8 +76,9 @@ struct create_metrics final : public utils::metrics::Factory {
 // === IMPLEMENTATION ===
 
 OrderEntryWS::OrderEntryWS(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : server::OrderActionStream{stream_id}, handler_{handler}, name_{create_name(stream_id, account)},
-      connection_{create_connection(*this, shared.settings, context, shared)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+    : server::OrderActionStream{stream_id, account.name, shared.settings.misc.disable_ws_api ? SUPPORTS : SUPPORTS_WSAPI}, handler_{handler},
+      name_{create_name(stream_id, account)}, connection_{create_connection(*this, shared.settings, context, shared)},
+      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -143,9 +144,9 @@ void OrderEntryWS::operator()(Trace<ConnectionStatus> const &event, std::string_
   auto &[trace_info, connection_status] = event;
   if (update(connection_status, reason)) {
     auto stream_status = StreamStatus{
-        .stream_id = stream_id(),
-        .account = account_.name,
-        .supports = shared_.settings.misc.disable_ws_api ? SUPPORTS : SUPPORTS_WSAPI,
+        .stream_id = stream_id,
+        .account = account,
+        .supports = supports,
         .transport = Transport::TCP,
         .protocol = Protocol::WS,
         .encoding = {Encoding::JSON},
@@ -240,7 +241,7 @@ void OrderEntryWS::operator()(Trace<web::socket::Close> const &event) {
 void OrderEntryWS::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id(),
+      .stream_id = stream_id,
       .account = account_.name,
       .latency = latency.sample,
   };
@@ -299,7 +300,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSError> const &event) {
           .price = NaN,
       };
       log::debug("response={}"sv, response);
-      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id());
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id);
     };
     switch (error.op) {
       using enum protocol::json::WSOp::type_t;
@@ -356,7 +357,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSAddOrderAck> const &event)
           .price = NaN,
       };
       log::debug("response={}"sv, response);
-      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id());
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id);
     }
   });
 }
@@ -381,7 +382,7 @@ void OrderEntryWS::operator()(Trace<protocol::json::WSCancelOrderAck> const &eve
           .price = NaN,
       };
       log::debug("response={}"sv, response);
-      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id());
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, response, stream_id);
     }
   });
 }

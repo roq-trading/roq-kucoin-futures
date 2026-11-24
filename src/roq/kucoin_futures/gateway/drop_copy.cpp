@@ -81,7 +81,7 @@ DropCopy::DropCopy(
     std::string_view const &uri,
     std::string_view const &query,
     std::chrono::nanoseconds ping_frequency)
-    : server::Stream{stream_id}, handler_{handler}, name_{create_name(stream_id, account)},
+    : server::Stream{stream_id, account.name, SUPPORTS}, handler_{handler}, name_{create_name(stream_id, account)},
       connection_{create_connection(*this, shared.settings, context, shared, uri)}, ping_frequency_{ping_frequency},
       decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
@@ -157,9 +157,9 @@ void DropCopy::operator()(Trace<ConnectionStatus> const &event, std::string_view
   auto &[trace_info, connection_status] = event;
   if (update(connection_status, reason)) {
     auto stream_status = StreamStatus{
-        .stream_id = stream_id(),
-        .account = account_.name,
-        .supports = SUPPORTS,
+        .stream_id = stream_id,
+        .account = account,
+        .supports = supports,
         .transport = Transport::TCP,
         .protocol = Protocol::WS,
         .encoding = {Encoding::JSON},
@@ -222,7 +222,7 @@ void DropCopy::operator()(Trace<web::socket::Close> const &event) {
 void DropCopy::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id(),
+      .stream_id = stream_id,
       .account = account_.name,
       .latency = latency.sample,
   };
@@ -384,7 +384,7 @@ void DropCopy::operator()(Trace<protocol::json::WalletBalanceChange> const &even
   log::info<2>("wallet_balance_change={}"sv, wallet_balance_change);
   auto &data = wallet_balance_change.data;
   auto funds_update = FundsUpdate{
-      .stream_id = stream_id(),
+      .stream_id = stream_id,
       .account = account_.name,
       .currency = data.currency,
       .margin_mode = {},
@@ -421,7 +421,7 @@ void DropCopy::operator()(Trace<protocol::json::PositionChange> const &event) {
   log::info<2>("position_change={}"sv, position_change);
   auto &data = position_change.data;
   auto position_update = PositionUpdate{
-      .stream_id = stream_id(),
+      .stream_id = stream_id,
       .account = account_.name,
       .exchange = shared_.settings.exchange,
       .symbol = data.symbol,
@@ -534,7 +534,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
         .profit_loss_amount = NaN,
     };
     auto trade_update = TradeUpdate{
-        .stream_id = stream_id(),
+        .stream_id = stream_id,
         .account = order.account,
         .order_id = order.order_id,
         .exchange = order.exchange,
@@ -556,7 +556,7 @@ void DropCopy::operator()(Trace<protocol::json::OrderChange> const &event) {
     };
     create_trace_and_dispatch(shared_.dispatcher, trace_info, trade_update, true, order.user_id);
   };
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id(), callback);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id, callback);
 }
 
 // helpers
