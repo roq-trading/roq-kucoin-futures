@@ -126,32 +126,6 @@ MarketData::MarketData(
 
 // server::Stream
 
-void MarketData::operator()(Trace<Start> const &event) {
-  (*connection_)(event);
-}
-
-void MarketData::operator()(Trace<Stop> const &event) {
-  (*connection_)(event);
-}
-
-void MarketData::operator()(Trace<Timer> const &event) {
-  auto &[trace_info, timer] = event;
-  if ((*connection_)(event)) {
-    if ((*connection_).ready()) {
-      if (welcome_) {
-        if (next_ping_ < timer.now) {
-          send_ping(timer.now);
-        }
-        check_subscribe_queue(trace_info);
-      }
-    } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
-      assert(!welcome_);
-      log::warn("Did not receive the welcome message, disconnecting now..."sv);
-      (*connection_).close();
-    }
-  }
-}
-
 void MarketData::operator()(metrics::Writer &writer) const {
   writer
       // counter
@@ -176,6 +150,32 @@ void MarketData::operator()(metrics::Writer &writer) const {
       // latency
       .write(latency_.ping, metrics::Type::LATENCY)
       .write(latency_.heartbeat, metrics::Type::LATENCY);
+}
+
+void MarketData::operator()(Trace<Start> const &event) {
+  (*connection_)(event);
+}
+
+void MarketData::operator()(Trace<Stop> const &event) {
+  (*connection_)(event);
+}
+
+void MarketData::operator()(Trace<Timer> const &event) {
+  auto &[trace_info, timer] = event;
+  if ((*connection_)(event)) {
+    if ((*connection_).ready()) {
+      if (welcome_) {
+        if (next_ping_ < timer.now) {
+          send_ping(timer.now);
+        }
+        check_subscribe_queue(trace_info);
+      }
+    } else if (logon_timeout_.count() && logon_timeout_ < timer.now) {
+      assert(!welcome_);
+      log::warn("Did not receive the welcome message, disconnecting now..."sv);
+      (*connection_).close();
+    }
+  }
 }
 
 void MarketData::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
